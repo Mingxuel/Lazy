@@ -1,0 +1,228 @@
+﻿<Window x:Class="WPF_Coding.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:WPF_Coding"
+        xmlns:vm="clr-namespace:WPF_Coding.Tabs.ButtonBase"
+        xmlns:ccontrol="clr-namespace:WPF_Coding.CustomControls"
+        xmlns:libs="clr-namespace:WPFControlLibrary;assembly=WPFControlLibrary"
+        mc:Ignorable="d"
+        Title="MainWindow" Height="1080" Width="1920" WindowState="Maximized">
+    <Window.Resources>
+        <!-- 合并外部资源字典 -->
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="pack://application:,,,/WPFControlLibrary;component/Themes/Generic.xaml"/>
+                <ResourceDictionary Source="Styles/ControlMapStyle.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+            <SolidColorBrush x:Key="Button_background" Color="DarkGreen"/>
+            <SolidColorBrush x:Key="GridLine" Color="Black"/>
+            <ControlTemplate x:Key="ButtonTemplate" TargetType="Button">
+                <Canvas>
+                    <Rectangle Width="{Binding RelativeSource={RelativeSource Mode=TemplatedParent}, Path=Width}"
+                               Height="{Binding RelativeSource={RelativeSource Mode=TemplatedParent}, Path=Height}"
+                               RadiusX="15" Fill="Purple" RadiusY="15"/>
+                </Canvas>
+            </ControlTemplate>
+        </ResourceDictionary>
+    </Window.Resources>
+    <Grid>
+        <TabControl Margin="1 1 1 1" Background="LightGray" SelectedIndex="1">
+            <TabItem Header="UIElement">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="185*"/>
+                        <ColumnDefinition Width="21*"/>
+                        <ColumnDefinition Width="272*"/>
+                        <ColumnDefinition Width="478*"/>
+                        <ColumnDefinition Width="478*"/>
+                        <ColumnDefinition Width="478*"/>
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+                </Grid>
+            </TabItem >
+            <TabItem Header="ButtonBase">
+                <TabItem.DataContext>
+                    <vm:ButtonBaseViewModel/>
+                </TabItem.DataContext>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+                    <!-- 绘制横线 -->
+                    <Rectangle Grid.Row="0" Grid.ColumnSpan="4" Height="1" Fill="{StaticResource GridLine}" VerticalAlignment="Bottom"/>
+                    <Rectangle Grid.Row="1" Grid.ColumnSpan="4" Height="1" Fill="{StaticResource GridLine}" VerticalAlignment="Bottom"/>
+                    <Rectangle Grid.Row="2" Grid.ColumnSpan="4" Height="1" Fill="{StaticResource GridLine}" VerticalAlignment="Bottom"/>
+                    <Rectangle Grid.Row="3" Grid.ColumnSpan="4" Height="1" Fill="{StaticResource GridLine}" VerticalAlignment="Bottom"/>
+
+                    <!-- 绘制竖线 -->
+                    <Rectangle Grid.RowSpan="4" Grid.Column="0" Width="1" Fill="{StaticResource GridLine}" HorizontalAlignment="Right"/>
+                    <Rectangle Grid.RowSpan="4" Grid.Column="1" Width="1" Fill="{StaticResource GridLine}" HorizontalAlignment="Right"/>
+                    <Rectangle Grid.RowSpan="4" Grid.Column="2" Width="1" Fill="{StaticResource GridLine}" HorizontalAlignment="Right"/>
+                    <Rectangle Grid.RowSpan="4" Grid.Column="3" Width="1" Fill="{StaticResource GridLine}" HorizontalAlignment="Right"/>
+                    <!--#region Control Map-->
+                    <Label Grid.Column="0" Grid.Row="0" Style="{StaticResource ControlMapStyleLabel}" Content="UIElement" Margin="10,10,0,0" />
+                    <Label Grid.Column="0" Grid.Row="0" Style="{StaticResource ControlMapStyleLabel}" Content="FrameworkElement" Margin="10,40,0,0" />
+                    <Label Grid.Column="0" Grid.Row="0" Style="{StaticResource ControlMapStyleLabel}" Content="Control" Margin="10,70,0,0" />
+                    <Label Grid.Column="0" Grid.Row="0" Style="{StaticResource ControlMapStyleLabel}" Content="ContentControl" Margin="10,100,0,0" />
+                    <Label Grid.Column="0" Grid.Row="0" Style="{StaticResource ControlMapStyleLabel}" Content="ButtonBase" Margin="10,130,0,0" />
+                    <Label Grid.Column="0" Grid.Row="0" Style="{StaticResource ControlMapStyleLabel}" Content="Button" Margin="10,160,0,0" />
+                    <!--#endregion-->
+                    <!--#region Column-0 Row-1 -->
+                    <TextBlock Grid.Column="0" Grid.Row="1" FontSize="16" Text="绑定数据" Margin="5,5,0,0" HorizontalAlignment="Left" VerticalAlignment="Top"/>
+                    <TextBlock Grid.Column="0" Grid.Row="1" Margin="5,30,0,0" HorizontalAlignment="Left" VerticalAlignment="Top">
+                        1> ViewModel中添加INotifyPropertyChanged
+                        <LineBreak/>
+                        2> 创建OnPropertyChanged，用于在Setter触发时通过传递属性名称通知前台更新UI
+                        <LineBreak/>
+                        3> 添加命名空间 xmlns:vm="clr-namespace:WPF_Coding.Tabs.ButtonBase"
+                        <LineBreak/>
+                        4> 将ViewModel赋值给DataContext
+                        <LineBreak/>
+                        5> 前台UI需要进行属性绑定，例如[Width="{Binding ButtonWidth}"]
+                    </TextBlock>
+                    <Button Grid.Column="0" Grid.Row="1" Content="Hello World" Width="{Binding ButtonWidth}" Height="30" Margin="5,120,0,0" HorizontalAlignment="Left" VerticalAlignment="Top"/>
+                    <!--#endregion-->
+                    <!--#region Column-0 Row-2 -->
+                    <TextBlock Grid.Column="0" Grid.Row="2" FontSize="16" Text="绑定静态资源" Margin="5,5,0,0" HorizontalAlignment="Left" VerticalAlignment="Top"/>
+                    <TextBlock Grid.Column="0" Grid.Row="2" Margin="5,30,0,0" HorizontalAlignment="Left" VerticalAlignment="Top">
+                        1> 创建静态资源，比如画刷Style等等，定义在ResourceDictionary里
+                        <LineBreak/>
+                        2> 绑定Source
+                    </TextBlock>
+                    <Button Grid.Column="0" Grid.Row="2" Content="Hello World" Background="{Binding Source={StaticResource Button_background}}" Width="150" Height="30" Margin="5,80,0,0" HorizontalAlignment="Left" VerticalAlignment="Top"/>
+                    <!-- Background="{StaticResource Button_background}" is OK -->
+                    <!--#endregion-->
+                    <!--#region Column-0 Row-3 -->
+                    <TextBlock Grid.Column="0" Grid.Row="3" FontSize="16" Text="绑定其它控件" Margin="5,5,0,0" HorizontalAlignment="Left" VerticalAlignment="Top"/>
+                    <TextBlock Grid.Column="0" Grid.Row="3" Margin="5,30,0,0" HorizontalAlignment="Left" VerticalAlignment="Top">
+                        1> 通过ElementName获取对应控件的上下文，通过Path指定该控件对应的属性
+                        <LineBreak/>
+                        2> 绑定Source
+                    </TextBlock>
+                    <TextBox x:Name="text_box" Grid.Column="0" Grid.Row="3" Text="asd" Margin="5,120,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" Width="200"/>
+                    <TextBlock Grid.Column="0" Grid.Row="3" Text="{Binding ElementName=text_box, Path=Text}" Margin="5,150,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" Width="200"/>
+                    <!--#endregion-->
+                    <!--#region Column-1 Row-0 -->
+                    <TextBlock Grid.Column="1" Grid.Row="0" FontSize="16" Text="绑定相对资源 - 绑定自己" Margin="5,5,0,0" HorizontalAlignment="Left" VerticalAlignment="Top"/>
+                    <TextBlock Grid.Column="1" Grid.Row="0" Margin="5,30,0,0" HorizontalAlignment="Left" VerticalAlignment="Top">
+                        1> 相对资源的关键字是RelativeSource，使用的Mode为Self
+                        <LineBreak/>
+                        2> 绑定自己也需要提供Path，以确定要绑定自己的哪个属性
+                    </TextBlock>
+                    <Button Grid.Column="1" Grid.Row="0" Foreground="Green" Content="{Binding RelativeSource={RelativeSource Mode=Self}, Path=Foreground}" Margin="5,70,0,0" HorizontalAlignment="Left" VerticalAlignment="Top"  Width="200"/>
+                    <!--#endregion-->
+                    <!--#region Column-1 Row-1 -->
+                    <TextBlock Grid.Column="1" Grid.Row="1" FontSize="16" Text="绑定相对资源 - 绑定父控件" Margin="5,5,0,0" HorizontalAlignment="Left" VerticalAlignment="Top"/>
+                    <TextBlock Grid.Column="1" Grid.Row="1" Margin="5,30,0,0" HorizontalAlignment="Left" VerticalAlignment="Top">
+                        1> 相对资源的关键字是RelativeSource，使用的Mode为FindAncestor
+                        <LineBreak/>
+                        2> AncestorLevel表示层级
+                        <LineBreak/>
+                        3> AncestorType表示控件类型
+                        <LineBreak/>
+                        4> 最后记得设置Path
+                    </TextBlock>
+                    <Border Grid.Column="1" Grid.Row="1" BorderBrush="Green">
+                        <Border BorderBrush="Blue">
+                            <Button Background="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorLevel=2, AncestorType=Border}, Path=BorderBrush}" Margin="5,120,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" Height="30"  Width="200"/>
+                        </Border>
+                    </Border>
+                    <!--#endregion-->
+                    <!--#region Column-1 Row-2 -->
+                    <TextBlock Grid.Column="1" Grid.Row="2" FontSize="16" Text="绑定静态模板" Margin="5,5,0,0" HorizontalAlignment="Left" VerticalAlignment="Top"/>
+                    <TextBlock Grid.Column="1" Grid.Row="2" Margin="5,30,0,0" HorizontalAlignment="Left" VerticalAlignment="Top">
+                        1> 创建静态模板，ControlTemplate
+                        <LineBreak/>
+                        2> 绑定静态模板，Template="{StaticResource ButtonTemplate}"
+                        <LineBreak/>
+                    </TextBlock>
+                    <Button Grid.Column="1" Grid.Row="2" Template="{StaticResource ButtonTemplate}" Margin="5,120,0,0" HorizontalAlignment="Left" VerticalAlignment="Top" Height="30"  Width="200"/>
+                    <!--#endregion-->
+                    <!--#region Column-1 Row-3 -->
+                    <TextBlock Grid.Column="1" Grid.Row="3" FontSize="16" Text="绑定模式+更新时机" Margin="5,5,0,0" HorizontalAlignment="Left" VerticalAlignment="Top"/>
+                    <TextBlock Grid.Column="1" Grid.Row="3" Margin="5,30,0,0" HorizontalAlignment="Left" VerticalAlignment="Top">
+                        1> Mode设置不同值表示单向还是双向之类的
+                        <LineBreak/>
+                        2> UpdateSourceTrigger设置更新时机
+                    </TextBlock>
+                    <Slider Grid.Column="1" Grid.Row="3" x:Name="slider_1" Value="10" Maximum="100" Width="200" Height="20" Margin="5,120,0,0" HorizontalAlignment="Left" VerticalAlignment="Top"/>
+                    <Slider Grid.Column="1" Grid.Row="3" x:Name="slider_2" Value="{Binding ElementName=slider_1, Mode=OneWay, Path=Value}" Maximum="100" Width="200" Height="20" Margin="5,150,0,0" HorizontalAlignment="Left" VerticalAlignment="Top"/>
+                    <TextBox Grid.Column="1" Grid.Row="3" x:Name="textbox_1" Text="10" Width="200" Height="20" Margin="5,180,0,0" HorizontalAlignment="Left" VerticalAlignment="Top"/>
+                    <TextBox Grid.Column="1" Grid.Row="3" x:Name="textbox_2" Text="{Binding ElementName=textbox_1, Mode=OneWayToSource, Path=Text, UpdateSourceTrigger=LostFocus}" Width="200" Height="20" Margin="5,210,0,0" HorizontalAlignment="Left" VerticalAlignment="Top"/>
+                    <!--#endregion-->
+                    <!--#region Column-2 Row-0 -->
+                    <TextBlock Grid.Column="2" Grid.Row="0" FontSize="16" Text="绑定集合" Margin="5,5,0,0" HorizontalAlignment="Left" VerticalAlignment="Top"/>
+                    <TextBlock Grid.Column="2" Grid.Row="0" Margin="5,30,0,0" HorizontalAlignment="Left" VerticalAlignment="Top">
+                        1> 集合成员需要继承INotifyPropertyChanged
+                        <LineBreak/>
+                        2> ViewModel中创建ObservableCollection集合属性
+                        <LineBreak/>
+                        3> ItemsSource绑定
+                        <LineBreak/>
+                        4> DisplayMemberBinding绑定
+                        <LineBreak/>
+                        4> 想支持右键可以设置ContextMenu
+                    </TextBlock>
+                    <ListView Grid.Column="2" Grid.Row="0" Margin="5,120,0,0" Width="400" Height="100" HorizontalAlignment="Left" VerticalAlignment="Top" ItemsSource="{Binding Members}" OverridesDefaultStyle="True">
+                        <ListView.View>
+                            <GridView>
+                                <GridViewColumn Header="Name" DisplayMemberBinding="{Binding Name}"/>
+                                <GridViewColumn Header="ID" DisplayMemberBinding="{Binding ID}"/>
+                            </GridView>
+                        </ListView.View>
+                        <ListView.ContextMenu>
+                            <ContextMenu>
+                                <MenuItem Header="删除"/>
+                                <MenuItem Header="拷贝"/>
+                            </ContextMenu>
+                        </ListView.ContextMenu>
+                    </ListView>
+                    <!--#endregion-->
+                    <!--#region Column-0 Row-2 -->
+                    <!--#endregion-->
+                </Grid>
+            </TabItem>
+            <TabItem Header="CustomControl">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+                    <libs:MyListView ItemsSource="{Binding ListViewItemSource}">
+                        <ListView.View>
+                            <GridView>
+                                <GridViewColumn Header="ID" DisplayMemberBinding="{Binding ID}" />
+                                <GridViewColumn Header="Name" DisplayMemberBinding="{Binding Name}" />
+                                <GridViewColumn Header="Address" DisplayMemberBinding="{Binding Address}" />
+                            </GridView>
+                        </ListView.View>
+                    </libs:MyListView>
+                </Grid>
+            </TabItem>
+        </TabControl>
+    </Grid>
+</Window>

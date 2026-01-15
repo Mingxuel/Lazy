@@ -1,0 +1,23 @@
+<hevo version="3960" sort_list="23,24,25,26,">
+  <Block name="3" id="35" IsLock="false" IsNameChanged="false" IsSecuritiesChanged="true">
+    <security market="URFI" code="883957" />
+    <security market="USHI" code="1A0001" />
+    <security market="URFI" code="881155" />
+    <security market="URFI" code="881157" />
+    <security market="URFI" code="881283" />
+    <security market="USZI" code="399001" />
+    <security market="USHI" code="1B0300" />
+    <security market="USHI" code="1B0905" />
+    <security market="USHI" code="1B0688" />
+===TPO3===
+  </Block>
+  <Block name="31" id="36" IsLock="false" IsNameChanged="false" IsSecuritiesChanged="true">
+===TPO31===
+  </Block>
+  <Block name="TOP" id="37" IsLock="false" IsNameChanged="false" IsSecuritiesChanged="true">
+===TOP===
+  </Block>
+  <Block name="TWICE" id="38" IsLock="false" IsNameChanged="false" IsSecuritiesChanged="true">
+===TWICE===
+  </Block>
+</hevo>

@@ -1,0 +1,31 @@
+﻿<UserControl x:Class="MarcoMVVM.UC_BindingMessangerRequest"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:MarcoMVVM"
+             mc:Ignorable="d" 
+             Width="450" Height="200" BorderThickness="1" BorderBrush="Black">
+    <UserControl.DataContext>
+        <local:BindingMessangerRequestViewModel />
+    </UserControl.DataContext>
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition/>
+            <ColumnDefinition/>
+            <ColumnDefinition/>
+            <ColumnDefinition/>
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition/>
+            <RowDefinition/>
+            <RowDefinition/>
+            <RowDefinition/>
+        </Grid.RowDefinitions>
+        <TextBlock Grid.Row="1" Grid.Column="0" Text="Send" TextWrapping="Wrap" VerticalAlignment="Center" HorizontalAlignment="Center" Margin="10" Foreground="White"/>
+        <TextBlock Grid.Row="2" Grid.Column="0" Text="Receive" TextWrapping="Wrap" VerticalAlignment="Center" HorizontalAlignment="Center" Margin="10" Foreground="White"/>
+        <TextBlock Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="4" Text="Toolkit的Messanger机制，Sender发送了请求，Receiver获得请求后进行了Reply，Sender获取Reply后进行打印" TextWrapping="Wrap" VerticalAlignment="Center" HorizontalAlignment="Center" Margin="10" Foreground="White"/>
+        <local:UC_BindingMessangerRequestSender Grid.Row="1" Grid.Column="1" Grid.RowSpan="3" />
+        <local:UC_BindingMessangerRequestReceiver Grid.Row="1" Grid.Column="2" Grid.RowSpan="3" />
+    </Grid>
+</UserControl>

@@ -1,0 +1,8 @@
+bin/
+obj/
+.vs/
+Debug/
+Release/
+*.user
+*.vscode/
+李明学的大A/Data/1M/*

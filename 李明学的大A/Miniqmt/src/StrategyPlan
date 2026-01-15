@@ -1,0 +1,16 @@
+写下问题
+S_CALLBACK_TICK - 能不能在竞价区间内按秒打印
+LIMIT_PRICE - 能不能通过条件判断
+B_AUCTION - 能不能再指定时间激活
+B_CALLBACK_1M - 好不好用
+
+tick会出现丢帧现象
+竞价区间price_open不好用，值依然
+9250之后day数据生效，非常好
+002981.SZ 28.5 29.91
+[LIMIT_PRICE] 002981.SZ 朝阳科技 limit_price=28.33
+002551.SZ 4.39 3.9899999999999998
+002514.SZ 6.42 6.42
+[LIMIT_PRICE] 002514.SZ 宝馨科技 limit_price=6.21
+002331.SZ 9.51 9.1
+[LIMIT_PRICE] 002331.SZ 皖通科技 limit_price=8.97

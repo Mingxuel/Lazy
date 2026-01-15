@@ -1,0 +1,32 @@
+﻿<UserControl x:Class="MarcoMVVM.UC_BindingData"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:MarcoMVVM"
+             mc:Ignorable="d" 
+             Width="450" Height="200" BorderThickness="1" BorderBrush="Black">
+    <UserControl.DataContext>
+        <local:BindingDataViewModel />
+    </UserControl.DataContext>
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition/>
+            <ColumnDefinition/>
+            <ColumnDefinition/>
+            <ColumnDefinition/>
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition/>
+            <RowDefinition/>
+            <RowDefinition/>
+            <RowDefinition/>
+        </Grid.RowDefinitions>
+        <TextBlock Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="4" Text="Toolkit极大的简化了MVVM结构" TextWrapping="Wrap" VerticalAlignment="Center" HorizontalAlignment="Center" Margin="10" Foreground="White"/>
+        <TextBlock Grid.Row="1" Grid.Column="0" Text="ID:" VerticalAlignment="Center" HorizontalAlignment="Right" Margin="10" Foreground="White"/>
+        <TextBlock Grid.Row="2" Grid.Column="0" Text="Name:" VerticalAlignment="Center" HorizontalAlignment="Right" Margin="10" Foreground="White"/>
+        <TextBox Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2" Text="{Binding Id}" Height="40"/>
+        <TextBox Grid.Row="2" Grid.Column="1" Grid.ColumnSpan="2" Text="{Binding Name}" Height="40"/>
+        <Button Grid.Row="3" Grid.Column="1" Grid.ColumnSpan="2" Command="{Binding ButtonClickCommand}" Height="40" Content="ID = NAME"/>
+    </Grid>
+</UserControl>

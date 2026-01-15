@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "MyDream": {
+      "commandName": "Project",
+      "nativeDebugging": true
+    }
+  }
+}

@@ -1,0 +1,17 @@
+﻿<UserControl x:Class="MarcoMVVM.CustomPropertyMain"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:MarcoMVVM"
+             mc:Ignorable="d" 
+             Width="450" Height="800">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition/>
+            <RowDefinition/>
+        </Grid.RowDefinitions>
+        <local:CustomUC Grid.Row="0" TextValue1="{Binding Value11}" TextValue2="{Binding Value12}" ButtonCommand="{Binding Click1Command}" Foreground="White"/>
+        <local:CustomUC Grid.Row="1" TextValue1="{Binding Value21}" TextValue2="{Binding Value22}" ButtonCommand="{Binding Click2Command}" Foreground="White"/>
+    </Grid>
+</UserControl>

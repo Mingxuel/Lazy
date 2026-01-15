@@ -1,0 +1,12 @@
+﻿<Window x:Class="MyDream.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:MyDream"
+        mc:Ignorable="d"
+        Title="MainWindow" Background="Black" FontFamily="Verdana" MinWidth="960" WindowStartupLocation="CenterScreen" MinHeight="960" WindowState="Maximized">
+    <Grid>
+		<local:Board Margin="0"/>
+	</Grid>
+</Window>

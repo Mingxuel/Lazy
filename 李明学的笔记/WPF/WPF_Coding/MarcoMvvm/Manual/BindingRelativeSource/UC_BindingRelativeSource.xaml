@@ -1,0 +1,45 @@
+﻿<UserControl x:Class="MarcoMVVM.UC_BindingRelativeSource"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:MarcoMVVM"
+             mc:Ignorable="d" 
+             Width="600" Height="400" BorderThickness="1" BorderBrush="Black">
+    <UserControl.Resources>
+        <ControlTemplate x:Key="ButtonTemplate" TargetType="Button">
+            <Border Width="{Binding RelativeSource={RelativeSource Mode=TemplatedParent}, Path=Width}"
+                    Height="{Binding RelativeSource={RelativeSource Mode=TemplatedParent}, Path=Height}"
+                    Background="{Binding RelativeSource={RelativeSource Mode=TemplatedParent}, Path=Background}"
+                    CornerRadius="5">
+                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" Content="{TemplateBinding Content}"/>
+            </Border>
+        </ControlTemplate>
+    </UserControl.Resources>
+    <Grid Background="#222222">
+        <Grid Background="#111111">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition/>
+                <ColumnDefinition/>
+                <ColumnDefinition/>
+                <ColumnDefinition/>
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition/>
+                <RowDefinition/>
+                <RowDefinition/>
+                <RowDefinition/>
+                <RowDefinition/>
+            </Grid.RowDefinitions>
+            <TextBlock Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" Text="绑定自己, 颜色绑定到Text:" Margin="10" VerticalAlignment="Center" HorizontalAlignment="Right" FontSize="14" Foreground="White"/>
+            <TextBox Grid.Row="1" Grid.Column="2" Grid.ColumnSpan="2" Margin="10" Text="{Binding RelativeSource={RelativeSource Mode=Self}, Path=Background}" Background="Blue" VerticalAlignment="Center"  Height="40"/>
+            <TextBlock Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" Text="绑定父亲(Gird)的颜色到Text, 可以通过设置AncestorLevel跳层级关系:" Margin="0 0 10 0" VerticalAlignment="Center" HorizontalAlignment="Right" TextAlignment="Right" FontSize="14" TextWrapping="Wrap" Foreground="White"/>
+            <TextBox Grid.Row="2" Grid.Column="2" Grid.ColumnSpan="2" Margin="10" Text="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Grid}, Path=Background}" VerticalAlignment="Center" Height="40"/>
+            <TextBox Grid.Row="3" Grid.Column="2" Grid.ColumnSpan="2" Margin="10" Text="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Grid, AncestorLevel=2}, Path=Background}" VerticalAlignment="Center" Height="40"/>
+            <TextBlock Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="2" Text="TemplatedParent绑定的是源数据，也就是ControlTemplate里的数据是从获取该静态资源的控件直接获取的:" Margin="0 0 10 0" VerticalAlignment="Center" HorizontalAlignment="Right" TextAlignment="Right" FontSize="14" TextWrapping="Wrap" Foreground="White"/>
+            <Button Grid.Row="4" Grid.Column="2" Grid.ColumnSpan="2" Template="{StaticResource ButtonTemplate}" Width="160" Height="30" VerticalAlignment="Center" Foreground="White" Background="Blue">
+                <TextBlock FontSize="10">Hello World</TextBlock>
+            </Button>
+        </Grid>
+    </Grid>
+</UserControl>

@@ -1,0 +1,886 @@
+﻿<UserControl x:Class="MyDream.Board"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:MyDream"
+             xmlns:oxy="http://oxyplot.org/wpf"
+            xmlns:wv2="clr-namespace:Microsoft.Web.WebView2.Wpf;assembly=Microsoft.Web.WebView2.Wpf"
+             mc:Ignorable="d" 
+             d:DesignHeight="720" d:DesignWidth="1280" Background="Black" FontFamily="Verdana">
+	<UserControl.Resources>
+		<local:RatioToColorConverter x:Key="RatioToColorConverter"/>
+		<local:StringToPercentStringConverter x:Key="StringToPercentStringConverter"/>
+	</UserControl.Resources>
+	<Grid>
+		<Grid.RowDefinitions>
+			<RowDefinition Height="200"/>
+			<RowDefinition/>
+		</Grid.RowDefinitions>
+		<Grid.ColumnDefinitions>
+			<ColumnDefinition Width="370"/>
+			<ColumnDefinition/>
+		</Grid.ColumnDefinitions>
+		<GroupBox Grid.Row="0" Grid.Column="0" Header="UPDATE" Margin="5" Foreground="#FF8000" FontSize="16" FontWeight="Bold">
+			<WrapPanel Orientation="Vertical" Margin="5">
+				<Button Content="UPDATE QMT" Command="{Binding UpdateDataClickCommand}" Margin="5" FontWeight="Bold" Width="160"/>
+				<Button Content="CLEAR TPO" Command="{Binding ClearTPOClickCommand}" Margin="5" FontWeight="Bold" Width="160"/>
+				<Button Content="UPDATE TPO" Command="{Binding UpdateTPOClickCommand}" Margin="5" FontWeight="Bold" Width="160"/>
+				<Button Content="CLEAR TEST" Command="{Binding ClearTestingClickCommand}" Margin="5" FontWeight="Bold" Width="160"/>
+				<Button Content="UPDATE TEST" Command="{Binding UpdateTestingClickCommand}" Margin="5" FontWeight="Bold" Width="160"/>
+				<Button Content="SYNC THX" Command="{Binding StrategyListSyncClickCommand}" Margin="5" FontWeight="Bold" Width="160"/>
+				<Button Content="RUNTIME" Command="{Binding RuntimeClickCommand}" Margin="5" FontWeight="Bold" Width="160"/>
+			</WrapPanel>
+		</GroupBox>
+		<GroupBox Grid.Row="0" Grid.Column="1" Header="OUTPUT" Margin="5" Foreground="#FF8000" FontSize="16" FontWeight="Bold">
+			<Grid Margin="5">
+				<TextBox Text="{Binding Output}" TextWrapping="Wrap" Background="Transparent" Foreground="White"/>
+			</Grid>
+		</GroupBox>
+		<TabControl Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" Background="Black" Margin="5 0 5 5" >
+			<TabItem Header="ZZ500" FontSize="14" Width="120" Height="30" Foreground="#FF8000" FontWeight="Bold" Background="Black">
+				<Grid>
+					<Grid.ColumnDefinitions>
+						<ColumnDefinition Width="180"/>
+						<ColumnDefinition Width="auto"/>
+						<ColumnDefinition Width="2*"/>
+					</Grid.ColumnDefinitions>
+					<Grid Grid.Column="0">
+						<ListBox Grid.Row="0" Grid.RowSpan="3" Margin="5" ItemsSource="{Binding ZZ500Data}" SelectedIndex="{Binding ZZ500DataIndex}" Background="Black" FontSize="11">
+							<ListBox.ItemTemplate>
+								<DataTemplate>
+									<StackPanel Orientation="Horizontal">
+										<TextBlock Text="{Binding StockName}" Width="60" Foreground="White"/>
+										<TextBlock Text="[" Foreground="White"/>
+										<TextBlock Text="{Binding StockCode}" Foreground="White"/>
+										<TextBlock Text="]" Foreground="White"/>
+									</StackPanel>
+								</DataTemplate>
+							</ListBox.ItemTemplate>
+						</ListBox>
+					</Grid>
+					<GridSplitter Grid.Column="1" Width="1" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Background="#000000" ResizeBehavior="PreviousAndNext" Cursor="SizeWE"/>
+					<local:KChart Grid.Column="2" KRecords="{Binding ZZ500KRecords}" Margin="5" Background="Black"/>
+				</Grid>
+			</TabItem>
+			<TabItem Header="STRATEGY" FontSize="14" Width="120" Height="30" Foreground="#FF8000" FontWeight="Bold" Background="Black">
+				<Grid>
+					<Grid.ColumnDefinitions>
+						<ColumnDefinition Width="750"/>
+						<ColumnDefinition/>
+					</Grid.ColumnDefinitions>
+					<Grid.RowDefinitions>
+						<RowDefinition Height="36"/>
+						<RowDefinition Height="24"/>
+						<RowDefinition Height="24"/>
+						<RowDefinition Height="24"/>
+						<RowDefinition Height="24"/>
+						<RowDefinition Height="16"/>
+						<RowDefinition Height="*"/>
+						<RowDefinition Height="360"/>
+					</Grid.RowDefinitions>
+					<StackPanel Grid.Row="0" Grid.Column="0" Orientation="Horizontal">
+						<ComboBox Margin="5" ItemsSource="{Binding StrategyTradingDates}" SelectedIndex="{Binding StrategyTradingDatesIndex}" Width="120"/>
+						<Button Margin="5" Content="↑" Width="24" Command="{Binding UpClickCommand}"/>
+						<Button Margin="5" Content="↓" Width="24" Command="{Binding DownClickCommand}"/>
+					</StackPanel>
+					<StackPanel Grid.Row="1" Grid.Column="0" Orientation="Horizontal">
+						<TextBlock Text="       类型" Width="120"/>
+						<TextBlock Text="交易次数" Width="80"/>
+						<TextBlock Text="可买票数" Width="80"/>
+						<TextBlock Text="可买票数" Width="80"/>
+						<TextBlock Text="  胜率" Width="80"/>
+						<TextBlock Text="单票胜率" Width="80"/>
+						<TextBlock Text=" 盈亏比" Width="80"/>
+					</StackPanel>
+					<StackPanel Grid.Row="2" Grid.Column="0" Orientation="Horizontal">
+						<TextBlock Text="  CLOSE卖出" Width="130"/>
+						<TextBlock Text="{Binding StrategySellCloseCount}" Width="80"/>
+						<TextBlock Text="{Binding StrategyPerSellCount}" Width="60"/>
+						<TextBlock Text="{Binding StrategySellCloseWin}" Width="90"/>
+						<TextBlock Text="{Binding StrategyPerSellCloseWin}" Width="80"/>
+						<TextBlock Text="{Binding StrategySellCloseRatio}" Width="120"/>
+					</StackPanel>
+					<StackPanel Grid.Row="3" Grid.Column="0" Orientation="Horizontal">
+						<TextBlock Text="  OPEN卖出" Width="130"/>
+						<TextBlock Text="{Binding StrategySellOpenCount}" Width="80"/>
+						<TextBlock Text="{Binding StrategyPerSellCount}" Width="60"/>
+						<TextBlock Text="{Binding StrategySellOpenWin}" Width="90"/>
+						<TextBlock Text="{Binding StrategyPerSellOpenWin}" Width="80"/>
+						<TextBlock Text="{Binding StrategySellOpenRatio}" Width="120"/>
+					</StackPanel>
+					<StackPanel Grid.Row="4" Grid.Column="0" Orientation="Horizontal">
+						<TextBlock Text="  HIGH卖出" Width="130"/>
+						<TextBlock Text="{Binding StrategySellHighCount}" Width="80"/>
+						<TextBlock Text="{Binding StrategyPerSellCount}" Width="60"/>
+						<TextBlock Text="{Binding StrategySellHighWin}" Width="90"/>
+						<TextBlock Text="{Binding StrategyPerSellHighWin}" Width="80"/>
+						<TextBlock Text="{Binding StrategySellHighRatio}" Width="120"/>
+					</StackPanel>
+					<StackPanel Grid.Row="5" Grid.Column="0" Orientation="Horizontal">
+						<TextBlock Text="   NAME" Width="100"/>
+						<TextBlock Text="CODE" Width="88"/>
+						<TextBlock Text="P CLO R" Width="88"/>
+						<TextBlock Text="P HIG R" Width="88"/>
+						<TextBlock Text="P OPE R" Width="88"/>
+						<TextBlock Text="CLO R" Width="88"/>
+						<TextBlock Text="HIG R" Width="88"/>
+						<TextBlock Text="OPE R" Width="88"/>
+					</StackPanel>
+					<Grid Grid.Row="6" Grid.Column="0">
+						<ListBox Margin="5" ItemsSource="{Binding StrategyData}" SelectedIndex="{Binding StrategyDataIndex}" Background="Black">
+							<ListBox.ItemTemplate>
+								<DataTemplate>
+									<StackPanel Orientation="Horizontal">
+										<TextBlock Text="{Binding StockName}" Width="60" Foreground="White"/>
+										<TextBlock Text="[" Foreground="White"/>
+										<TextBlock Text="{Binding StockCode}" Foreground="White"/>
+										<TextBlock Text="]   " Foreground="White"/>
+										<TextBlock Text="{Binding PreCloseRatio, Converter={StaticResource StringToPercentStringConverter}}" Foreground="White" Width="88"/>
+										<TextBlock Text="{Binding PreHighRatio, Converter={StaticResource StringToPercentStringConverter}}" Foreground="White" Width="88"/>
+										<TextBlock Text="{Binding PreOpenRatio, Converter={StaticResource StringToPercentStringConverter}}" Foreground="White" Width="88"/>
+										<TextBlock Text="{Binding CloseRatio, Converter={StaticResource StringToPercentStringConverter}}" Foreground="White" Width="88"/>
+										<TextBlock Text="{Binding HighRatio, Converter={StaticResource StringToPercentStringConverter}}" Foreground="White" Width="88"/>
+										<TextBlock Text="{Binding OpenRatio, Converter={StaticResource StringToPercentStringConverter}}" Foreground="White" Width="88"/>
+									</StackPanel>
+								</DataTemplate>
+							</ListBox.ItemTemplate>
+						</ListBox>
+					</Grid>
+					<TabControl Grid.Row="7" Grid.Column="0" Background="Black" Margin="5 5 5 5">
+						<TabItem Header="CLOSE" FontSize="11" Width="60" Height="24" Foreground="#FF8000" FontWeight="Bold" Background="Black">
+							<Grid>
+								<Grid.ColumnDefinitions>
+									<ColumnDefinition Width="160"/>
+									<ColumnDefinition Width="1"/>
+									<ColumnDefinition/>
+								</Grid.ColumnDefinitions>
+								<Grid Grid.Column="0">
+									<Grid.ColumnDefinitions>
+										<ColumnDefinition Width="16"/>
+										<ColumnDefinition Width="16"/>
+										<ColumnDefinition/>
+										<ColumnDefinition Width="16"/>
+										<ColumnDefinition Width="16"/>
+									</Grid.ColumnDefinitions>
+									<Grid.RowDefinitions>
+										<RowDefinition Height="16"/>
+										<RowDefinition Height="16"/>
+										<RowDefinition Height="16"/>
+										<RowDefinition Height="16"/>
+										<RowDefinition Height="16"/>
+										<RowDefinition Height="16"/>
+									</Grid.RowDefinitions>
+									<TextBlock Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="5" Text="YEAR" HorizontalAlignment="Center"/>
+									<Button Grid.Row="2" Grid.Column="1" Content="-" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Command="{Binding CloseYearMinusClickCommand}"/>
+									<TextBlock Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="5" Text="{Binding CloseYear}" HorizontalAlignment="Center"/>
+									<Button Grid.Row="2" Grid.Column="3" Content="+" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Command="{Binding CloseYearPlusClickCommand}"/>
+									<TextBlock Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="5" Text="MONTH" HorizontalAlignment="Center"/>
+									<Button Grid.Row="5" Grid.Column="1" Content="-" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Command="{Binding CloseMonthMinusClickCommand}"/>
+									<TextBlock Grid.Row="5" Grid.Column="0" Grid.ColumnSpan="5" Text="{Binding CloseMonth}" HorizontalAlignment="Center"/>
+									<Button Grid.Row="5" Grid.Column="3" Content="+" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Command="{Binding CloseMonthPlusClickCommand}"/>
+								</Grid>
+								<Grid Grid.Column="1" Background="White"/>
+								<Grid Grid.Column="2">
+									<ListBox Margin="5" ItemsSource="{Binding DisCloseData}" Background="Black" ScrollViewer.HorizontalScrollBarVisibility="Disabled" ScrollViewer.VerticalScrollBarVisibility="Disabled">
+										<ListBox.ItemTemplate>
+											<DataTemplate>
+												<StackPanel Orientation="Horizontal">
+													<TextBlock Text="{Binding Name}" Width="75" Foreground="White" FontSize="8"/>
+													<TextBlock Text="{Binding Count}" Width="25" Foreground="White" FontSize="8"/>
+													<Rectangle Fill="#FF8000" Width="{Binding Count}" Margin="10 1 0 1" Height="8">
+														<Rectangle.RenderTransform>
+															<ScaleTransform ScaleX="{x:Static local:Constants.ScaleX}"/>
+														</Rectangle.RenderTransform>
+													</Rectangle>
+												</StackPanel>
+											</DataTemplate>
+										</ListBox.ItemTemplate>
+									</ListBox>
+								</Grid>
+							</Grid>
+						</TabItem>
+						<TabItem Header="OPEN" FontSize="11" Width="60" Height="24" Foreground="#FF8000" FontWeight="Bold" Background="Black">
+							<Grid>
+								<Grid.ColumnDefinitions>
+									<ColumnDefinition Width="160"/>
+									<ColumnDefinition Width="1"/>
+									<ColumnDefinition/>
+								</Grid.ColumnDefinitions>
+								<Grid Grid.Column="0">
+									<Grid.ColumnDefinitions>
+										<ColumnDefinition Width="16"/>
+										<ColumnDefinition Width="16"/>
+										<ColumnDefinition/>
+										<ColumnDefinition Width="16"/>
+										<ColumnDefinition Width="16"/>
+									</Grid.ColumnDefinitions>
+									<Grid.RowDefinitions>
+										<RowDefinition Height="16"/>
+										<RowDefinition Height="16"/>
+										<RowDefinition Height="16"/>
+										<RowDefinition Height="16"/>
+										<RowDefinition Height="16"/>
+										<RowDefinition Height="16"/>
+									</Grid.RowDefinitions>
+									<TextBlock Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="5" Text="YEAR" HorizontalAlignment="Center"/>
+									<Button Grid.Row="2" Grid.Column="1" Content="-" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Command="{Binding OpenYearMinusClickCommand}"/>
+									<TextBlock Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="5" Text="{Binding OpenYear}" HorizontalAlignment="Center"/>
+									<Button Grid.Row="2" Grid.Column="3" Content="+" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Command="{Binding OpenYearPlusClickCommand}"/>
+									<TextBlock Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="5" Text="MONTH" HorizontalAlignment="Center"/>
+									<Button Grid.Row="5" Grid.Column="1" Content="-" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Command="{Binding OpenMonthMinusClickCommand}"/>
+									<TextBlock Grid.Row="5" Grid.Column="0" Grid.ColumnSpan="5" Text="{Binding OpenMonth}" HorizontalAlignment="Center"/>
+									<Button Grid.Row="5" Grid.Column="3" Content="+" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Command="{Binding OpenMonthPlusClickCommand}"/>
+								</Grid>
+								<Grid Grid.Column="1" Background="White"/>
+								<Grid Grid.Column="2">
+									<ListBox Grid.Row="1" Grid.Column="1" Margin="5" ItemsSource="{Binding DisOpenData}" Background="Black" ScrollViewer.HorizontalScrollBarVisibility="Disabled" ScrollViewer.VerticalScrollBarVisibility="Disabled">
+										<ListBox.ItemTemplate>
+											<DataTemplate>
+												<StackPanel Orientation="Horizontal">
+													<TextBlock Text="{Binding Name}" Width="75" Foreground="White" FontSize="8"/>
+													<TextBlock Text="{Binding Count}" Width="25" Foreground="White" FontSize="8"/>
+													<Rectangle Fill="#FF8000" Width="{Binding Count}" Margin="10 1 0 1" Height="8">
+														<Rectangle.RenderTransform>
+															<ScaleTransform ScaleX="{x:Static local:Constants.ScaleX}"/>
+														</Rectangle.RenderTransform>
+													</Rectangle>
+												</StackPanel>
+											</DataTemplate>
+										</ListBox.ItemTemplate>
+									</ListBox>
+								</Grid>
+							</Grid>
+						</TabItem>
+						<TabItem Header="HIGH" FontSize="11" Width="60" Height="24" Foreground="#FF8000" FontWeight="Bold" Background="Black">
+							<Grid>
+								<Grid.ColumnDefinitions>
+									<ColumnDefinition Width="160"/>
+									<ColumnDefinition Width="1"/>
+									<ColumnDefinition/>
+								</Grid.ColumnDefinitions>
+								<Grid Grid.Column="0">
+									<Grid.ColumnDefinitions>
+										<ColumnDefinition Width="16"/>
+										<ColumnDefinition Width="16"/>
+										<ColumnDefinition/>
+										<ColumnDefinition Width="16"/>
+										<ColumnDefinition Width="16"/>
+									</Grid.ColumnDefinitions>
+									<Grid.RowDefinitions>
+										<RowDefinition Height="16"/>
+										<RowDefinition Height="16"/>
+										<RowDefinition Height="16"/>
+										<RowDefinition Height="16"/>
+										<RowDefinition Height="16"/>
+										<RowDefinition Height="16"/>
+									</Grid.RowDefinitions>
+									<TextBlock Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="5" Text="YEAR" HorizontalAlignment="Center"/>
+									<Button Grid.Row="2" Grid.Column="1" Content="-" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Command="{Binding HighYearMinusClickCommand}"/>
+									<TextBlock Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="5" Text="{Binding HighYear}" HorizontalAlignment="Center"/>
+									<Button Grid.Row="2" Grid.Column="3" Content="+" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Command="{Binding HighYearPlusClickCommand}"/>
+									<TextBlock Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="5" Text="MONTH" HorizontalAlignment="Center"/>
+									<Button Grid.Row="5" Grid.Column="1" Content="-" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Command="{Binding HighMonthMinusClickCommand}"/>
+									<TextBlock Grid.Row="5" Grid.Column="0" Grid.ColumnSpan="5" Text="{Binding HighMonth}" HorizontalAlignment="Center"/>
+									<Button Grid.Row="5" Grid.Column="3" Content="+" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Command="{Binding HighMonthPlusClickCommand}"/>
+								</Grid>
+								<Grid Grid.Column="1" Background="White"/>
+								<Grid Grid.Column="2">
+									<ListBox Grid.Row="1" Grid.Column="2" Margin="5" ItemsSource="{Binding DisHighData}" Background="Black" ScrollViewer.HorizontalScrollBarVisibility="Disabled" ScrollViewer.VerticalScrollBarVisibility="Disabled">
+										<ListBox.ItemTemplate>
+											<DataTemplate>
+												<StackPanel Orientation="Horizontal">
+													<TextBlock Text="{Binding Name}" Width="75" Foreground="White" FontSize="8"/>
+													<TextBlock Text="{Binding Count}" Width="25" Foreground="White" FontSize="8"/>
+													<Rectangle Fill="#FF8000" Width="{Binding Count}" Margin="10 1 0 1" Height="8">
+														<Rectangle.RenderTransform>
+															<ScaleTransform ScaleX="{x:Static local:Constants.ScaleX}"/>
+														</Rectangle.RenderTransform>
+													</Rectangle>
+												</StackPanel>
+											</DataTemplate>
+										</ListBox.ItemTemplate>
+									</ListBox>
+								</Grid>
+							</Grid>
+						</TabItem>
+						<TabItem Header="2024" FontSize="11" Width="60" Height="24" Foreground="#FF8000" FontWeight="Bold" Background="Black">
+							<Grid>
+								<Grid.RowDefinitions>
+									<RowDefinition Height="16"/>
+									<RowDefinition/>
+									<RowDefinition Height="16"/>
+									<RowDefinition Height="16"/>
+								</Grid.RowDefinitions>
+								<TextBlock Grid.Row="0" Text="  月份  日数 股票数    收盘胜率   收盘个股胜率   收盘盈亏比     开盘胜率    开盘个股胜率   开盘盈亏比    最高胜率  最高个股胜率   最高盈亏比" FontSize="11" Margin="0 3 0 2"/>
+								<ListBox Grid.Row="1" Margin="5" ItemsSource="{Binding TotalMonth2024}" Background="Black">
+									<ListBox.ItemTemplate>
+										<DataTemplate>
+											<StackPanel Orientation="Horizontal">
+												<TextBlock Text="{Binding Month}" Width="30" Foreground="White" FontSize="11"/>
+												<TextBlock Text="{Binding SellCount}" Width="30" Foreground="White" FontSize="11"/>
+												<TextBlock Text="{Binding PerSellCount}" Width="35" Foreground="White" FontSize="11"/>
+												<TextBlock Text="{Binding CloseWin}" Width="66" Foreground="White" FontSize="11"/>
+												<TextBlock Text="{Binding PerCloseWin}" Width="66" Foreground="White" FontSize="11"/>
+												<TextBlock Text="{Binding CloseRatio}" Width="80" Foreground="White" FontSize="11"/>
+												<TextBlock Text="{Binding OpenWin}" Width="66" Foreground="White" FontSize="11"/>
+												<TextBlock Text="{Binding PerOpenWin}" Width="66" Foreground="White" FontSize="11"/>
+												<TextBlock Text="{Binding OpenRatio}" Width="66" Foreground="White" FontSize="11"/>
+												<TextBlock Text="{Binding HighWin}" Width="66" Foreground="White" FontSize="11"/>
+												<TextBlock Text="{Binding PerHighWin}" Width="66" Foreground="White" FontSize="11"/>
+												<TextBlock Text="{Binding HighRatio}" Width="70" Foreground="White" FontSize="11"/>
+											</StackPanel>
+										</DataTemplate>
+									</ListBox.ItemTemplate>
+								</ListBox>
+								<StackPanel Grid.Row="2" Orientation="Horizontal">
+									<TextBlock Grid.Row="0" Text="  TOTAL                                                  " FontSize="11"/>
+									<TextBlock Grid.Row="0" Text="{Binding CloseRatio2024}" FontSize="11" Width="80" HorizontalAlignment="Right"/>
+									<TextBlock Grid.Row="0" Text="                                    " FontSize="11"/>
+									<TextBlock Grid.Row="0" Text="{Binding OpenRatio2024}" FontSize="11" Width="80" HorizontalAlignment="Right"/>
+									<TextBlock Grid.Row="0" Text="                               " FontSize="11"/>
+									<TextBlock Grid.Row="0" Text="{Binding HighRatio2024}" FontSize="11" Width="80" HorizontalAlignment="Right"/>
+								</StackPanel>
+								<StackPanel Grid.Row="3" Orientation="Horizontal">
+									<TextBlock Grid.Row="0" Text="  TOTAL                                                  " FontSize="11"/>
+									<TextBlock Grid.Row="0" Text="{Binding CloseRatioPlan2024}" FontSize="11" Width="80" HorizontalAlignment="Right"/>
+									<TextBlock Grid.Row="0" Text="                                    " FontSize="11"/>
+									<TextBlock Grid.Row="0" Text="{Binding OpenRatioPlan2024}" FontSize="11" Width="80" HorizontalAlignment="Right"/>
+									<TextBlock Grid.Row="0" Text="                               " FontSize="11"/>
+									<TextBlock Grid.Row="0" Text="{Binding HighRatioPlan2024}" FontSize="11" Width="80" HorizontalAlignment="Right"/>
+								</StackPanel>
+							</Grid>
+						</TabItem>
+						<TabItem Header="2024 BURN" FontSize="11" Width="90" Height="24" Foreground="#FF8000" FontWeight="Bold" Background="Black">
+							<Grid Margin="3">
+								<Image Source="{Binding Burn2024}" HorizontalAlignment="Center" VerticalAlignment="Center" SnapsToDevicePixels="True" RenderOptions.EdgeMode="Aliased"/>
+							</Grid>
+						</TabItem>
+						<TabItem Header="2025" FontSize="11" Width="60" Height="24" Foreground="#FF8000" FontWeight="Bold" Background="Black">
+							<Grid>
+								<Grid.RowDefinitions>
+									<RowDefinition Height="16"/>
+									<RowDefinition/>
+									<RowDefinition Height="16"/>
+									<RowDefinition Height="16"/>
+								</Grid.RowDefinitions>
+								<TextBlock Grid.Row="0" Text="  月份  日数 股票数    收盘胜率   收盘个股胜率   收盘盈亏比     开盘胜率    开盘个股胜率   开盘盈亏比    最高胜率  最高个股胜率   最高盈亏比" FontSize="11" Margin="0 3 0 2"/>
+								<ListBox Grid.Row="1" Margin="5" ItemsSource="{Binding TotalMonth2025}" Background="Black">
+									<ListBox.ItemTemplate>
+										<DataTemplate>
+											<StackPanel Orientation="Horizontal">
+												<TextBlock Text="{Binding Month}" Width="30" Foreground="White" FontSize="11"/>
+												<TextBlock Text="{Binding SellCount}" Width="30" Foreground="White" FontSize="11"/>
+												<TextBlock Text="{Binding PerSellCount}" Width="35" Foreground="White" FontSize="11"/>
+												<TextBlock Text="{Binding CloseWin}" Width="66" Foreground="White" FontSize="11"/>
+												<TextBlock Text="{Binding PerCloseWin}" Width="66" Foreground="White" FontSize="11"/>
+												<TextBlock Text="{Binding CloseRatio}" Width="80" Foreground="White" FontSize="11"/>
+												<TextBlock Text="{Binding OpenWin}" Width="66" Foreground="White" FontSize="11"/>
+												<TextBlock Text="{Binding PerOpenWin}" Width="66" Foreground="White" FontSize="11"/>
+												<TextBlock Text="{Binding OpenRatio}" Width="66" Foreground="White" FontSize="11"/>
+												<TextBlock Text="{Binding HighWin}" Width="66" Foreground="White" FontSize="11"/>
+												<TextBlock Text="{Binding PerHighWin}" Width="66" Foreground="White" FontSize="11"/>
+												<TextBlock Text="{Binding HighRatio}" Width="70" Foreground="White" FontSize="11"/>
+											</StackPanel>
+										</DataTemplate>
+									</ListBox.ItemTemplate>
+								</ListBox>
+								<StackPanel Grid.Row="2" Orientation="Horizontal">
+									<TextBlock Grid.Row="0" Text="  TOTAL                                                  " FontSize="11"/>
+									<TextBlock Grid.Row="0" Text="{Binding CloseRatio2025}" FontSize="11" Width="80" HorizontalAlignment="Right"/>
+									<TextBlock Grid.Row="0" Text="                                    " FontSize="11"/>
+									<TextBlock Grid.Row="0" Text="{Binding OpenRatio2025}" FontSize="11" Width="80" HorizontalAlignment="Right"/>
+									<TextBlock Grid.Row="0" Text="                               " FontSize="11"/>
+									<TextBlock Grid.Row="0" Text="{Binding HighRatio2025}" FontSize="11" Width="80" HorizontalAlignment="Right"/>
+								</StackPanel>
+								<StackPanel Grid.Row="3" Orientation="Horizontal">
+									<TextBlock Grid.Row="0" Text="  TOTAL                                                  " FontSize="11"/>
+									<TextBlock Grid.Row="0" Text="{Binding CloseRatioPlan2025}" FontSize="11" Width="80" HorizontalAlignment="Right"/>
+									<TextBlock Grid.Row="0" Text="                                    " FontSize="11"/>
+									<TextBlock Grid.Row="0" Text="{Binding OpenRatioPlan2025}" FontSize="11" Width="80" HorizontalAlignment="Right"/>
+									<TextBlock Grid.Row="0" Text="                               " FontSize="11"/>
+									<TextBlock Grid.Row="0" Text="{Binding HighRatioPlan2025}" FontSize="11" Width="80" HorizontalAlignment="Right"/>
+								</StackPanel>
+							</Grid>
+						</TabItem>
+						<TabItem Header="2025 BURN" FontSize="11" Width="90" Height="24" Foreground="#FF8000" FontWeight="Bold" Background="Black">
+							<Grid Margin="3">
+								<Image Source="{Binding Burn2025}" HorizontalAlignment="Center" VerticalAlignment="Center" SnapsToDevicePixels="True" RenderOptions.EdgeMode="Aliased"/>
+							</Grid>
+						</TabItem>
+						<TabItem Header="2026" FontSize="11" Width="60" Height="24" Foreground="#FF8000" FontWeight="Bold" Background="Black">
+							<Grid>
+								<Grid.RowDefinitions>
+									<RowDefinition Height="16"/>
+									<RowDefinition/>
+									<RowDefinition Height="16"/>
+									<RowDefinition Height="16"/>
+								</Grid.RowDefinitions>
+								<TextBlock Grid.Row="0" Text="  月份  日数 股票数    收盘胜率   收盘个股胜率   收盘盈亏比     开盘胜率    开盘个股胜率   开盘盈亏比    最高胜率  最高个股胜率   最高盈亏比" FontSize="11" Margin="0 3 0 2"/>
+								<ListBox Grid.Row="1" Margin="5" ItemsSource="{Binding TotalMonth2026}" Background="Black">
+									<ListBox.ItemTemplate>
+										<DataTemplate>
+											<StackPanel Orientation="Horizontal">
+												<TextBlock Text="{Binding Month}" Width="30" Foreground="White" FontSize="11"/>
+												<TextBlock Text="{Binding SellCount}" Width="30" Foreground="White" FontSize="11"/>
+												<TextBlock Text="{Binding PerSellCount}" Width="35" Foreground="White" FontSize="11"/>
+												<TextBlock Text="{Binding CloseWin}" Width="66" Foreground="White" FontSize="11"/>
+												<TextBlock Text="{Binding PerCloseWin}" Width="66" Foreground="White" FontSize="11"/>
+												<TextBlock Text="{Binding CloseRatio}" Width="80" Foreground="White" FontSize="11"/>
+												<TextBlock Text="{Binding OpenWin}" Width="66" Foreground="White" FontSize="11"/>
+												<TextBlock Text="{Binding PerOpenWin}" Width="66" Foreground="White" FontSize="11"/>
+												<TextBlock Text="{Binding OpenRatio}" Width="66" Foreground="White" FontSize="11"/>
+												<TextBlock Text="{Binding HighWin}" Width="66" Foreground="White" FontSize="11"/>
+												<TextBlock Text="{Binding PerHighWin}" Width="66" Foreground="White" FontSize="11"/>
+												<TextBlock Text="{Binding HighRatio}" Width="70" Foreground="White" FontSize="11"/>
+											</StackPanel>
+										</DataTemplate>
+									</ListBox.ItemTemplate>
+								</ListBox>
+								<StackPanel Grid.Row="2" Orientation="Horizontal">
+									<TextBlock Grid.Row="0" Text="  TOTAL                                                  " FontSize="11"/>
+									<TextBlock Grid.Row="0" Text="{Binding CloseRatio2026}" FontSize="11" Width="80" HorizontalAlignment="Right"/>
+									<TextBlock Grid.Row="0" Text="                                    " FontSize="11"/>
+									<TextBlock Grid.Row="0" Text="{Binding OpenRatio2026}" FontSize="11" Width="80" HorizontalAlignment="Right"/>
+									<TextBlock Grid.Row="0" Text="                               " FontSize="11"/>
+									<TextBlock Grid.Row="0" Text="{Binding HighRatio2026}" FontSize="11" Width="80" HorizontalAlignment="Right"/>
+								</StackPanel>
+								<StackPanel Grid.Row="3" Orientation="Horizontal">
+									<TextBlock Grid.Row="0" Text="  TOTAL                                                  " FontSize="11"/>
+									<TextBlock Grid.Row="0" Text="{Binding CloseRatioPlan2026}" FontSize="11" Width="80" HorizontalAlignment="Right"/>
+									<TextBlock Grid.Row="0" Text="                                    " FontSize="11"/>
+									<TextBlock Grid.Row="0" Text="{Binding OpenRatioPlan2026}" FontSize="11" Width="80" HorizontalAlignment="Right"/>
+									<TextBlock Grid.Row="0" Text="                               " FontSize="11"/>
+									<TextBlock Grid.Row="0" Text="{Binding HighRatioPlan2026}" FontSize="11" Width="80" HorizontalAlignment="Right"/>
+								</StackPanel>
+							</Grid>
+						</TabItem>
+						<TabItem Header="2026 BURN" FontSize="11" Width="90" Height="24" Foreground="#FF8000" FontWeight="Bold" Background="Black">
+							<Grid Margin="3">
+								<Image Source="{Binding Burn2026}" HorizontalAlignment="Center" VerticalAlignment="Center" SnapsToDevicePixels="True" RenderOptions.EdgeMode="Aliased"/>
+							</Grid>
+						</TabItem>
+						<TabItem Header="2027" FontSize="11" Width="60" Height="24" Foreground="#FF8000" FontWeight="Bold" Background="Black">
+							<Grid>
+								<Grid.RowDefinitions>
+									<RowDefinition Height="16"/>
+									<RowDefinition/>
+									<RowDefinition Height="16"/>
+									<RowDefinition Height="16"/>
+								</Grid.RowDefinitions>
+								<TextBlock Grid.Row="0" Text="  月份  日数 股票数    收盘胜率   收盘个股胜率   收盘盈亏比     开盘胜率    开盘个股胜率   开盘盈亏比    最高胜率  最高个股胜率   最高盈亏比" FontSize="11" Margin="0 3 0 2"/>
+								<ListBox Grid.Row="1" Margin="5" ItemsSource="{Binding TotalMonth2027}" Background="Black">
+									<ListBox.ItemTemplate>
+										<DataTemplate>
+											<StackPanel Orientation="Horizontal">
+												<TextBlock Text="{Binding Month}" Width="30" Foreground="White" FontSize="11"/>
+												<TextBlock Text="{Binding SellCount}" Width="30" Foreground="White" FontSize="11"/>
+												<TextBlock Text="{Binding PerSellCount}" Width="35" Foreground="White" FontSize="11"/>
+												<TextBlock Text="{Binding CloseWin}" Width="66" Foreground="White" FontSize="11"/>
+												<TextBlock Text="{Binding PerCloseWin}" Width="66" Foreground="White" FontSize="11"/>
+												<TextBlock Text="{Binding CloseRatio}" Width="80" Foreground="White" FontSize="11"/>
+												<TextBlock Text="{Binding OpenWin}" Width="66" Foreground="White" FontSize="11"/>
+												<TextBlock Text="{Binding PerOpenWin}" Width="66" Foreground="White" FontSize="11"/>
+												<TextBlock Text="{Binding OpenRatio}" Width="66" Foreground="White" FontSize="11"/>
+												<TextBlock Text="{Binding HighWin}" Width="66" Foreground="White" FontSize="11"/>
+												<TextBlock Text="{Binding PerHighWin}" Width="66" Foreground="White" FontSize="11"/>
+												<TextBlock Text="{Binding HighRatio}" Width="70" Foreground="White" FontSize="11"/>
+											</StackPanel>
+										</DataTemplate>
+									</ListBox.ItemTemplate>
+								</ListBox>
+								<StackPanel Grid.Row="2" Orientation="Horizontal">
+									<TextBlock Grid.Row="0" Text="  TOTAL                                                  " FontSize="11"/>
+									<TextBlock Grid.Row="0" Text="{Binding CloseRatio2027}" FontSize="11" Width="80" HorizontalAlignment="Right"/>
+									<TextBlock Grid.Row="0" Text="                                    " FontSize="11"/>
+									<TextBlock Grid.Row="0" Text="{Binding OpenRatio2027}" FontSize="11" Width="80" HorizontalAlignment="Right"/>
+									<TextBlock Grid.Row="0" Text="                               " FontSize="11"/>
+									<TextBlock Grid.Row="0" Text="{Binding HighRatio2027}" FontSize="11" Width="80" HorizontalAlignment="Right"/>
+								</StackPanel>
+								<StackPanel Grid.Row="3" Orientation="Horizontal">
+									<TextBlock Grid.Row="0" Text="  TOTAL                                                  " FontSize="11"/>
+									<TextBlock Grid.Row="0" Text="{Binding CloseRatioPlan2027}" FontSize="11" Width="80" HorizontalAlignment="Right"/>
+									<TextBlock Grid.Row="0" Text="                                    " FontSize="11"/>
+									<TextBlock Grid.Row="0" Text="{Binding OpenRatioPlan2027}" FontSize="11" Width="80" HorizontalAlignment="Right"/>
+									<TextBlock Grid.Row="0" Text="                               " FontSize="11"/>
+									<TextBlock Grid.Row="0" Text="{Binding HighRatioPlan2027}" FontSize="11" Width="80" HorizontalAlignment="Right"/>
+								</StackPanel>
+							</Grid>
+						</TabItem>
+						<TabItem Header="2027 BURN" FontSize="11" Width="90" Height="24" Foreground="#FF8000" FontWeight="Bold" Background="Black">
+							<Grid Margin="3">
+								<Image Source="{Binding Burn2027}" HorizontalAlignment="Center" VerticalAlignment="Center" SnapsToDevicePixels="True" RenderOptions.EdgeMode="Aliased"/>
+							</Grid>
+						</TabItem>
+						<TabItem Header="2028" FontSize="11" Width="60" Height="24" Foreground="#FF8000" FontWeight="Bold" Background="Black">
+							<Grid>
+								<Grid.RowDefinitions>
+									<RowDefinition Height="16"/>
+									<RowDefinition/>
+									<RowDefinition Height="16"/>
+									<RowDefinition Height="16"/>
+								</Grid.RowDefinitions>
+								<TextBlock Grid.Row="0" Text="  月份  日数 股票数    收盘胜率   收盘个股胜率   收盘盈亏比     开盘胜率    开盘个股胜率   开盘盈亏比    最高胜率  最高个股胜率   最高盈亏比" FontSize="11" Margin="0 3 0 2"/>
+								<ListBox Grid.Row="1" Margin="5" ItemsSource="{Binding TotalMonth2028}" Background="Black">
+									<ListBox.ItemTemplate>
+										<DataTemplate>
+											<StackPanel Orientation="Horizontal">
+												<TextBlock Text="{Binding Month}" Width="30" Foreground="White" FontSize="11"/>
+												<TextBlock Text="{Binding SellCount}" Width="30" Foreground="White" FontSize="11"/>
+												<TextBlock Text="{Binding PerSellCount}" Width="35" Foreground="White" FontSize="11"/>
+												<TextBlock Text="{Binding CloseWin}" Width="66" Foreground="White" FontSize="11"/>
+												<TextBlock Text="{Binding PerCloseWin}" Width="66" Foreground="White" FontSize="11"/>
+												<TextBlock Text="{Binding CloseRatio}" Width="80" Foreground="White" FontSize="11"/>
+												<TextBlock Text="{Binding OpenWin}" Width="66" Foreground="White" FontSize="11"/>
+												<TextBlock Text="{Binding PerOpenWin}" Width="66" Foreground="White" FontSize="11"/>
+												<TextBlock Text="{Binding OpenRatio}" Width="66" Foreground="White" FontSize="11"/>
+												<TextBlock Text="{Binding HighWin}" Width="66" Foreground="White" FontSize="11"/>
+												<TextBlock Text="{Binding PerHighWin}" Width="66" Foreground="White" FontSize="11"/>
+												<TextBlock Text="{Binding HighRatio}" Width="70" Foreground="White" FontSize="11"/>
+											</StackPanel>
+										</DataTemplate>
+									</ListBox.ItemTemplate>
+								</ListBox>
+								<StackPanel Grid.Row="2" Orientation="Horizontal">
+									<TextBlock Grid.Row="0" Text="  TOTAL                                                  " FontSize="11"/>
+									<TextBlock Grid.Row="0" Text="{Binding CloseRatio2028}" FontSize="11" Width="80" HorizontalAlignment="Right"/>
+									<TextBlock Grid.Row="0" Text="                                    " FontSize="11"/>
+									<TextBlock Grid.Row="0" Text="{Binding OpenRatio2028}" FontSize="11" Width="80" HorizontalAlignment="Right"/>
+									<TextBlock Grid.Row="0" Text="                               " FontSize="11"/>
+									<TextBlock Grid.Row="0" Text="{Binding HighRatio2028}" FontSize="11" Width="80" HorizontalAlignment="Right"/>
+								</StackPanel>
+								<StackPanel Grid.Row="3" Orientation="Horizontal">
+									<TextBlock Grid.Row="0" Text="  TOTAL                                                  " FontSize="11"/>
+									<TextBlock Grid.Row="0" Text="{Binding CloseRatioPlan2028}" FontSize="11" Width="80" HorizontalAlignment="Right"/>
+									<TextBlock Grid.Row="0" Text="                                    " FontSize="11"/>
+									<TextBlock Grid.Row="0" Text="{Binding OpenRatioPlan2028}" FontSize="11" Width="80" HorizontalAlignment="Right"/>
+									<TextBlock Grid.Row="0" Text="                               " FontSize="11"/>
+									<TextBlock Grid.Row="0" Text="{Binding HighRatioPlan2028}" FontSize="11" Width="80" HorizontalAlignment="Right"/>
+								</StackPanel>
+							</Grid>
+						</TabItem>
+						<TabItem Header="2028 BURN" FontSize="11" Width="90" Height="24" Foreground="#FF8000" FontWeight="Bold" Background="Black">
+							<Grid Margin="3">
+								<Image Source="{Binding Burn2028}" HorizontalAlignment="Center" VerticalAlignment="Center" SnapsToDevicePixels="True" RenderOptions.EdgeMode="Aliased"/>
+							</Grid>
+						</TabItem>
+						<TabItem Header="2029" FontSize="11" Width="60" Height="24" Foreground="#FF8000" FontWeight="Bold" Background="Black">
+							<Grid>
+								<Grid.RowDefinitions>
+									<RowDefinition Height="16"/>
+									<RowDefinition/>
+									<RowDefinition Height="16"/>
+									<RowDefinition Height="16"/>
+								</Grid.RowDefinitions>
+								<TextBlock Grid.Row="0" Text="  月份  日数 股票数    收盘胜率   收盘个股胜率   收盘盈亏比     开盘胜率    开盘个股胜率   开盘盈亏比    最高胜率  最高个股胜率   最高盈亏比" FontSize="11" Margin="0 3 0 2"/>
+								<ListBox Grid.Row="1" Margin="5" ItemsSource="{Binding TotalMonth2029}" Background="Black">
+									<ListBox.ItemTemplate>
+										<DataTemplate>
+											<StackPanel Orientation="Horizontal">
+												<TextBlock Text="{Binding Month}" Width="30" Foreground="White" FontSize="11"/>
+												<TextBlock Text="{Binding SellCount}" Width="30" Foreground="White" FontSize="11"/>
+												<TextBlock Text="{Binding PerSellCount}" Width="35" Foreground="White" FontSize="11"/>
+												<TextBlock Text="{Binding CloseWin}" Width="66" Foreground="White" FontSize="11"/>
+												<TextBlock Text="{Binding PerCloseWin}" Width="66" Foreground="White" FontSize="11"/>
+												<TextBlock Text="{Binding CloseRatio}" Width="80" Foreground="White" FontSize="11"/>
+												<TextBlock Text="{Binding OpenWin}" Width="66" Foreground="White" FontSize="11"/>
+												<TextBlock Text="{Binding PerOpenWin}" Width="66" Foreground="White" FontSize="11"/>
+												<TextBlock Text="{Binding OpenRatio}" Width="66" Foreground="White" FontSize="11"/>
+												<TextBlock Text="{Binding HighWin}" Width="66" Foreground="White" FontSize="11"/>
+												<TextBlock Text="{Binding PerHighWin}" Width="66" Foreground="White" FontSize="11"/>
+												<TextBlock Text="{Binding HighRatio}" Width="70" Foreground="White" FontSize="11"/>
+											</StackPanel>
+										</DataTemplate>
+									</ListBox.ItemTemplate>
+								</ListBox>
+								<StackPanel Grid.Row="2" Orientation="Horizontal">
+									<TextBlock Grid.Row="0" Text="  TOTAL                                                  " FontSize="11"/>
+									<TextBlock Grid.Row="0" Text="{Binding CloseRatio2029}" FontSize="11" Width="80" HorizontalAlignment="Right"/>
+									<TextBlock Grid.Row="0" Text="                                    " FontSize="11"/>
+									<TextBlock Grid.Row="0" Text="{Binding OpenRatio2029}" FontSize="11" Width="80" HorizontalAlignment="Right"/>
+									<TextBlock Grid.Row="0" Text="                               " FontSize="11"/>
+									<TextBlock Grid.Row="0" Text="{Binding HighRatio2029}" FontSize="11" Width="80" HorizontalAlignment="Right"/>
+								</StackPanel>
+								<StackPanel Grid.Row="3" Orientation="Horizontal">
+									<TextBlock Grid.Row="0" Text="  TOTAL                                                  " FontSize="11"/>
+									<TextBlock Grid.Row="0" Text="{Binding CloseRatioPlan2029}" FontSize="11" Width="80" HorizontalAlignment="Right"/>
+									<TextBlock Grid.Row="0" Text="                                    " FontSize="11"/>
+									<TextBlock Grid.Row="0" Text="{Binding OpenRatioPlan2029}" FontSize="11" Width="80" HorizontalAlignment="Right"/>
+									<TextBlock Grid.Row="0" Text="                               " FontSize="11"/>
+									<TextBlock Grid.Row="0" Text="{Binding HighRatioPlan2029}" FontSize="11" Width="80" HorizontalAlignment="Right"/>
+								</StackPanel>
+							</Grid>
+						</TabItem>
+						<TabItem Header="2029 BURN" FontSize="11" Width="90" Height="24" Foreground="#FF8000" FontWeight="Bold" Background="Black">
+							<Grid Margin="3">
+								<Image Source="{Binding Burn2029}" HorizontalAlignment="Center" VerticalAlignment="Center" SnapsToDevicePixels="True" RenderOptions.EdgeMode="Aliased"/>
+							</Grid>
+						</TabItem>
+						<TabItem Header="2030" FontSize="11" Width="60" Height="24" Foreground="#FF8000" FontWeight="Bold" Background="Black">
+							<Grid>
+								<Grid.RowDefinitions>
+									<RowDefinition Height="16"/>
+									<RowDefinition/>
+									<RowDefinition Height="16"/>
+									<RowDefinition Height="16"/>
+									<RowDefinition Height="16"/>
+								</Grid.RowDefinitions>
+								<TextBlock Grid.Row="0" Text="  月份  日数 股票数    收盘胜率   收盘个股胜率   收盘盈亏比     开盘胜率    开盘个股胜率   开盘盈亏比    最高胜率  最高个股胜率   最高盈亏比" FontSize="11" Margin="0 3 0 2"/>
+								<ListBox Grid.Row="1" Margin="5" ItemsSource="{Binding TotalMonth2030}" Background="Black">
+									<ListBox.ItemTemplate>
+										<DataTemplate>
+											<StackPanel Orientation="Horizontal">
+												<TextBlock Text="{Binding Month}" Width="30" Foreground="White" FontSize="11"/>
+												<TextBlock Text="{Binding SellCount}" Width="30" Foreground="White" FontSize="11"/>
+												<TextBlock Text="{Binding PerSellCount}" Width="35" Foreground="White" FontSize="11"/>
+												<TextBlock Text="{Binding CloseWin}" Width="66" Foreground="White" FontSize="11"/>
+												<TextBlock Text="{Binding PerCloseWin}" Width="66" Foreground="White" FontSize="11"/>
+												<TextBlock Text="{Binding CloseRatio}" Width="80" Foreground="White" FontSize="11"/>
+												<TextBlock Text="{Binding OpenWin}" Width="66" Foreground="White" FontSize="11"/>
+												<TextBlock Text="{Binding PerOpenWin}" Width="66" Foreground="White" FontSize="11"/>
+												<TextBlock Text="{Binding OpenRatio}" Width="66" Foreground="White" FontSize="11"/>
+												<TextBlock Text="{Binding HighWin}" Width="66" Foreground="White" FontSize="11"/>
+												<TextBlock Text="{Binding PerHighWin}" Width="66" Foreground="White" FontSize="11"/>
+												<TextBlock Text="{Binding HighRatio}" Width="70" Foreground="White" FontSize="11"/>
+											</StackPanel>
+										</DataTemplate>
+									</ListBox.ItemTemplate>
+								</ListBox>
+								<StackPanel Grid.Row="2" Orientation="Horizontal">
+									<TextBlock Grid.Row="0" Text="  TOTAL                                                  " FontSize="11"/>
+									<TextBlock Grid.Row="0" Text="{Binding CloseRatio2030}" FontSize="11" Width="80" HorizontalAlignment="Right"/>
+									<TextBlock Grid.Row="0" Text="                                    " FontSize="11"/>
+									<TextBlock Grid.Row="0" Text="{Binding OpenRatio2030}" FontSize="11" Width="80" HorizontalAlignment="Right"/>
+									<TextBlock Grid.Row="0" Text="                               " FontSize="11"/>
+									<TextBlock Grid.Row="0" Text="{Binding HighRatio2030}" FontSize="11" Width="80" HorizontalAlignment="Right"/>
+								</StackPanel>
+								<StackPanel Grid.Row="3" Orientation="Horizontal">
+									<TextBlock Grid.Row="0" Text="  TOTAL                                                  " FontSize="11"/>
+									<TextBlock Grid.Row="0" Text="{Binding CloseRatioPlan2030}" FontSize="11" Width="80" HorizontalAlignment="Right"/>
+									<TextBlock Grid.Row="0" Text="                                    " FontSize="11"/>
+									<TextBlock Grid.Row="0" Text="{Binding OpenRatioPlan2030}" FontSize="11" Width="80" HorizontalAlignment="Right"/>
+									<TextBlock Grid.Row="0" Text="                               " FontSize="11"/>
+									<TextBlock Grid.Row="0" Text="{Binding HighRatioPlan2030}" FontSize="11" Width="80" HorizontalAlignment="Right"/>
+								</StackPanel>
+							</Grid>
+						</TabItem>
+						<TabItem Header="2030 BURN" FontSize="11" Width="90" Height="24" Foreground="#FF8000" FontWeight="Bold" Background="Black">
+							<Grid Margin="3">
+								<Image Source="{Binding Burn2030}" HorizontalAlignment="Center" VerticalAlignment="Center" SnapsToDevicePixels="True" RenderOptions.EdgeMode="Aliased"/>
+							</Grid>
+						</TabItem>
+						<TabItem Header="CALENDAR" FontSize="11" Width="80" Height="24" Foreground="#FF8000" FontWeight="Bold" Background="Black">
+							<Grid>
+								<Grid.ColumnDefinitions>
+									<ColumnDefinition Width="160"/>
+									<ColumnDefinition Width="1"/>
+									<ColumnDefinition/>
+								</Grid.ColumnDefinitions>
+								<Grid Grid.Column="0">
+									<Grid.ColumnDefinitions>
+										<ColumnDefinition Width="16"/>
+										<ColumnDefinition Width="16"/>
+										<ColumnDefinition/>
+										<ColumnDefinition Width="16"/>
+										<ColumnDefinition Width="16"/>
+									</Grid.ColumnDefinitions>
+									<Grid.RowDefinitions>
+										<RowDefinition Height="16"/>
+										<RowDefinition Height="16"/>
+										<RowDefinition Height="16"/>
+										<RowDefinition Height="16"/>
+										<RowDefinition Height="16"/>
+										<RowDefinition Height="16"/>
+									</Grid.RowDefinitions>
+									<TextBlock Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="5" Text="YEAR" HorizontalAlignment="Center"/>
+									<Button Grid.Row="2" Grid.Column="1" Content="-" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Command="{Binding CalenderYearMinusClickCommand}"/>
+									<TextBlock Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="5" Text="{Binding CalendarYear}" HorizontalAlignment="Center"/>
+									<Button Grid.Row="2" Grid.Column="3" Content="+" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Command="{Binding CalenderYearPlusClickCommand}"/>
+									<TextBlock Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="5" Text="MONTH" HorizontalAlignment="Center"/>
+									<Button Grid.Row="5" Grid.Column="1" Content="-" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Command="{Binding CalenderMonthMinusClickCommand}"/>
+									<TextBlock Grid.Row="5" Grid.Column="0" Grid.ColumnSpan="5" Text="{Binding CalendarMonth}" HorizontalAlignment="Center"/>
+									<Button Grid.Row="5" Grid.Column="3" Content="+" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" Command="{Binding CalenderMonthPlusClickCommand}"/>
+								</Grid>
+								<Grid Grid.Column="1" Background="White"/>
+								<ItemsControl Grid.Column="2" ItemsSource="{Binding CalendarDatas}" Foreground="#FF8000">
+									<ItemsControl.ItemsPanel>
+										<ItemsPanelTemplate>
+											<WrapPanel Orientation="Horizontal" Margin="7 3 0 0"/>
+										</ItemsPanelTemplate>
+									</ItemsControl.ItemsPanel>
+									<ItemsControl.ItemTemplate>
+										<DataTemplate>
+											<Border Background="#000000" BorderBrush="#FFFFFF" Width="104" Height="50" BorderThickness="1" CornerRadius="5" Padding="5" Margin="4">
+												<Grid>
+													<Grid.ColumnDefinitions>
+														<ColumnDefinition Width="24"/>
+														<ColumnDefinition Width="1"/>
+														<ColumnDefinition/>
+													</Grid.ColumnDefinitions>
+													<TextBlock Grid.Column="0" Text="{Binding Day}" FontSize="13" FontWeight="Bold" Foreground="#FF8000" VerticalAlignment="Center"/>
+													<Grid Grid.Column="1" Background="White"/>
+													<Grid Grid.Column="2" Margin="5 0 0 0" VerticalAlignment="Center">
+														<Grid.ColumnDefinitions>
+															<ColumnDefinition Width="16"/>
+															<ColumnDefinition/>
+														</Grid.ColumnDefinitions>
+														<Grid.RowDefinitions>
+															<RowDefinition/>
+															<RowDefinition/>
+															<RowDefinition/>
+														</Grid.RowDefinitions>
+														<TextBlock Grid.Row="0" Grid.Column="0" Text="C:" FontSize="10" Foreground="#E0E0E0"/>
+														<TextBlock Grid.Row="1" Grid.Column="0" Text="O:" FontSize="10" Foreground="#E0E0E0"/>
+														<TextBlock Grid.Row="2" Grid.Column="0" Text="H:" FontSize="10" Foreground="#E0E0E0"/>
+														<TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding CloseRatio}" FontSize="10" Foreground="{Binding CloseRatio, Converter={StaticResource RatioToColorConverter}}"/>
+														<TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding OpenRatio}" FontSize="10" Foreground="{Binding OpenRatio, Converter={StaticResource RatioToColorConverter}}"/>
+														<TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding HighRatio}" FontSize="10" Foreground="{Binding HighRatio, Converter={StaticResource RatioToColorConverter}}"/>
+													</Grid>
+												</Grid>
+											</Border>
+										</DataTemplate>
+									</ItemsControl.ItemTemplate>
+								</ItemsControl>
+							</Grid>
+						</TabItem>
+					</TabControl>
+					<local:KChart Grid.Row="0" Grid.RowSpan="8" Grid.Column="1" KRecords="{Binding StrategyKRecords}" Margin="5" Background="Black"/>
+				</Grid>
+			</TabItem>
+			<TabItem Header="STRATEGY TARGET" FontSize="14" Width="160" Height="30" Foreground="#FF8000" FontWeight="Bold" Background="Black">
+				<Grid>
+					<Grid.ColumnDefinitions>
+						<ColumnDefinition Width="480"/>
+						<ColumnDefinition/>
+					</Grid.ColumnDefinitions>
+					<Grid  Grid.Column="0">
+						<Grid.ColumnDefinitions>
+							<ColumnDefinition Width="*"/>
+							<ColumnDefinition Width="*"/>
+						</Grid.ColumnDefinitions>
+						<Grid.RowDefinitions>
+							<RowDefinition Height="16"/>
+							<RowDefinition Height="*"/>
+							<RowDefinition Height="16"/>
+							<RowDefinition Height="*"/>
+						</Grid.RowDefinitions>
+						<StackPanel Grid.Row="0" Grid.Column="0" Orientation="Horizontal">
+							<TextBlock Text=" ▲▲▲" Width="100"/>
+							<TextBlock Text=" 缩量下跌阴线" Width="100"/>
+						</StackPanel>
+						<Grid Grid.Row="1" Grid.Column="0">
+							<ListBox Margin="5" ItemsSource="{Binding StrategyTarget3Data, Mode=TwoWay}" SelectedIndex="{Binding StrategyTarget3DataIndex}" Background="Black" FontSize="11" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+								<ListBox.ItemTemplate>
+									<DataTemplate>
+										<StackPanel Orientation="Horizontal">
+											<TextBlock Text="{Binding StockName}" Width="40" Foreground="White" FontSize="9"/>
+											<TextBlock Text="[" Foreground="White" FontSize="10"/>
+											<TextBlock Text="{Binding StockCode}" Foreground="White" FontSize="9"/>
+											<TextBlock Text="]  " Foreground="White" FontSize="10"/>
+											<TextBlock Text="{Binding Slope}" Foreground="White" Width="55" FontSize="9"/>
+											<TextBlock Text="{Binding SlopeRatio}" Foreground="White" Width="60" FontSize="9"/>
+										</StackPanel>
+									</DataTemplate>
+								</ListBox.ItemTemplate>
+							</ListBox>
+						</Grid>
+						<StackPanel Grid.Row="0" Grid.Column="1" Orientation="Horizontal">
+							<TextBlock Text=" ▲▲▲▽" Width="200"/>
+						</StackPanel>
+						<Grid Grid.Row="1" Grid.Column="1">
+							<ListBox Margin="5" ItemsSource="{Binding StrategyTarget31Data, Mode=TwoWay}" SelectedIndex="{Binding StrategyTarget31DataIndex}" Background="Black" FontSize="11" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+								<ListBox.ItemTemplate>
+									<DataTemplate>
+										<StackPanel Orientation="Horizontal">
+											<TextBlock Text="{Binding StockName}" Width="40" Foreground="White" FontSize="9"/>
+											<TextBlock Text="[" Foreground="White" FontSize="10"/>
+											<TextBlock Text="{Binding StockCode}" Foreground="White" FontSize="9"/>
+											<TextBlock Text="]  " Foreground="White" FontSize="10"/>
+											<TextBlock Text="{Binding Slope}" Foreground="White" Width="55" FontSize="9"/>
+											<TextBlock Text="{Binding SlopeRatio}" Foreground="White" Width="60" FontSize="9"/>
+										</StackPanel>
+									</DataTemplate>
+								</ListBox.ItemTemplate>
+							</ListBox>
+						</Grid>
+						<StackPanel Grid.Row="2" Grid.Column="0" Orientation="Horizontal">
+							<TextBlock Text="TOP" Width="200"/>
+						</StackPanel>
+						<Grid Grid.Row="3" Grid.Column="0">
+							<ListBox Margin="5" ItemsSource="{Binding StrategyTargetTopData, Mode=TwoWay}" SelectedIndex="{Binding StrategyTargetTopDataIndex}" Background="Black" FontSize="11" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+								<ListBox.ItemTemplate>
+									<DataTemplate>
+										<StackPanel Orientation="Horizontal">
+											<TextBlock Text="{Binding StockName}" Width="40" Foreground="White" FontSize="9"/>
+											<TextBlock Text="[" Foreground="White" FontSize="10"/>
+											<TextBlock Text="{Binding StockCode}" Foreground="White" FontSize="9"/>
+											<TextBlock Text="]  " Foreground="White" FontSize="10"/>
+											<TextBlock Text="{Binding Slope}" Foreground="White" Width="55" FontSize="9"/>
+											<TextBlock Text="{Binding SlopeRatio}" Foreground="White" Width="60" FontSize="9"/>
+										</StackPanel>
+									</DataTemplate>
+								</ListBox.ItemTemplate>
+							</ListBox>
+						</Grid>
+						<StackPanel Grid.Row="2" Grid.Column="1" Orientation="Horizontal">
+							<TextBlock Text="▲▲▲ + ▲▲" Width="200"/>
+						</StackPanel>
+						<Grid Grid.Row="3" Grid.Column="1">
+							<ListBox Margin="5" ItemsSource="{Binding StrategyTargetTwiceData, Mode=TwoWay}" SelectedIndex="{Binding StrategyTargetTwiceDataIndex}" Background="Black" FontSize="11" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+								<ListBox.ItemTemplate>
+									<DataTemplate>
+										<StackPanel Orientation="Horizontal">
+											<TextBlock Text="{Binding StockName}" Width="40" Foreground="White" FontSize="9"/>
+											<TextBlock Text="[" Foreground="White" FontSize="10"/>
+											<TextBlock Text="{Binding StockCode}" Foreground="White" FontSize="9"/>
+											<TextBlock Text="]  " Foreground="White" FontSize="10"/>
+											<TextBlock Text="{Binding Slope}" Foreground="White" Width="55" FontSize="9"/>
+											<TextBlock Text="{Binding SlopeRatio}" Foreground="White" Width="60" FontSize="9"/>
+										</StackPanel>
+									</DataTemplate>
+								</ListBox.ItemTemplate>
+							</ListBox>
+						</Grid>
+					</Grid>
+					<local:KChart Grid.Row="0" Grid.RowSpan="4" Grid.Column="1" KRecords="{Binding StrategyTargetKRecords}" Margin="5" Background="Black"/>
+				</Grid>
+			</TabItem>
+			<TabItem Header="TREND SET" FontSize="14" Width="100" Height="30" Foreground="#FF8000" FontWeight="Bold" Background="Black" Visibility="Hidden">
+				<Grid>
+					<Grid.ColumnDefinitions>
+						<ColumnDefinition Width="560"/>
+						<ColumnDefinition/>
+					</Grid.ColumnDefinitions>
+					<Grid.RowDefinitions>
+						<RowDefinition Height="48"/>
+						<RowDefinition/>
+					</Grid.RowDefinitions>
+					<StackPanel Orientation="Horizontal" Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" Margin="5" >
+						<TextBlock Text="股票名称:" VerticalAlignment="Center"/>
+						<ComboBox Margin="5" Width="90" ItemsSource="{Binding TrendStockCodes}" SelectedIndex="{Binding TrendStockCodeIndex}"/>
+						<TextBlock Text=" 开始:" VerticalAlignment="Center"/>
+						<ComboBox Margin="5" Width="110" ItemsSource="{Binding TrendBeginDate}" SelectedIndex="{Binding TrendBeginDateIndex}"/>
+						<TextBlock Text=" 结束:" VerticalAlignment="Center"/>
+						<ComboBox Margin="5" Width="110" ItemsSource="{Binding TrendEndDate}" SelectedIndex="{Binding TrendEndDateIndex}"/>
+						<Button Width="60" Content="ADD" Margin="10 5 5 5" Command="{Binding AddTrendClickCommand}"/>
+					</StackPanel>
+					<ListBox Grid.Row="1" Grid.Column="0" Margin="3 5 3 5" ItemsSource="{Binding TrendData}" SelectedIndex="{Binding TrendDataIndex}" Background="Black" VerticalContentAlignment="Center">
+						<ListBox.ItemTemplate>
+							<DataTemplate>
+								<StackPanel Orientation="Horizontal">
+									<TextBlock Text="{Binding StockName}" Width="100" Foreground="White"/>
+									<TextBlock Text="{Binding StockCode}" Foreground="White" Width="100"/>
+									<TextBlock Text="{Binding BeginDate}" Foreground="White" Width="120"/>
+									<TextBlock Text="{Binding EndDate}" Foreground="White" Width="120"/>
+									<Button Content="DELETE" Command="{Binding DataContext.DeleteTrendClickCommand, RelativeSource={RelativeSource AncestorType=ListBox}}"
+							CommandParameter="{Binding}" Width="100"/>
+								</StackPanel>
+							</DataTemplate>
+						</ListBox.ItemTemplate>
+					</ListBox>
+					<local:KChart Grid.Row="0" Grid.RowSpan="2" Grid.Column="1" KRecords="{Binding TrendKRecords}" Margin="5"/>
+				</Grid>
+			</TabItem>
+		</TabControl>
+	</Grid>
+</UserControl>
