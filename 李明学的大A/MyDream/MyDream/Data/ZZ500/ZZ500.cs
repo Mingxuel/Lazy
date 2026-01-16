@@ -9,13 +9,15 @@ namespace MyDream
     {
         public static List<ZZ500Item> Data { get; } = new List<ZZ500Item>();
 
-        public static void ReadFromXlsx()
+        public static void ReadFromXlsx(bool isZZ500)
         {
             Data.Clear();
 
-            using (var stream = new FileStream(APath.GetZZ500Xlsx(), FileMode.Open, FileAccess.Read))
+            string FilePath = isZZ500 ? APath.GetZZ500Xlsx() : APath.GetSZ200Xlsx();
+
+            using (var stream = new FileStream(FilePath, FileMode.Open, FileAccess.Read))
             {
-                IWorkbook workbook = Path.GetExtension(APath.GetZZ500Xlsx()).Equals(".xlsx", StringComparison.OrdinalIgnoreCase) ? new XSSFWorkbook(stream) : new HSSFWorkbook(stream);
+                IWorkbook workbook = Path.GetExtension(FilePath).Equals(".xlsx", StringComparison.OrdinalIgnoreCase) ? new XSSFWorkbook(stream) : new HSSFWorkbook(stream);
                 ISheet worksheet = workbook.GetSheetAt(0);
                 for (int i = 1; i <= worksheet.LastRowNum; i++)
                 {
@@ -31,8 +33,10 @@ namespace MyDream
             }
         }
 
-        public static void WriteToConfig()
+        public static void WriteToConfig(bool isZZ500)
         {
+            string ticketConfigPath = isZZ500 ? APath.GetZZ500TicketsConfig() : APath.GetSZ200TicketsConfig();
+
             using (StreamWriter writer = new StreamWriter(APath.GetZZ500DataConfig()))
             {
                 foreach (var data in Data)
@@ -41,7 +45,7 @@ namespace MyDream
                 }
             }
 
-            using (StreamWriter writer = new StreamWriter(APath.GetZZ500TicketConfig()))
+            using (StreamWriter writer = new StreamWriter(ticketConfigPath))
             {
                 foreach (var data in Data)
                 {

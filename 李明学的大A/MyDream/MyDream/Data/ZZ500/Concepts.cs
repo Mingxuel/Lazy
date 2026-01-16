@@ -6,10 +6,10 @@ namespace MyDream
     {
         public static List<string> Data { get; set; } = new List<string>();
 
-        public static void InitData()
+        public static void InitData(bool isZZ500)
         {
             Data.Clear();
-            ZZ500.ReadFromXlsx();
+            ZZ500.ReadFromXlsx(isZZ500);
             foreach (var data in ZZ500.Data)
             {
                 foreach(var concept in data.Concepts!)

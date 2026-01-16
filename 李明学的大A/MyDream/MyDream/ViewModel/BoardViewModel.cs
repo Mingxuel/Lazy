@@ -8,6 +8,7 @@ using OxyPlot.Wpf;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Configuration;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -29,11 +30,41 @@ namespace MyDream
         [ObservableProperty]
         private EPage kPage = EPage.Main;
 
+        [ObservableProperty]
+        private bool sZ200IsSelected = false;
+
+        [ObservableProperty]
+        private bool zZ500IsSelected = false;
+
+        public BoardViewModel()
+        {
+            //默认选择ZZ500
+            SZ200IsSelected = true;
+        }
+
         [RelayCommand]
         private async Task UpdateDataClick()
         {
             if (MessageBox.Show("确定要更新所有数据吗?", "更新数据", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
             {
+                List<string> stock_codes = new List<string>();
+                string file_zz500 = APath.GetZZ500TicketsConfig();
+                foreach (var line in File.ReadLines(file_zz500))
+                {
+                    if (!string.IsNullOrEmpty(line.Trim())) stock_codes.Add(line.Trim());
+                }
+                string file_sz200 = APath.GetSZ200TicketsConfig();
+                foreach (var line in File.ReadLines(file_sz200))
+                {
+                    if (!string.IsNullOrEmpty(line.Trim()) && !stock_codes.Contains(line.Trim()))
+                    {
+                        stock_codes.Add(line.Trim());
+                    }
+                }
+                stock_codes.Sort();
+                string target_file = APath.GetTicketsConfig();
+                File.WriteAllLines(target_file, stock_codes);
+
                 //更新交易日数据
                 Output = await CallPythonAPI.UpdateTradingDatesAsync();
                 //下载1D数据
@@ -108,15 +139,15 @@ namespace MyDream
         {
             //更新ZZ500数据
             Output = "更新ZZ500数据\n";
-            ZZ500.ReadFromXlsx();
-            ZZ500.WriteToConfig();
+            ZZ500.ReadFromXlsx(ZZ500IsSelected);
+            ZZ500.WriteToConfig(ZZ500IsSelected);
             //更新板块
             Output += "更新板块\n";
-            Industry.InitData();
+            Industry.InitData(ZZ500IsSelected);
             Industry.WriteDataToConfig();
             //更新概念
             Output += "更新概念\n";
-            Concepts.InitData();
+            Concepts.InitData(ZZ500IsSelected);
             Concepts.WriteDataToConfig();
 
             //初始化数据类
@@ -124,7 +155,7 @@ namespace MyDream
             TradingDates.Init();
             TradingTimes.Init();
             //初始化ZZ500股票代码
-            ZZ500StockCodes.Init();
+            ZZ500StockCodes.Init(ZZ500IsSelected);
             //初始化ZZ500股票代码
             ZZ5001D.Instance.Init();
             //初始化ZZ500股票代码

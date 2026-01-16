@@ -18,20 +18,30 @@
 			<RowDefinition/>
 		</Grid.RowDefinitions>
 		<Grid.ColumnDefinitions>
-			<ColumnDefinition Width="370"/>
+			<ColumnDefinition Width="570"/>
 			<ColumnDefinition/>
 		</Grid.ColumnDefinitions>
-		<GroupBox Grid.Row="0" Grid.Column="0" Header="UPDATE" Margin="5" Foreground="#FF8000" FontSize="16" FontWeight="Bold">
-			<WrapPanel Orientation="Vertical" Margin="5">
-				<Button Content="UPDATE QMT" Command="{Binding UpdateDataClickCommand}" Margin="5" FontWeight="Bold" Width="160"/>
-				<Button Content="CLEAR TPO" Command="{Binding ClearTPOClickCommand}" Margin="5" FontWeight="Bold" Width="160"/>
-				<Button Content="UPDATE TPO" Command="{Binding UpdateTPOClickCommand}" Margin="5" FontWeight="Bold" Width="160"/>
-				<Button Content="CLEAR TEST" Command="{Binding ClearTestingClickCommand}" Margin="5" FontWeight="Bold" Width="160"/>
-				<Button Content="UPDATE TEST" Command="{Binding UpdateTestingClickCommand}" Margin="5" FontWeight="Bold" Width="160"/>
-				<Button Content="SYNC THX" Command="{Binding StrategyListSyncClickCommand}" Margin="5" FontWeight="Bold" Width="160"/>
-				<Button Content="RUNTIME" Command="{Binding RuntimeClickCommand}" Margin="5" FontWeight="Bold" Width="160"/>
+		<Grid Grid.Row="0" Grid.Column="0" >
+			<Grid.RowDefinitions>
+				<RowDefinition Height="24"/>
+				<RowDefinition/>
+			</Grid.RowDefinitions>
+			<WrapPanel VerticalAlignment="Center">
+				<RadioButton Content="SZ200" Foreground="White" VerticalContentAlignment="Center" GroupName="Tickets" FontSize="16" Margin="10 5 0 0" FontWeight="Bold" IsChecked="{Binding SZ200IsSelected}"/>
+				<RadioButton Content="ZZ500" Foreground="White" VerticalContentAlignment="Center" GroupName="Tickets" FontSize="16" Margin="10 5 0 0" FontWeight="Bold" IsChecked="{Binding ZZ500IsSelected}"/>
 			</WrapPanel>
-		</GroupBox>
+			<GroupBox Grid.Row="1" Header="UPDATE" Margin="5" Foreground="#FF8000" FontSize="16" FontWeight="Bold">
+				<WrapPanel Orientation="Vertical" Margin="5">
+					<Button Content="UPDATE QMT" Command="{Binding UpdateDataClickCommand}" Margin="5" FontWeight="Bold" Width="160"/>
+					<Button Content="CLEAR TPO" Command="{Binding ClearTPOClickCommand}" Margin="5" FontWeight="Bold" Width="160"/>
+					<Button Content="UPDATE TPO" Command="{Binding UpdateTPOClickCommand}" Margin="5" FontWeight="Bold" Width="160"/>
+					<Button Content="CLEAR TEST" Command="{Binding ClearTestingClickCommand}" Margin="5" FontWeight="Bold" Width="160"/>
+					<Button Content="UPDATE TEST" Command="{Binding UpdateTestingClickCommand}" Margin="5" FontWeight="Bold" Width="160"/>
+					<Button Content="SYNC THX" Command="{Binding StrategyListSyncClickCommand}" Margin="5" FontWeight="Bold" Width="160"/>
+					<Button Content="RUNTIME" Command="{Binding RuntimeClickCommand}" Margin="5" FontWeight="Bold" Width="160"/>
+				</WrapPanel>
+			</GroupBox>
+		</Grid>
 		<GroupBox Grid.Row="0" Grid.Column="1" Header="OUTPUT" Margin="5" Foreground="#FF8000" FontSize="16" FontWeight="Bold">
 			<Grid Margin="5">
 				<TextBox Text="{Binding Output}" TextWrapping="Wrap" Background="Transparent" Foreground="White"/>
