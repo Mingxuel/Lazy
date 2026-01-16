@@ -351,11 +351,6 @@
 								</StackPanel>
 							</Grid>
 						</TabItem>
-						<TabItem Header="2024 BURN" FontSize="11" Width="90" Height="24" Foreground="#FF8000" FontWeight="Bold" Background="Black">
-							<Grid Margin="3">
-								<Image Source="{Binding Burn2024}" HorizontalAlignment="Center" VerticalAlignment="Center" SnapsToDevicePixels="True" RenderOptions.EdgeMode="Aliased"/>
-							</Grid>
-						</TabItem>
 						<TabItem Header="2025" FontSize="11" Width="60" Height="24" Foreground="#FF8000" FontWeight="Bold" Background="Black">
 							<Grid>
 								<Grid.RowDefinitions>
@@ -401,11 +396,6 @@
 									<TextBlock Grid.Row="0" Text="                               " FontSize="11"/>
 									<TextBlock Grid.Row="0" Text="{Binding HighRatioPlan2025}" FontSize="11" Width="80" HorizontalAlignment="Right"/>
 								</StackPanel>
-							</Grid>
-						</TabItem>
-						<TabItem Header="2025 BURN" FontSize="11" Width="90" Height="24" Foreground="#FF8000" FontWeight="Bold" Background="Black">
-							<Grid Margin="3">
-								<Image Source="{Binding Burn2025}" HorizontalAlignment="Center" VerticalAlignment="Center" SnapsToDevicePixels="True" RenderOptions.EdgeMode="Aliased"/>
 							</Grid>
 						</TabItem>
 						<TabItem Header="2026" FontSize="11" Width="60" Height="24" Foreground="#FF8000" FontWeight="Bold" Background="Black">
@@ -455,11 +445,6 @@
 								</StackPanel>
 							</Grid>
 						</TabItem>
-						<TabItem Header="2026 BURN" FontSize="11" Width="90" Height="24" Foreground="#FF8000" FontWeight="Bold" Background="Black">
-							<Grid Margin="3">
-								<Image Source="{Binding Burn2026}" HorizontalAlignment="Center" VerticalAlignment="Center" SnapsToDevicePixels="True" RenderOptions.EdgeMode="Aliased"/>
-							</Grid>
-						</TabItem>
 						<TabItem Header="2027" FontSize="11" Width="60" Height="24" Foreground="#FF8000" FontWeight="Bold" Background="Black">
 							<Grid>
 								<Grid.RowDefinitions>
@@ -505,11 +490,6 @@
 									<TextBlock Grid.Row="0" Text="                               " FontSize="11"/>
 									<TextBlock Grid.Row="0" Text="{Binding HighRatioPlan2027}" FontSize="11" Width="80" HorizontalAlignment="Right"/>
 								</StackPanel>
-							</Grid>
-						</TabItem>
-						<TabItem Header="2027 BURN" FontSize="11" Width="90" Height="24" Foreground="#FF8000" FontWeight="Bold" Background="Black">
-							<Grid Margin="3">
-								<Image Source="{Binding Burn2027}" HorizontalAlignment="Center" VerticalAlignment="Center" SnapsToDevicePixels="True" RenderOptions.EdgeMode="Aliased"/>
 							</Grid>
 						</TabItem>
 						<TabItem Header="2028" FontSize="11" Width="60" Height="24" Foreground="#FF8000" FontWeight="Bold" Background="Black">
@@ -559,11 +539,6 @@
 								</StackPanel>
 							</Grid>
 						</TabItem>
-						<TabItem Header="2028 BURN" FontSize="11" Width="90" Height="24" Foreground="#FF8000" FontWeight="Bold" Background="Black">
-							<Grid Margin="3">
-								<Image Source="{Binding Burn2028}" HorizontalAlignment="Center" VerticalAlignment="Center" SnapsToDevicePixels="True" RenderOptions.EdgeMode="Aliased"/>
-							</Grid>
-						</TabItem>
 						<TabItem Header="2029" FontSize="11" Width="60" Height="24" Foreground="#FF8000" FontWeight="Bold" Background="Black">
 							<Grid>
 								<Grid.RowDefinitions>
@@ -609,11 +584,6 @@
 									<TextBlock Grid.Row="0" Text="                               " FontSize="11"/>
 									<TextBlock Grid.Row="0" Text="{Binding HighRatioPlan2029}" FontSize="11" Width="80" HorizontalAlignment="Right"/>
 								</StackPanel>
-							</Grid>
-						</TabItem>
-						<TabItem Header="2029 BURN" FontSize="11" Width="90" Height="24" Foreground="#FF8000" FontWeight="Bold" Background="Black">
-							<Grid Margin="3">
-								<Image Source="{Binding Burn2029}" HorizontalAlignment="Center" VerticalAlignment="Center" SnapsToDevicePixels="True" RenderOptions.EdgeMode="Aliased"/>
 							</Grid>
 						</TabItem>
 						<TabItem Header="2030" FontSize="11" Width="60" Height="24" Foreground="#FF8000" FontWeight="Bold" Background="Black">
@@ -662,11 +632,6 @@
 									<TextBlock Grid.Row="0" Text="                               " FontSize="11"/>
 									<TextBlock Grid.Row="0" Text="{Binding HighRatioPlan2030}" FontSize="11" Width="80" HorizontalAlignment="Right"/>
 								</StackPanel>
-							</Grid>
-						</TabItem>
-						<TabItem Header="2030 BURN" FontSize="11" Width="90" Height="24" Foreground="#FF8000" FontWeight="Bold" Background="Black">
-							<Grid Margin="3">
-								<Image Source="{Binding Burn2030}" HorizontalAlignment="Center" VerticalAlignment="Center" SnapsToDevicePixels="True" RenderOptions.EdgeMode="Aliased"/>
 							</Grid>
 						</TabItem>
 						<TabItem Header="CALENDAR" FontSize="11" Width="80" Height="24" Foreground="#FF8000" FontWeight="Bold" Background="Black">

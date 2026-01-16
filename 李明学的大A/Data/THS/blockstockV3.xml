@@ -1,5 +1,6 @@
 <hevo version="3960" sort_list="23,24,25,26,">
   <Block name="3" id="35" IsLock="false" IsNameChanged="false" IsSecuritiesChanged="true">
+    <security market="USHJ" code="510500" />
     <security market="URFI" code="883957" />
     <security market="USHI" code="1A0001" />
     <security market="URFI" code="881155" />
