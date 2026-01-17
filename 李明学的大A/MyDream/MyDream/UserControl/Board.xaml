@@ -93,6 +93,11 @@
 						<ComboBox Margin="5" ItemsSource="{Binding StrategyTradingDates}" SelectedIndex="{Binding StrategyTradingDatesIndex}" Width="120"/>
 						<Button Margin="5" Content="↑" Width="24" Command="{Binding UpClickCommand}"/>
 						<Button Margin="5" Content="↓" Width="24" Command="{Binding DownClickCommand}"/>
+						<RadioButton Margin="5" Content="0-DAY" IsChecked="{Binding StrategyIs0Day}" Foreground="White" VerticalContentAlignment="Center"/>
+						<RadioButton Margin="5" Content="1-DAY" IsChecked="{Binding StrategyIs1Day}" Foreground="White" VerticalContentAlignment="Center"/>
+						<RadioButton Margin="5" Content="5-DAY" IsChecked="{Binding StrategyIs5Day}" Foreground="White" VerticalContentAlignment="Center"/>
+						<RadioButton Margin="5" Content="10-DAY" IsChecked="{Binding StrategyIs10Day}" Foreground="White" VerticalContentAlignment="Center"/>
+						<RadioButton Margin="5" Content="20-DAY" IsChecked="{Binding StrategyIs20Day}" Foreground="White" VerticalContentAlignment="Center"/>
 					</StackPanel>
 					<StackPanel Grid.Row="1" Grid.Column="0" Orientation="Horizontal">
 						<TextBlock Text="       类型" Width="120"/>

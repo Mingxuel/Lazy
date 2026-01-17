@@ -18,6 +18,21 @@ namespace MyDream
     public partial class BoardViewModel : ObservableObject
     {
         [ObservableProperty]
+        private bool strategyIs0Day = true;
+
+        [ObservableProperty]
+        private bool strategyIs1Day = false;
+
+        [ObservableProperty]
+        private bool strategyIs5Day = false;
+
+        [ObservableProperty]
+        private bool strategyIs10Day = false;
+
+        [ObservableProperty]
+        private bool strategyIs20Day = false;
+
+        [ObservableProperty]
         private string strategyPerSellCount = "-";
 
         [ObservableProperty]
@@ -328,18 +343,29 @@ namespace MyDream
             if (StrategyDataIndex == -1) return;
 
             string selected_date = StrategyTradingDates[StrategyTradingDatesIndex];
-/*
-            for(int i = 5; i != 0; i--)
+
+            int selected_date_count = 0;
+            if (StrategyIs0Day) {
+                for (int i = 1; i < 5; i++)
+                {
+                    var date = TradingDates.PreDate(selected_date, i);
+                    if (date == null) continue;
+                    selected_date = date;
+                    break;
+                }
+            } else if (StrategyIs1Day) {
+                selected_date_count = 0;
+            } else if (StrategyIs5Day) {
+                selected_date_count = 4;
+            } else if (StrategyIs10Day) {
+                selected_date_count = 9;
+            } else if (StrategyIs20Day) {
+                selected_date_count = 19;
+            }
+
+            for (int i = selected_date_count; i != 0; i--)
             {
                 var date = TradingDates.NextDate(selected_date, i);
-                if (date == null) continue;
-                selected_date = date;
-                break;
-            }
-*/
-            for (int i = 1; i < 5; i++)
-            {
-                var date = TradingDates.PreDate(selected_date, i);
                 if (date == null) continue;
                 selected_date = date;
                 break;
