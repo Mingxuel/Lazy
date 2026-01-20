@@ -115,7 +115,7 @@ namespace MyDream
             }
 
             DataTwice.Clear();
-            range = 8;
+            range = 4;
             foreach (var stock_code in ZZ500StockCodes.StockCodes)
             {
                 var last_date = TradingDates.Dates.Last();
@@ -131,12 +131,9 @@ namespace MyDream
 
                 var ma5 = (record_1.Close + record_2.Close + record_3.Close + record_4.Close + record_5.Close) / 5.0;
                 var pre_ma5 = (record_2.Close + record_3.Close + record_4.Close + record_5.Close + record_6.Close) / 5.0;
-                if (!record_1.IsTop && !record_1.IsBottom &&
-                    record_1.IsUp && record_1.Close > ma5 && record_1.IsRed &&
-                    record_1.Volume > record_2.Volume && ma5 > pre_ma5 &&
-                    record_2.Close > pre_ma5)
+                if (record_1.IsUp)
                 {
-                    for (int i = TradingDates.Dates.Count - range; i < TradingDates.Dates.Count - 3; i++)
+                    for (int i = TradingDates.Dates.Count - range; i < TradingDates.Dates.Count ; i++)
                     {
                         var items = Strategy.Instance.Data[TradingDates.Dates[i]];
                         foreach (var item in items)
