@@ -131,7 +131,7 @@ namespace MyDream
 
                 var ma5 = (record_1.Close + record_2.Close + record_3.Close + record_4.Close + record_5.Close) / 5.0;
                 var pre_ma5 = (record_2.Close + record_3.Close + record_4.Close + record_5.Close + record_6.Close) / 5.0;
-                if (record_1.IsUp)
+                if (record_1.IsGreen && record_1.Volume < record_2.Volume && record_1.IsDown && record_1.Close > ma5)
                 {
                     for (int i = TradingDates.Dates.Count - range; i < TradingDates.Dates.Count ; i++)
                     {
