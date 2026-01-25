@@ -45,36 +45,93 @@ namespace MyDream
         {
             foreach (var date in TradingDates.Dates)
             {
-                if (int.Parse(date) < 20240604) continue;
+                if (int.Parse(date) < 20240604 || int.Parse(date) > 20260101) continue;
 
                 var date_index = TradingDates.Dates.IndexOf(date);
                 var data = Strategy.Instance.Data[date];
+                List<double> total_ratios = new List<double>();
+                for (int i = 0; i < 238; i++)
+                {
+                    total_ratios.Add(0.0);
+                }
                 foreach (var time in TradingTimes.Times)
                 {
                     var time_index = TradingTimes.Times.IndexOf(time);
                     string datetime = date + time;
-                    var total_ratio = 0.0;
+
                     foreach (var item in data)
                     {
-                        var record_1d = ZZ5001D.Instance.Records[item.StockCode!];
+                        int item_index = data.IndexOf(item);
                         var record_1m = ZZ5001M.Instance[item.StockCode!];
-                        var high = record_1d![date!]!.High;
-                        var low = record_1d![date!]!.Low;
-                        var pre_close = record_1d![date!]!.PreClose;
-                        var close = record_1m![date][time_index].Close;
-                        total_ratio += (close - pre_close) / (pre_close) * 100.0;
+                        var record_1d = ZZ5001D.Instance[item.StockCode!];
+                        var pre_close = record_1d![date]!.PreClose;
+                        var close = record_1m![date][time_index].High;
+                        var ratio = (close - pre_close) / pre_close * 100;
+                        total_ratios[time_index] += ratio;
                     }
-                    if (date.StartsWith("2024"))
+                    if (data.Count > 0) total_ratios[time_index] = total_ratios[time_index] / data.Count;
+                    else total_ratios[time_index] = 0.0;
+                }
+
+                if (date.StartsWith("2024"))
+                {
+                    foreach (var time in TradingTimes.Times)
                     {
+                        var time_index = TradingTimes.Times.IndexOf(time);
                         Burn2024[date_index][time_index].Index = time_index;
-                        Burn2024[date_index][time_index].Value = (total_ratio / (double)data.Count);
+                        Burn2024[date_index][time_index].Value = total_ratios[time_index];
                     }
-                    else if (date.StartsWith("2025"))
+                }
+                else if (date.StartsWith("2025"))
+                {
+                    foreach (var time in TradingTimes.Times)
                     {
-                        var index = TradingDates.Dates.IndexOf("20250102");
-                        Burn2025[date_index - index][time_index].Index = time_index;
-                        Burn2025[date_index - index][time_index].Value = (total_ratio / (double)data.Count);
+                        var time_index = TradingTimes.Times.IndexOf(time);
+                        Burn2025[date_index - 242][time_index].Index = time_index;
+                        Burn2025[date_index - 242][time_index].Value = total_ratios[time_index];
                     }
+                }
+            }
+
+            foreach (var time in TradingTimes.Times)
+            {
+                var time_index = TradingTimes.Times.IndexOf(time);
+                List<double> ratios = new List<double>();
+                for (int i = 0; i < 60; i++)
+                {
+                    ratios.Add(1.0);
+                }
+                int count = 0;
+                int index = 0;
+                foreach (var date in TradingDates.Dates)
+                {
+                    if (int.Parse(date) <= 20241231 || int.Parse(date) >= 20260101) continue;
+
+                    if (count >= 5) 
+                    {
+                        index += 1;
+                        count = 0;
+                    }
+                    count++;
+
+                    var date_index = TradingDates.Dates.IndexOf(date);
+                    ratios[index] = ratios[index] * (1 + Burn2025[date_index - 242][time_index].Value / 100.0);
+                }
+                count = 0;
+                index = 0;
+                foreach (var date in TradingDates.Dates)
+                {
+                    if (int.Parse(date) <= 20241231 || int.Parse(date) >= 20260101) continue;
+
+                    if (count >= 5)
+                    {
+                        index += 1;
+                        count = 0;
+                    }
+                    count++;
+
+                    var date_index = TradingDates.Dates.IndexOf(date);
+                    Burn2025[date_index - 242][time_index].Value = ratios[index];
                 }
             }
         }

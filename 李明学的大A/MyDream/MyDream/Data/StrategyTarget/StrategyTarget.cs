@@ -31,14 +31,27 @@ namespace MyDream
                 var record_2 = ZZ5001D.Instance.PreRecord(stock_code, last_date, 1, true);
                 var record_3 = ZZ5001D.Instance.PreRecord(stock_code, last_date, 2, true);
                 var record_4 = ZZ5001D.Instance.PreRecord(stock_code, last_date, 3, true);
+                var record_5 = ZZ5001D.Instance.PreRecord(stock_code, last_date, 4, true);
+                var record_6 = ZZ5001D.Instance.PreRecord(stock_code, last_date, 5, true);
+                var record_7 = ZZ5001D.Instance.PreRecord(stock_code, last_date, 6, true);
+                var record_8 = ZZ5001D.Instance.PreRecord(stock_code, last_date, 7, true);
+
+                if (record_8 == null || record_7 == null || record_6 == null || record_5 == null || record_4 == null || record_3 == null || record_2 == null || record_1 == null) continue;
+
+                var pre_pre_pre_m5 = (record_4.Close + record_5.Close + record_6.Close + record_7.Close + record_8.Close) / 5.0;
+                var pre_pre_m5 = (record_3.Close + record_4.Close + record_5.Close + record_6.Close + record_7.Close) / 5.0;
+                var pre_m5 = (record_2.Close + record_3.Close + record_4.Close + record_5.Close + record_6.Close) / 5.0;
+                var m5 = (record_1.Close + record_2.Close + record_3.Close + record_4.Close + record_5.Close) / 5.0;
+                var next_m5 = (record_1.Close + record_2.Close + record_3.Close + record_4.Close + record_1.Close) / 5.0;
 
                 if (record_4 == null || record_3 == null || record_2 == null || record_1 == null) continue;
                 if (record_3.Volume < record_2.Volume && record_2.Volume < record_1.Volume &&
                     record_3.IsUp && record_2.IsUp && record_1.IsUp &&
-                    record_2.IsRed && record_1.IsRed &&
+                    record_3.IsRed && record_2.IsRed && record_1.IsRed &&
                     record_3.Low < record_2.Low && record_2.Low < record_1.Low &&
                     record_3.High < record_2.High && record_2.High < record_1.High &&
-                    !record_3.IsTop && !record_2.IsTop && !record_1.IsTop)
+                    !record_3.IsTop && !record_2.IsTop && !record_1.IsTop && 
+                    m5 > pre_m5 && pre_m5 > pre_pre_m5)
                 {
                     StrategyTargetItem StrategyTarget_item = new StrategyTargetItem();
                     StrategyTarget_item.StockCode = stock_code;
@@ -63,14 +76,26 @@ namespace MyDream
                 var record_3 = ZZ5001D.Instance.PreRecord(stock_code, last_date, 2, true);
                 var record_4 = ZZ5001D.Instance.PreRecord(stock_code, last_date, 3, true);
                 var record_5 = ZZ5001D.Instance.PreRecord(stock_code, last_date, 4, true);
+                var record_6 = ZZ5001D.Instance.PreRecord(stock_code, last_date, 5, true);
+                var record_7 = ZZ5001D.Instance.PreRecord(stock_code, last_date, 6, true);
+                var record_8 = ZZ5001D.Instance.PreRecord(stock_code, last_date, 7, true);
 
-                if (record_5 == null || record_4 == null || record_3 == null || record_2 == null || record_1 == null) continue;
+                if (record_8 == null || record_7 == null || record_6 == null || record_5 == null || record_4 == null || record_3 == null || record_2 == null || record_1 == null) continue;
+
+                var pre_pre_pre_m5 = (record_4.Close + record_5.Close + record_6.Close + record_7.Close + record_8.Close) / 5.0;
+                var pre_pre_m5 = (record_3.Close + record_4.Close + record_5.Close + record_6.Close + record_7.Close) / 5.0;
+                var pre_m5 = (record_2.Close + record_3.Close + record_4.Close + record_5.Close + record_6.Close) / 5.0;
+                var m5 = (record_1.Close + record_2.Close + record_3.Close + record_4.Close + record_5.Close) / 5.0;
+                var next_m5 = (record_1.Close + record_2.Close + record_3.Close + record_4.Close + record_1.Close) / 5.0;
+
                 if (record_4.Volume < record_3.Volume && record_3.Volume < record_2.Volume && record_2.Volume > record_1.Volume &&
                     record_4.Low < record_3.Low && record_3.Low < record_2.Low &&
                     record_4.High < record_3.High && record_3.High < record_2.High &&
                     !record_4.IsTop && !record_3.IsTop && !record_2.IsTop && !record_1.IsBottom &&
                     record_4.IsUp && record_3.IsUp && record_2.IsUp && record_1.IsDown &&
-                    record_3.IsRed && record_2.IsRed && record_1.IsGreen)
+                    record_4.IsRed && record_3.IsRed && record_2.IsRed && 
+                    m5 > pre_m5 && pre_m5 > pre_pre_m5 && pre_pre_m5 > pre_pre_pre_m5 &&
+                    record_1.Close > m5)
                 {
                     StrategyTargetItem StrategyTarget_item = new StrategyTargetItem();
                     StrategyTarget_item.StockCode = stock_code;
@@ -131,7 +156,7 @@ namespace MyDream
 
                 var ma5 = (record_1.Close + record_2.Close + record_3.Close + record_4.Close + record_5.Close) / 5.0;
                 var pre_ma5 = (record_2.Close + record_3.Close + record_4.Close + record_5.Close + record_6.Close) / 5.0;
-                if (record_1.IsGreen && record_1.Volume < record_2.Volume && record_1.IsDown && record_1.Close > ma5)
+                if (record_1.Volume < record_2.Volume && record_1.IsDown && record_1.Close > ma5)
                 {
                     for (int i = TradingDates.Dates.Count - range; i < TradingDates.Dates.Count ; i++)
                     {

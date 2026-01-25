@@ -366,6 +366,11 @@
 								</StackPanel>
 							</Grid>
 						</TabItem>
+						<TabItem Header="2024 BURN" FontSize="11" Width="90" Height="24" Foreground="#FF8000" FontWeight="Bold" Background="Black">
+							<Grid Margin="3">
+								<Image Source="{Binding Burn2025}" HorizontalAlignment="Center" VerticalAlignment="Center" SnapsToDevicePixels="True" RenderOptions.EdgeMode="Aliased"/>
+							</Grid>
+						</TabItem>
 						<TabItem Header="2025" FontSize="11" Width="60" Height="24" Foreground="#FF8000" FontWeight="Bold" Background="Black">
 							<Grid>
 								<Grid.RowDefinitions>
