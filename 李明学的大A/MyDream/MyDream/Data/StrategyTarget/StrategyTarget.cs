@@ -111,7 +111,7 @@ namespace MyDream
             }
 
             DataTop.Clear();
-            int range = 10;
+            int range = 15;
             for (int i = TradingDates.Dates.Count - range; i < TradingDates.Dates.Count; i++)
             {
                 var items = Strategy.Instance.Data[TradingDates.Dates[i]];
@@ -128,8 +128,7 @@ namespace MyDream
 
                     var ma5 = (record_1.Close + record_2.Close + record_3.Close + record_4.Close + record_5.Close) / 5.0;
                     var pre_ma5 = (record_2.Close + record_3.Close + record_4.Close + record_5.Close + record_6.Close) / 5.0;
-                    if ((record_1!.IsTop || record_2!.IsTop) &&
-                        record_1.Close >= ma5 && record_2.Close >= pre_ma5)
+                    if (record_1!.IsTop || record_2!.IsTop || record_3!.IsTop || record_4!.IsTop || record_5!.IsTop || record_6!.IsTop)
                     {
                         StrategyTargetItem target_item = new StrategyTargetItem();
                         target_item.StockName = item.StockName;
