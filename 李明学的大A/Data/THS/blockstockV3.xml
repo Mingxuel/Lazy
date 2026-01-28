@@ -19,4 +19,7 @@
   <Block name="TOP" id="37" IsLock="false" IsNameChanged="false" IsSecuritiesChanged="true">
 ===TOP===
   </Block>
+    <Block name="TOPHIS" id="38" IsLock="false" IsNameChanged="false" IsSecuritiesChanged="true">
+===TOPHISTORY===
+  </Block>
 </hevo>

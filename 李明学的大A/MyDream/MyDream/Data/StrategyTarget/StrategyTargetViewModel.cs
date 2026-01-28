@@ -70,6 +70,21 @@ namespace MyDream
         }
 
         [ObservableProperty]
+        private ObservableCollection<StrategyTargetItem> strategyTargetTopHistoryData = new ObservableCollection<StrategyTargetItem>();
+
+        private int strategyTargetTopHistoryDataIndex = -1;
+        public int StrategyTargetTopHistoryDataIndex
+        {
+            get => strategyTargetTopHistoryDataIndex;
+            set
+            {
+                strategyTargetTopHistoryDataIndex = value;
+                OnPropertyChanged();
+                UpdateRecordsStrategyTargetTopHistory();
+            }
+        }
+
+        [ObservableProperty]
         private List<Record1DItem> strategyTargetKRecords = new List<Record1DItem>();
 
         private Dictionary<string, Record1DItem> RealRecords = new Dictionary<string, Record1DItem>();
@@ -79,6 +94,7 @@ namespace MyDream
             StrategyTarget3Data.Clear();
             StrategyTarget31Data.Clear();
             StrategyTargetTopData.Clear();
+            StrategyTargetTopHistoryData.Clear();
 
             StrategyTarget.Instance.Init();
 
@@ -95,6 +111,11 @@ namespace MyDream
             foreach (var item in StrategyTarget.Instance.DataTop)
             {
                 StrategyTargetTopData.Add(item);
+            }
+
+            foreach (var item in StrategyTarget.Instance.DataTopHistory)
+            {
+                StrategyTargetTopHistoryData.Add(item);
             }
         }
 
@@ -155,6 +176,25 @@ namespace MyDream
             StrategyTargetKRecords = records!;
         }
 
+        private void UpdateRecordsStrategyTargetTopHistory()
+        {
+            if (StrategyTargetTopDataIndex == -1) return;
+
+            List<Record1DItem?> records = new List<Record1DItem?>();
+            string stock_code = StrategyTargetTopHistoryData[StrategyTargetTopHistoryDataIndex].StockCode!;
+            int count = ZZ5001D.Instance[stock_code]!.Data!.Count;
+            for (int i = 0; i <= count; i++)
+            {
+                if (i == count)
+                {
+                    if (RealRecords.Keys.Contains(stock_code)) records.Add(RealRecords[stock_code]);
+                    break;
+                }
+                records.Add(ZZ5001D.Instance[stock_code]!.Data![i]);
+            }
+            StrategyTargetKRecords = records!;
+        }
+
         [RelayCommand]
         private void StrategyListSyncClick()
         {
@@ -182,8 +222,16 @@ namespace MyDream
             }
             if (!string.IsNullOrEmpty(top) && top.Last() == '\n') top = top.Remove(top.Count() - 1);
 
+            string top_history = string.Empty;
+            foreach (var data in StrategyTargetTopHistoryData)
+            {
+                string stock_code = data!.StockCode!.Replace(".SH", "").Replace(".SZ", "");
+                top_history += FormatTHSLine(stock_code);
+            }
+            if (!string.IsNullOrEmpty(top_history) && top_history.Last() == '\n') top_history = top_history.Remove(top_history.Count() - 1);
+
             string file_content = File.ReadAllText(APath.GetTHSStrategyFileOrigin());
-            file_content = file_content.Replace("===TPO3===", tpo3).Replace("===TPO31===", tpo31).Replace("===TOP===", top);
+            file_content = file_content.Replace("===TPO3===", tpo3).Replace("===TPO31===", tpo31).Replace("===TOP===", top).Replace("===TOPHISTORY===", top_history);
             File.WriteAllText(APath.GetTHSStrategyFileTarget(), file_content);
         }
 

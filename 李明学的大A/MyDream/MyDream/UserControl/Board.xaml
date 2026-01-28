@@ -807,6 +807,25 @@
 								</ListBox.ItemTemplate>
 							</ListBox>
 						</Grid>
+						<StackPanel Grid.Row="2" Grid.Column="2" Orientation="Horizontal">
+							<TextBlock Text="TOP HISTORY" Width="200"/>
+						</StackPanel>
+						<Grid Grid.Row="3" Grid.Column="2">
+							<ListBox Margin="5" ItemsSource="{Binding StrategyTargetTopHistoryData, Mode=TwoWay}" SelectedIndex="{Binding StrategyTargetTopHistoryDataIndex}" Background="Black" FontSize="11" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+								<ListBox.ItemTemplate>
+									<DataTemplate>
+										<StackPanel Orientation="Horizontal">
+											<TextBlock Text="{Binding StockName}" Width="40" Foreground="White" FontSize="9"/>
+											<TextBlock Text="[" Foreground="White" FontSize="10"/>
+											<TextBlock Text="{Binding StockCode}" Foreground="White" FontSize="9"/>
+											<TextBlock Text="]  " Foreground="White" FontSize="10"/>
+											<TextBlock Text="{Binding Slope}" Foreground="White" Width="55" FontSize="9"/>
+											<TextBlock Text="{Binding SlopeRatio}" Foreground="White" Width="60" FontSize="9"/>
+										</StackPanel>
+									</DataTemplate>
+								</ListBox.ItemTemplate>
+							</ListBox>
+						</Grid>
 					</Grid>
 					<local:KChart Grid.Row="0" Grid.RowSpan="4" Grid.Column="1" KRecords="{Binding StrategyTargetKRecords}" Margin="5" Background="Black"/>
 				</Grid>

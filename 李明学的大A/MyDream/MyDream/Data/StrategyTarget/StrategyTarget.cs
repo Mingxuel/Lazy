@@ -18,6 +18,7 @@ namespace MyDream
         public List<StrategyTargetItem> Data3 = new List<StrategyTargetItem>();
         public List<StrategyTargetItem> Data31 = new List<StrategyTargetItem>();
         public List<StrategyTargetItem> DataTop = new List<StrategyTargetItem>();
+        public List<StrategyTargetItem> DataTopHistory = new List<StrategyTargetItem>();
 
         public void Init()
         {
@@ -117,7 +118,35 @@ namespace MyDream
                 foreach (var item in items)
                 {
                     List<Record1DItem?> records = new List<Record1DItem?>();
-                    foreach (int index in Enumerable.Range(1, range))
+                    foreach (int index in Enumerable.Range(0, range))
+                    {
+                        records.Add(ZZ5001D.Instance.PreRecord(item.StockCode!, TradingDates.Dates.Last(), index));
+                    }
+
+                    int top_count = 0;
+                    foreach (var record in records)
+                    {
+                        if (record!.IsTop) top_count++;
+                    }
+
+                    if (top_count != 1) continue;
+
+                    StrategyTargetItem target_item = new StrategyTargetItem();
+                    target_item.StockName = item.StockName;
+                    target_item.StockCode = item.StockCode;
+                    DataTop.Add(target_item);
+                }
+            }
+
+            DataTopHistory.Clear();
+            range = 30;
+            for (int i = TradingDates.Dates.Count - range; i < TradingDates.Dates.Count; i++)
+            {
+                var items = Strategy.Instance.Data[TradingDates.Dates[i]];
+                foreach (var item in items)
+                {
+                    List<Record1DItem?> records = new List<Record1DItem?>();
+                    foreach (int index in Enumerable.Range(0, range))
                     {
                         records.Add(ZZ5001D.Instance.PreRecord(item.StockCode!, TradingDates.Dates.Last(), index));
                     }
@@ -129,7 +158,7 @@ namespace MyDream
                             StrategyTargetItem target_item = new StrategyTargetItem();
                             target_item.StockName = item.StockName;
                             target_item.StockCode = item.StockCode;
-                            DataTop.Add(target_item);
+                            DataTopHistory.Add(target_item);
                             break;
                         }
                     }
