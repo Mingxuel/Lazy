@@ -70,21 +70,6 @@ namespace MyDream
         }
 
         [ObservableProperty]
-        private ObservableCollection<StrategyTargetItem> strategyTargetTwiceData = new ObservableCollection<StrategyTargetItem>();
-
-        private int strategyTargetTwiceDataIndex = -1;
-        public int StrategyTargetTwiceDataIndex
-        {
-            get => strategyTargetTwiceDataIndex;
-            set
-            {
-                strategyTargetTwiceDataIndex = value;
-                OnPropertyChanged();
-                UpdateRecordsStrategyTargetTwice();
-            }
-        }
-
-        [ObservableProperty]
         private List<Record1DItem> strategyTargetKRecords = new List<Record1DItem>();
 
         private Dictionary<string, Record1DItem> RealRecords = new Dictionary<string, Record1DItem>();
@@ -94,7 +79,6 @@ namespace MyDream
             StrategyTarget3Data.Clear();
             StrategyTarget31Data.Clear();
             StrategyTargetTopData.Clear();
-            StrategyTargetTwiceData.Clear();
 
             StrategyTarget.Instance.Init();
 
@@ -111,11 +95,6 @@ namespace MyDream
             foreach (var item in StrategyTarget.Instance.DataTop)
             {
                 StrategyTargetTopData.Add(item);
-            }
-
-            foreach (var item in StrategyTarget.Instance.DataTwice)
-            {
-                StrategyTargetTwiceData.Add(item);
             }
         }
 
@@ -176,25 +155,6 @@ namespace MyDream
             StrategyTargetKRecords = records!;
         }
 
-        private void UpdateRecordsStrategyTargetTwice()
-        {
-            if (StrategyTargetTwiceDataIndex == -1) return;
-
-            List<Record1DItem?> records = new List<Record1DItem?>();
-            string stock_code = StrategyTargetTwiceData[StrategyTargetTwiceDataIndex].StockCode!;
-            int count = ZZ5001D.Instance[stock_code]!.Data!.Count;
-            for (int i = 0; i <= count; i++)
-            {
-                if (i == count)
-                {
-                    if (RealRecords.Keys.Contains(stock_code)) records.Add(RealRecords[stock_code]);
-                    break;
-                }
-                records.Add(ZZ5001D.Instance[stock_code]!.Data![i]);
-            }
-            StrategyTargetKRecords = records!;
-        }
-
         [RelayCommand]
         private void StrategyListSyncClick()
         {
@@ -222,16 +182,8 @@ namespace MyDream
             }
             if (!string.IsNullOrEmpty(top) && top.Last() == '\n') top = top.Remove(top.Count() - 1);
 
-            string twice = string.Empty;
-            foreach (var data in StrategyTargetTwiceData)
-            {
-                string stock_code = data!.StockCode!.Replace(".SH", "").Replace(".SZ", "");
-                twice += FormatTHSLine(stock_code);
-            }
-            if (!string.IsNullOrEmpty(twice) && twice.Last() == '\n') twice = twice.Remove(twice.Count() - 1);
-
             string file_content = File.ReadAllText(APath.GetTHSStrategyFileOrigin());
-            file_content = file_content.Replace("===TPO3===", tpo3).Replace("===TPO31===", tpo31).Replace("===TOP===", top).Replace("===TWICE===", twice);
+            file_content = file_content.Replace("===TPO3===", tpo3).Replace("===TPO31===", tpo31).Replace("===TOP===", top);
             File.WriteAllText(APath.GetTHSStrategyFileTarget(), file_content);
         }
 
