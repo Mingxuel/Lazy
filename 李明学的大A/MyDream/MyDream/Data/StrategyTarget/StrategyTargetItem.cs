@@ -10,13 +10,13 @@ namespace MyDream
     {
         public string? StockName { get; set; }
         public string? StockCode { get; set; }
-        public string? Slope { get; set; }
-        public string? SlopeRatio { get; set; }
+        public string? VWAPHigh { get; set; }
+        public string? VWAPClose { get; set; }
         public int Count { get; set; }
         public int LastDateIndex { get; set; }
         public override string ToString()
         {
-            return $"{StockName}|{StockCode}|{Slope}|{SlopeRatio}|{Count}|{LastDateIndex}";
+            return $"{StockName}|{StockCode}|{VWAPHigh}|{VWAPClose}|{Count}|{LastDateIndex}";
         }
     }
 }

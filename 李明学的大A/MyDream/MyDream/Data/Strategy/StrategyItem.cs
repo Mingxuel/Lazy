@@ -17,13 +17,13 @@ namespace MyDream
         public double Close { get; set; } = 0.0;
         public string CloseRatio { get; set; } = "00.00%";
         public string HighRatio { get; set; } = "00.00%";
+        public string LowRatio { get; set; } = "00.00%";
         public string OpenRatio { get; set; } = "00.00%";
-        public string PreCloseRatio { get; set; } = "00.00%";
-        public string PreHighRatio { get; set; } = "00.00%";
-        public string PreOpenRatio { get; set; } = "00.00%";
+        public string VWAPHighRatio { get; set; } = "00.00%";
+        public string VWAPCloseRatio { get; set; } = "00.00%";
         public override string ToString()
         {
-            return $"{StockName}|{StockCode}|{Date}|{Open}|{High}|{Low}|{Close}|{CloseRatio}|{HighRatio}|{OpenRatio}|{PreCloseRatio}|{PreHighRatio}|{PreOpenRatio}";
+            return $"{StockName}|{StockCode}|{Date}|{Open}|{High}|{Low}|{Close}|{CloseRatio}|{HighRatio}|{LowRatio}|{OpenRatio}|{VWAPHighRatio}|{VWAPCloseRatio}";
         }
     }
 }

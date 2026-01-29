@@ -39,6 +39,7 @@
 					<Button Content="UPDATE TEST" Command="{Binding UpdateTestingClickCommand}" Margin="5" FontWeight="Bold" Width="160"/>
 					<Button Content="SYNC THX" Command="{Binding StrategyListSyncClickCommand}" Margin="5" FontWeight="Bold" Width="160"/>
 					<Button Content="RUNTIME" Command="{Binding RuntimeClickCommand}" Margin="5" FontWeight="Bold" Width="160"/>
+					<Button Content="VWAP UPDATE" Command="{Binding VWAPClickCommand}" Margin="5" FontWeight="Bold" Width="160"/>
 				</WrapPanel>
 			</GroupBox>
 		</Grid>
@@ -135,12 +136,12 @@
 					<StackPanel Grid.Row="5" Grid.Column="0" Orientation="Horizontal">
 						<TextBlock Text="   NAME" Width="100"/>
 						<TextBlock Text="CODE" Width="88"/>
-						<TextBlock Text="P CLO R" Width="88"/>
-						<TextBlock Text="P HIG R" Width="88"/>
-						<TextBlock Text="P OPE R" Width="88"/>
-						<TextBlock Text="CLO R" Width="88"/>
-						<TextBlock Text="HIG R" Width="88"/>
-						<TextBlock Text="OPE R" Width="88"/>
+						<TextBlock Text="CLOSE" Width="88"/>
+						<TextBlock Text="HIGH" Width="88"/>
+						<TextBlock Text="LOW" Width="88"/>
+						<TextBlock Text="OPEN" Width="88"/>
+						<TextBlock Text="VWAP-H" Width="88"/>
+						<TextBlock Text="VWAP-C" Width="88"/>
 					</StackPanel>
 					<Grid Grid.Row="6" Grid.Column="0">
 						<ListBox Margin="5" ItemsSource="{Binding StrategyData}" SelectedIndex="{Binding StrategyDataIndex}" Background="Black">
@@ -151,12 +152,12 @@
 										<TextBlock Text="[" Foreground="White"/>
 										<TextBlock Text="{Binding StockCode}" Foreground="White"/>
 										<TextBlock Text="]   " Foreground="White"/>
-										<TextBlock Text="{Binding PreCloseRatio, Converter={StaticResource StringToPercentStringConverter}}" Foreground="White" Width="88"/>
-										<TextBlock Text="{Binding PreHighRatio, Converter={StaticResource StringToPercentStringConverter}}" Foreground="White" Width="88"/>
-										<TextBlock Text="{Binding PreOpenRatio, Converter={StaticResource StringToPercentStringConverter}}" Foreground="White" Width="88"/>
 										<TextBlock Text="{Binding CloseRatio, Converter={StaticResource StringToPercentStringConverter}}" Foreground="White" Width="88"/>
 										<TextBlock Text="{Binding HighRatio, Converter={StaticResource StringToPercentStringConverter}}" Foreground="White" Width="88"/>
+										<TextBlock Text="{Binding LowRatio, Converter={StaticResource StringToPercentStringConverter}}" Foreground="White" Width="88"/>
 										<TextBlock Text="{Binding OpenRatio, Converter={StaticResource StringToPercentStringConverter}}" Foreground="White" Width="88"/>
+										<TextBlock Text="{Binding VWAPHighRatio, Converter={StaticResource StringToPercentStringConverter}}" Foreground="White" Width="88"/>
+										<TextBlock Text="{Binding VWAPCloseRatio, Converter={StaticResource StringToPercentStringConverter}}" Foreground="White" Width="88"/>
 									</StackPanel>
 								</DataTemplate>
 							</ListBox.ItemTemplate>
@@ -864,6 +865,67 @@
 						</ListBox.ItemTemplate>
 					</ListBox>
 					<local:KChart Grid.Row="0" Grid.RowSpan="2" Grid.Column="1" KRecords="{Binding TrendKRecords}" Margin="5"/>
+				</Grid>
+			</TabItem>
+			<TabItem Header="STRATEGY" FontSize="14" Width="120" Height="30" Foreground="#FF8000" FontWeight="Bold" Background="Black">
+				<Grid>
+					<Grid.RowDefinitions>
+						<RowDefinition/>
+					</Grid.RowDefinitions>
+					<Grid.ColumnDefinitions>
+						<ColumnDefinition/>
+						<ColumnDefinition/>
+						<ColumnDefinition/>
+						<ColumnDefinition/>
+					</Grid.ColumnDefinitions>
+					<ListBox Grid.Row="1" Grid.Column="0" Margin="3 5 3 5" ItemsSource="{Binding StrategyDetail1}" Background="Black" VerticalContentAlignment="Center">
+						<ListBox.ItemTemplate>
+							<DataTemplate>
+								<StackPanel Orientation="Horizontal">
+									<TextBlock Text="{Binding ID}" Width="100" Foreground="White"/>
+									<TextBlock Text="{Binding Detail2024}" Foreground="White" Width="100"/>
+									<TextBlock Text="{Binding Detail2025}" Foreground="White" Width="100"/>
+									<TextBlock Text="{Binding Detail2026}" Foreground="White" Width="100"/>
+								</StackPanel>
+							</DataTemplate>
+						</ListBox.ItemTemplate>
+					</ListBox>
+					<ListBox Grid.Row="1" Grid.Column="1" Margin="3 5 3 5" ItemsSource="{Binding StrategyDetail2}" Background="Black" VerticalContentAlignment="Center">
+						<ListBox.ItemTemplate>
+							<DataTemplate>
+								<StackPanel Orientation="Horizontal">
+									<TextBlock Text="{Binding ID}" Width="100" Foreground="White"/>
+									<TextBlock Text="{Binding Detail2024}" Foreground="White" Width="100"/>
+									<TextBlock Text="{Binding Detail2025}" Foreground="White" Width="100"/>
+									<TextBlock Text="{Binding Detail2026}" Foreground="White" Width="100"/>
+								</StackPanel>
+							</DataTemplate>
+						</ListBox.ItemTemplate>
+					</ListBox>
+					<ListBox Grid.Row="1" Grid.Column="2" Margin="3 5 3 5" ItemsSource="{Binding StrategyDetail3}" Background="Black" VerticalContentAlignment="Center">
+						<ListBox.ItemTemplate>
+							<DataTemplate>
+								<StackPanel Orientation="Horizontal">
+									<TextBlock Text="{Binding ID}" Width="100" Foreground="White"/>
+									<TextBlock Text="{Binding Detail2024}" Foreground="White" Width="100"/>
+									<TextBlock Text="{Binding Detail2025}" Foreground="White" Width="100"/>
+									<TextBlock Text="{Binding Detail2026}" Foreground="White" Width="100"/>
+								</StackPanel>
+							</DataTemplate>
+						</ListBox.ItemTemplate>
+					</ListBox>
+					<ListBox Grid.Row="1" Grid.Column="3" Margin="3 5 3 5" ItemsSource="{Binding StrategyDetailVWAP}" Background="Black" VerticalContentAlignment="Center">
+						<ListBox.ItemTemplate>
+							<DataTemplate>
+								<StackPanel Orientation="Horizontal">
+									<TextBlock Text="{Binding ID}" Width="100" Foreground="White"/>
+									<TextBlock Text="{Binding Detail2024}" Foreground="White" Width="100"/>
+									<TextBlock Text="{Binding Detail2025}" Foreground="White" Width="100"/>
+									<TextBlock Text="{Binding Detail2026}" Foreground="White" Width="100"/>
+								</StackPanel>
+							</DataTemplate>
+						</ListBox.ItemTemplate>
+					</ListBox>
 				</Grid>
 			</TabItem>
 		</TabControl>

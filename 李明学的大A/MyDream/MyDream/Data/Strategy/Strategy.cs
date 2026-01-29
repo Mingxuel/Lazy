@@ -55,10 +55,10 @@ namespace MyDream
                             strategy_item.Close = double.Parse(items[6].Trim());
                             strategy_item.CloseRatio = items[7];
                             strategy_item.HighRatio = items[8];
-                            strategy_item.OpenRatio = items[9];
-                            strategy_item.PreCloseRatio = items[10];
-                            strategy_item.PreHighRatio = items[11];
-                            strategy_item.PreOpenRatio = items[12];
+                            strategy_item.LowRatio = items[9];
+                            strategy_item.OpenRatio = items[10];
+                            strategy_item.VWAPHighRatio = items[11];
+                            strategy_item.VWAPCloseRatio = items[12];
                             Data[trading_date].Add(strategy_item);
                         }
                     }
@@ -128,10 +128,13 @@ namespace MyDream
                     strategy_item.Close = item.Close;
                     strategy_item.CloseRatio = ((item.Close - item.PreClose) / item.PreClose * 100).ToString("00.00");
                     strategy_item.HighRatio = ((item.High - item.PreClose) / item.PreClose * 100).ToString("00.00");
+                    strategy_item.LowRatio = ((item.Low - item.PreClose) / item.PreClose * 100).ToString("00.00");
                     strategy_item.OpenRatio = ((item.Open - item.PreClose) / item.PreClose * 100).ToString("00.00");
-                    strategy_item.PreCloseRatio = ((record_1.Close - record_1.PreClose) / record_1.PreClose * 100).ToString("00.00");
-                    strategy_item.PreHighRatio = ((record_1.High - record_1.PreClose) / record_1.PreClose * 100).ToString("00.00");
-                    strategy_item.PreOpenRatio = ((record_1.Open - record_1.PreClose) / record_1.PreClose * 100).ToString("00.00");
+                    double total_high = record_1.High * record_1.Volume + record_2.High * record_2.Volume + record_3.High * record_3.Volume + record_4.High * record_4.Volume;
+                    double total_close = record_1.Close * record_1.Volume + record_2.Close * record_2.Volume + record_3.Close * record_3.Volume + record_4.Close * record_4.Volume;
+                    double total_volume = record_1.Volume + record_2.Volume + record_3.Volume + record_4.Volume;
+                    strategy_item.VWAPHighRatio = ((total_high / total_volume - record_1.Close) / record_1.Close * 100).ToString("00.00");
+                    strategy_item.VWAPCloseRatio = ((total_close / total_volume - record_1.Close) / record_1.Close * 100).ToString("00.00");
                     Data[trading_date!].Add(strategy_item);
                     using (StreamWriter writer = new StreamWriter(file!, true))
                     {
@@ -190,10 +193,13 @@ namespace MyDream
                     strategy_item.Close = item.Close;
                     strategy_item.CloseRatio = ((item.Close - item.PreClose) / item.PreClose * 100).ToString("00.00");
                     strategy_item.HighRatio = ((item.High - item.PreClose) / item.PreClose * 100).ToString("00.00");
+                    strategy_item.LowRatio = ((item.High - item.PreClose) / item.PreClose * 100).ToString("00.00");
                     strategy_item.OpenRatio = ((item.Open - item.PreClose) / item.PreClose * 100).ToString("00.00");
-                    strategy_item.PreCloseRatio = ((record_1.Close - record_1.PreClose) / record_1.PreClose * 100).ToString("00.00");
-                    strategy_item.PreHighRatio = ((record_1.High - record_1.PreClose) / record_1.PreClose * 100).ToString("00.00");
-                    strategy_item.PreOpenRatio = ((record_1.Open - record_1.PreClose) / record_1.PreClose * 100).ToString("00.00");
+                    double total_high = record_1.High * record_1.Volume + record_2.High * record_2.Volume + record_3.High * record_3.Volume + record_4.High * record_4.Volume;
+                    double total_close = record_1.Close * record_1.Volume + record_2.Close * record_2.Volume + record_3.Close * record_3.Volume + record_4.Close * record_4.Volume;
+                    double total_volume = record_1.Volume + record_2.Volume + record_3.Volume + record_4.Volume;
+                    strategy_item.VWAPHighRatio = ((total_high / total_volume - record_1.Close) / record_1.Close * 100).ToString("00.00");
+                    strategy_item.VWAPCloseRatio = ((total_close / total_volume - record_1.Close) / record_1.Close * 100).ToString("00.00");
                     Data[trading_date!].Add(strategy_item);
                     using (StreamWriter writer = new StreamWriter(file!, true))
                     {

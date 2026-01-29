@@ -135,6 +135,12 @@ namespace MyDream
             _real_timer.Start();
         }
 
+        [RelayCommand]
+        private void VWAPClick()
+        {
+            UpdateStrategyDetail();
+        }
+
         private void UpdateStrategy()
         {
             //更新ZZ500数据
