@@ -363,7 +363,7 @@ namespace MyDream
 
                         data.VWAPHigh = (((total_high / total_volume) - records[records.Count - 1]!.Close) / records[records.Count - 1]!.Close * 100).ToString("00.00%");
                         data.VWAPClose = (((total_close / total_volume) - records[records.Count - 1]!.Close) / records[records.Count - 1]!.Close * 100).ToString("00.00%");
-                        collection31.Add(data);
+                        collectiontop.Add(data);
                     }
                     StrategyTargetTopData = collectiontop;
                 });
