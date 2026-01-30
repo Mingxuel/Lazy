@@ -12,11 +12,12 @@ namespace MyDream
         public string? StockCode { get; set; }
         public string? VWAPHigh { get; set; }
         public string? VWAPClose { get; set; }
+        public string? Flag { get; set; }
         public int Count { get; set; }
         public int LastDateIndex { get; set; }
         public override string ToString()
         {
-            return $"{StockName}|{StockCode}|{VWAPHigh}|{VWAPClose}|{Count}|{LastDateIndex}";
+            return $"{StockName}|{StockCode}|{VWAPHigh}|{VWAPClose}|{Flag}|{Count}|{LastDateIndex}";
         }
     }
 }

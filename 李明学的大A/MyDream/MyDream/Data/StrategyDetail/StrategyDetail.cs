@@ -227,8 +227,6 @@ namespace MyDream
                         }
                     }
 
-                    if (max_vwap < 0.0) continue;
-
                     var ratio = GetRatio(strategy_items[max_index]);
 
                     if (date.StartsWith("2024"))
@@ -264,7 +262,7 @@ namespace MyDream
 
         private double GetRatio(StrategyItem item)
         {
-            var value = double.Parse(item.CloseRatio);
+            var value = double.Parse(item.HighRatio);
             return value;
         }
 

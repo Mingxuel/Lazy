@@ -289,9 +289,9 @@ namespace MyDream
                             records.Add(ZZ5001D.Instance[data!.StockCode!]!.Data![i]);
                         }
 
-                        double total_high = records[records.Count - 1]!.High * records[records.Count - 1]!.Volume + 
-                                            records[records.Count - 2]!.High * records[records.Count - 2]!.Volume + 
-                                            records[records.Count - 3]!.High * records[records.Count - 3]!.Volume + 
+                        double total_high = records[records.Count - 1]!.High * records[records.Count - 1]!.Volume +
+                                            records[records.Count - 2]!.High * records[records.Count - 2]!.Volume +
+                                            records[records.Count - 3]!.High * records[records.Count - 3]!.Volume +
                                             records[records.Count - 4]!.High * records[records.Count - 4]!.Volume;
                         double total_close = records[records.Count - 1]!.Close * records[records.Count - 1]!.Volume +
                                             records[records.Count - 2]!.Close * records[records.Count - 2]!.Volume +
@@ -300,7 +300,20 @@ namespace MyDream
                         double total_volume = records[records.Count - 1]!.Volume + records[records.Count - 2]!.Volume + records[records.Count - 3]!.Volume + records[records.Count - 4]!.Volume;
 
                         data.VWAPHigh = (((total_high / total_volume) - records[records.Count - 1]!.Close) / records[records.Count - 1]!.Close * 100).ToString("00.00%");
-                        data.VWAPClose= (((total_close / total_volume) - records[records.Count - 1]!.Close) / records[records.Count - 1]!.Close * 100).ToString("00.00%");
+                        data.VWAPClose = (((total_close / total_volume) - records[records.Count - 1]!.Close) / records[records.Count - 1]!.Close * 100).ToString("00.00%");
+
+                        records[records.Count - 1]!.PreClose = records[records.Count - 2]!.Close;
+                        if (records[records.Count - 1]!.Volume < records[records.Count - 2]!.Volume &&
+                            records[records.Count - 1]!.IsDown &&
+                            !records[records.Count - 1]!.IsBottom)
+                        {
+                            data.Flag = "Y";
+                        }
+                        else
+                        {
+                            data.Flag = "N";
+                        }
+
                         collection3.Add(data);
                     }
                     StrategyTarget3Data = collection3;

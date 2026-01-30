@@ -736,7 +736,7 @@
 			<TabItem Header="STRATEGY TARGET" FontSize="14" Width="160" Height="30" Foreground="#FF8000" FontWeight="Bold" Background="Black">
 				<Grid>
 					<Grid.ColumnDefinitions>
-						<ColumnDefinition Width="480"/>
+						<ColumnDefinition Width="640"/>
 						<ColumnDefinition/>
 					</Grid.ColumnDefinitions>
 					<Grid  Grid.Column="0">
@@ -763,8 +763,9 @@
 											<TextBlock Text="[" Foreground="White" FontSize="10"/>
 											<TextBlock Text="{Binding StockCode}" Foreground="White" FontSize="9"/>
 											<TextBlock Text="]  " Foreground="White" FontSize="10"/>
-											<TextBlock Text="{Binding Slope}" Foreground="White" Width="55" FontSize="9"/>
-											<TextBlock Text="{Binding SlopeRatio}" Foreground="White" Width="60" FontSize="9"/>
+											<TextBlock Text="{Binding VWAPHigh}" Foreground="White" Width="55" FontSize="9"/>
+											<TextBlock Text="{Binding VWAPClose}" Foreground="White" Width="60" FontSize="9"/>
+											<TextBlock Text="{Binding Flag}" Foreground="White" Width="88"/>
 										</StackPanel>
 									</DataTemplate>
 								</ListBox.ItemTemplate>
@@ -782,8 +783,9 @@
 											<TextBlock Text="[" Foreground="White" FontSize="10"/>
 											<TextBlock Text="{Binding StockCode}" Foreground="White" FontSize="9"/>
 											<TextBlock Text="]  " Foreground="White" FontSize="10"/>
-											<TextBlock Text="{Binding Slope}" Foreground="White" Width="55" FontSize="9"/>
-											<TextBlock Text="{Binding SlopeRatio}" Foreground="White" Width="60" FontSize="9"/>
+											<TextBlock Text="{Binding VWAPHigh}" Foreground="White" Width="60" FontSize="9"/>
+											<TextBlock Text="{Binding VWAPClose}" Foreground="White" Width="55" FontSize="9"/>
+											<TextBlock Text="{Binding Flag}" Foreground="White" Width="88"/>
 										</StackPanel>
 									</DataTemplate>
 								</ListBox.ItemTemplate>
@@ -801,8 +803,9 @@
 											<TextBlock Text="[" Foreground="White" FontSize="10"/>
 											<TextBlock Text="{Binding StockCode}" Foreground="White" FontSize="9"/>
 											<TextBlock Text="]  " Foreground="White" FontSize="10"/>
-											<TextBlock Text="{Binding Slope}" Foreground="White" Width="55" FontSize="9"/>
-											<TextBlock Text="{Binding SlopeRatio}" Foreground="White" Width="60" FontSize="9"/>
+											<TextBlock Text="{Binding VWAPHigh}" Foreground="White" Width="60" FontSize="9"/>
+											<TextBlock Text="{Binding VWAPClose}" Foreground="White" Width="55" FontSize="9"/>
+											<TextBlock Text="{Binding Flag}" Foreground="White" Width="88"/>
 										</StackPanel>
 									</DataTemplate>
 								</ListBox.ItemTemplate>
@@ -820,8 +823,9 @@
 											<TextBlock Text="[" Foreground="White" FontSize="10"/>
 											<TextBlock Text="{Binding StockCode}" Foreground="White" FontSize="9"/>
 											<TextBlock Text="]  " Foreground="White" FontSize="10"/>
-											<TextBlock Text="{Binding Slope}" Foreground="White" Width="55" FontSize="9"/>
-											<TextBlock Text="{Binding SlopeRatio}" Foreground="White" Width="60" FontSize="9"/>
+											<TextBlock Text="{Binding VWAPHigh}" Foreground="White" Width="60" FontSize="9"/>
+											<TextBlock Text="{Binding VWAPClose}" Foreground="White" Width="55" FontSize="9"/>
+											<TextBlock Text="{Binding Flag}" Foreground="White" Width="88"/>
 										</StackPanel>
 									</DataTemplate>
 								</ListBox.ItemTemplate>
