@@ -206,7 +206,7 @@ namespace MyDream
                     var strategy_items = Strategy.Instance.Data[date];
                     if (strategy_items.Count == 0) continue;
 
-                    int max_index = 0;
+                    int max_index = -1;
                     double max_vwap = -10000;
                     foreach (var strategy_item in strategy_items)
                     {
@@ -217,15 +217,21 @@ namespace MyDream
                         var record_4 = ZZ5001D.Instance.PreRecord(strategy_item.StockCode!, date, 4);
                         if (record == null || record_1 == null || record_2 == null || record_3 == null || record_4 == null) continue;
                         double total_value = GetPrice(record_1) * record_1.Volume + GetPrice(record_2) * record_2.Volume + GetPrice(record_3) * record_3.Volume + GetPrice(record_4) * record_4.Volume;
+                        double total_value_low = GetLow(record_1) * record_1.Volume + GetLow(record_2) * record_2.Volume + GetLow(record_3) * record_3.Volume + GetLow(record_4) * record_4.Volume;
                         double total_volume = record_1.Volume + record_2.Volume + record_3.Volume + record_4.Volume;
                         double vwap = total_value / total_volume;
+                        double vwap_low = total_value_low / total_volume;
+
                         vwap = (vwap - record_1.Close) / record_1.Close * 100.0;
+
                         if (vwap > max_vwap)
                         {
                             max_vwap = vwap;
                             max_index = strategy_items.IndexOf(strategy_item);
                         }
                     }
+
+                    if (max_index == -1) continue;
 
                     var ratio = GetRatio(strategy_items[max_index]);
 
@@ -269,6 +275,11 @@ namespace MyDream
         private double GetPrice(Record1DItem? item)
         {
             return item!.High;
+        }
+
+        private double GetLow(Record1DItem? item)
+        {
+            return item!.Low;
         }
     }
 }

@@ -9,7 +9,7 @@ namespace MyDream
     public static class Constants
     {
         // 数值常量
-        public const double ScaleX = 4.0;
+        public const double ScaleX = 10.0;
 
         public const double PlanRatio = 0.45;
     }
