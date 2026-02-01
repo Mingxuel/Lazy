@@ -22,17 +22,16 @@ namespace MyDream
         {
             get
             {
-                double new_value = Value - 1.0;
-                int ratio = 450 * 3;
+                double new_value = Value * 25.5;
                 if (new_value > 0.0)
                 {
-                    double value = new_value * ratio;
+                    double value = new_value;
                     if (value > 255) value = 255;
                     return new SolidColorBrush(Color.FromRgb((byte)value, 0, 0));
                 }
                 else if (new_value < 0.0)
                 {
-                    double value = Math.Abs(new_value * ratio);
+                    double value = Math.Abs(new_value);
                     if (value > 255) value = 255;
                     return new SolidColorBrush(Color.FromRgb(0, (byte)value, 0));
                 }

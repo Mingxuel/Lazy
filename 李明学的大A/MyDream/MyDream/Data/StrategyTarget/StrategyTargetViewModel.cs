@@ -6,6 +6,7 @@ using NPOI.SS.Formula.Functions;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Diagnostics.Eventing.Reader;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -299,13 +300,16 @@ namespace MyDream
                                             records[records.Count - 4]!.Close * records[records.Count - 4]!.Volume;
                         double total_volume = records[records.Count - 1]!.Volume + records[records.Count - 2]!.Volume + records[records.Count - 3]!.Volume + records[records.Count - 4]!.Volume;
 
-                        data.VWAPHigh = (((total_high / total_volume) - records[records.Count - 1]!.Close) / records[records.Count - 1]!.Close * 100).ToString("00.00%");
-                        data.VWAPClose = (((total_close / total_volume) - records[records.Count - 1]!.Close) / records[records.Count - 1]!.Close * 100).ToString("00.00%");
+                        data.VWAPHigh = (((total_high / total_volume) - records[records.Count - 1]!.Close) / records[records.Count - 1]!.Close).ToString("00.00%");
+                        data.VWAPClose = (((total_close / total_volume) - records[records.Count - 1]!.Close) / records[records.Count - 1]!.Close).ToString("00.00%");
+
+                        double ma5 = (records[records.Count - 1]!.Close + records[records.Count - 2]!.Close + records[records.Count - 3]!.Close + records[records.Count - 4]!.Close + records[records.Count - 5]!.Close) / 5.0;
 
                         records[records.Count - 1]!.PreClose = records[records.Count - 2]!.Close;
                         if (records[records.Count - 1]!.Volume < records[records.Count - 2]!.Volume &&
                             records[records.Count - 1]!.IsDown &&
-                            !records[records.Count - 1]!.IsBottom)
+                            !records[records.Count - 1]!.IsBottom &&
+                            records[records.Count - 1]!.Close > ma5)
                         {
                             data.Flag = "Y";
                         }
@@ -336,16 +340,27 @@ namespace MyDream
                         double total_high = records[records.Count - 1]!.High * records[records.Count - 1]!.Volume +
                                             records[records.Count - 2]!.High * records[records.Count - 2]!.Volume +
                                             records[records.Count - 3]!.High * records[records.Count - 3]!.Volume +
-                                            records[records.Count - 4]!.High * records[records.Count - 4]!.Volume;
+                                            records[records.Count - 4]!.High * records[records.Count - 4]!.Volume +
+                                            records[records.Count - 5]!.High * records[records.Count - 5]!.Volume;
                         double total_close = records[records.Count - 1]!.Close * records[records.Count - 1]!.Volume +
                                             records[records.Count - 2]!.Close * records[records.Count - 2]!.Volume +
                                             records[records.Count - 3]!.Close * records[records.Count - 3]!.Volume +
-                                            records[records.Count - 4]!.Close * records[records.Count - 4]!.Volume;
-                        double total_volume = records[records.Count - 1]!.Volume + records[records.Count - 2]!.Volume + records[records.Count - 3]!.Volume + records[records.Count - 4]!.Volume;
+                                            records[records.Count - 4]!.Close * records[records.Count - 4]!.Volume +
+                                            records[records.Count - 5]!.Close * records[records.Count - 5]!.Volume;
+                        double total_volume = records[records.Count - 1]!.Volume + records[records.Count - 2]!.Volume + records[records.Count - 3]!.Volume + records[records.Count - 4]!.Volume + records[records.Count - 5]!.Volume;
 
-                        data.VWAPHigh = (((total_high / total_volume) - records[records.Count - 1]!.Close) / records[records.Count - 1]!.Close * 100).ToString("00.00%");
-                        data.VWAPClose = (((total_close / total_volume) - records[records.Count - 1]!.Close) / records[records.Count - 1]!.Close * 100).ToString("00.00%");
-                        collection31.Add(data);
+                        data.VWAPHigh = (((total_high / total_volume) - records[records.Count - 1]!.Close) / records[records.Count - 1]!.Close).ToString("P2");
+                        data.VWAPClose = (((total_close / total_volume) - records[records.Count - 1]!.Close) / records[records.Count - 1]!.Close).ToString("P2");
+                        if (total_high / total_volume > records[records.Count - 1]!.High) {
+                            data.Flag = "H>H";
+                        } else if (total_high / total_volume > records[records.Count - 1]!.Close) {
+                            data.Flag = "H>C";
+                        } else if (total_close / total_volume > records[records.Count - 1]!.Close){
+                            data.Flag = "C>C";
+                        } else {
+                            data.Flag = "";
+                        }
+                            collection31.Add(data);
                     }
                     StrategyTarget31Data = collection31;
 

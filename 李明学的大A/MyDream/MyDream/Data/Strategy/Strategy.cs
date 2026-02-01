@@ -60,7 +60,7 @@ namespace MyDream
                             strategy_item.VWAPHighRatio = items[11];
                             strategy_item.VWAPCloseRatio = items[12];
                             Data[trading_date].Add(strategy_item);
-                        }
+    }
                     }
                 }
                 else

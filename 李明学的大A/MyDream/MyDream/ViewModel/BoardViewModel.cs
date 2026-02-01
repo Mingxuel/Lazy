@@ -139,6 +139,7 @@ namespace MyDream
         private void VWAPClick()
         {
             UpdateStrategyDetail();
+            UpdateBurn();
         }
 
         private void UpdateStrategy()

@@ -106,6 +106,12 @@ namespace MyDream
                             StrategyTarget_item.StockName = data.StockName;
                         }
                     }
+                    double vwap_high = record_1.High * record_1.Volume + record_2.High * record_2.Volume + record_3.High * record_3.Volume + record_4.High * record_4.Volume;
+                    double vwap_close = record_1.Close * record_1.Volume + record_2.Close * record_2.Volume + record_3.Close * record_3.Volume + record_4.Close * record_4.Volume;
+                    double vwap_volume = record_1.Volume + record_2.Volume + record_3.Volume + record_4.Volume;
+                    StrategyTarget_item.VWAPHigh = ((vwap_high / vwap_volume - record_1.Close) / record_1.Close).ToString("P2");
+                    StrategyTarget_item.VWAPClose = ((vwap_close / vwap_volume - record_1.Close) / record_1.Close).ToString("P2");
+
                     Data31.Add(StrategyTarget_item);
                 }
             }

@@ -3,6 +3,7 @@ using MathNet.Numerics.Distributions;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -17,36 +18,21 @@ namespace MyDream
         private Burn burn = new Burn();
 
         [ObservableProperty]
-        private DrawingImage? burn2024;
+        private DrawingImage? burnAll;
 
         [ObservableProperty]
-        private DrawingImage? burn2025;
-
-        [ObservableProperty]
-        private DrawingImage? burn2026;
-
-        [ObservableProperty]
-        private DrawingImage? burn2027;
-
-        [ObservableProperty]
-        private DrawingImage? burn2028;
-
-        [ObservableProperty]
-        private DrawingImage? burn2029;
-
-        [ObservableProperty]
-        private DrawingImage? burn2030;
+        private ObservableCollection<BurnChartItem> burnChart = new ObservableCollection<BurnChartItem>();
 
         public void UpdateBurn()
         {
             burn.Update();
-            Burn2024 = Draw(burn.Burn2024);
-            Burn2025 = Draw(burn.Burn2025);
-            Burn2026 = Draw(burn.Burn2026);
-            Burn2027 = Draw(burn.Burn2027);
-            Burn2028 = Draw(burn.Burn2028);
-            Burn2029 = Draw(burn.Burn2029);
-            Burn2030 = Draw(burn.Burn2030);
+            BurnAll = Draw(burn.BurnAll);
+
+            BurnChart.Clear();
+            foreach (var item in burn.BurnChart)
+            {
+                BurnChart.Add(item);
+            }
         }
 
         private DrawingImage Draw(List<List<BurnItem>> item)
