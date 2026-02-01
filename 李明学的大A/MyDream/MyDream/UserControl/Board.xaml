@@ -837,12 +837,18 @@
 						<TabItem Header="BURN" Foreground="#FF8000" FontWeight="Bold" Background="Black" FontSize="36" Width="120" Height="60">
 							<Grid>
 								<ListBox ItemsSource="{Binding BurnChart}" Background="Black" FontSize="30" FontWeight="Bold" ScrollViewer.HorizontalScrollBarVisibility="Disabled" ScrollViewer.VerticalScrollBarVisibility="Disabled">
+									<ListBox.ItemContainerStyle>
+										<Style TargetType="ListBoxItem">
+											<Setter Property="Height" Value="10"/>
+											<Setter Property="Padding" Value="0"/>
+										</Style>
+									</ListBox.ItemContainerStyle>
 									<ListBox.ItemTemplate>
 										<DataTemplate>
 											<StackPanel Orientation="Horizontal">
-												<TextBlock Foreground="#FF8000" Text="{Binding Time}" Margin="5 0 5 0" FontSize="8"/>
-												<TextBlock Foreground="#FF8000" Text="{Binding Count}" Margin="5 0 5 0" FontSize="8"/>
-												<Rectangle Fill="#FF8000" Width="{Binding Count}" Margin="5 0 0 0" Height="5">
+												<TextBlock Foreground="#FF8000" Text="{Binding Time}" Margin="5 0 5 0" FontSize="6" Width="30"/>
+												<TextBlock Foreground="#FF8000" Text="{Binding Count}" Margin="5 0 5 0" FontSize="6" Width="20"/>
+												<Rectangle Fill="#FF8000" Width="{Binding Count}" Margin="5 0 0 0" Height="6">
 												</Rectangle>
 											</StackPanel>
 										</DataTemplate>
