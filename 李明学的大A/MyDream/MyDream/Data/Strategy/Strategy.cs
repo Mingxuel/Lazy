@@ -1,4 +1,5 @@
-﻿using NPOI.SS.Util;
+﻿using NPOI.HSSF.Record;
+using NPOI.SS.Util;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -14,15 +15,18 @@ namespace MyDream
         private static Strategy? _instance = null;
         public static Strategy Instance { get => _instance == null ? _instance = new Strategy() : _instance; }
         public Dictionary<string, List<StrategyItem>> Data = new Dictionary<string, List<StrategyItem>>();
+        public Dictionary<string, List<StrategyItem>> DataTop = new Dictionary<string, List<StrategyItem>>();
         public EStrategy StrategyType = EStrategy.ThreePlusOne;
 
         public void Init()
         {
             Data.Clear();
+            DataTop.Clear();
 
             foreach (var trading_date in TradingDates.Dates)
             {
                 Data[trading_date] = new List<StrategyItem>();
+                DataTop[trading_date] = new List<StrategyItem>();
 
                 string? file = null;
                 switch(StrategyType)
@@ -60,7 +64,7 @@ namespace MyDream
                             strategy_item.VWAPHighRatio = items[11];
                             strategy_item.VWAPCloseRatio = items[12];
                             Data[trading_date].Add(strategy_item);
-    }
+                        }
                     }
                 }
                 else
@@ -76,6 +80,43 @@ namespace MyDream
                         default:
                             UpdateTPO(file, trading_date);
                             break;
+                    }
+                }
+            }
+
+            foreach (var date in TradingDates.Dates)
+            {
+                if (Data[date].Count == 0) continue;
+
+                foreach (var data in Data[date])
+                {
+                    foreach (var i in Enumerable.Range(0, 10))
+                    {
+                        var next_date = TradingDates.NextDate(date, i);
+                        if (next_date == null) continue;
+                        var item = ZZ5001D.Instance.Records[data.StockCode][next_date];
+                        if (item != null && item.IsTop)
+                        {
+                            StrategyItem strategy_item = new StrategyItem();
+                            strategy_item.StockCode = data.StockCode;
+                            foreach (var zz500_data in ZZ500.Data)
+                            {
+                                if (zz500_data.StockCode == data.StockCode)
+                                {
+                                    strategy_item.StockName = zz500_data.StockName;
+                                }
+                            }
+                            strategy_item.Date = next_date;
+                            strategy_item.Open = item.Open;
+                            strategy_item.High = item.High;
+                            strategy_item.Low = item.Low;
+                            strategy_item.Close = item.Close;
+                            strategy_item.CloseRatio = ((item.Close - item.PreClose) / item.PreClose * 100).ToString("00.00");
+                            strategy_item.HighRatio = ((item.High - item.PreClose) / item.PreClose * 100).ToString("00.00");
+                            strategy_item.LowRatio = ((item.Low - item.PreClose) / item.PreClose * 100).ToString("00.00");
+                            strategy_item.OpenRatio = ((item.Open - item.PreClose) / item.PreClose * 100).ToString("00.00");
+                            DataTop[next_date].Add(strategy_item);
+                        }
                     }
                 }
             }

@@ -140,6 +140,7 @@ namespace MyDream
         {
             UpdateStrategyDetail();
             UpdateBurn();
+            UpdateMotion();
         }
 
         private void UpdateStrategy()

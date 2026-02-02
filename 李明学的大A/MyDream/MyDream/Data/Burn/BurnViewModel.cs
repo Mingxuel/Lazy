@@ -26,7 +26,7 @@ namespace MyDream
         public void UpdateBurn()
         {
             burn.Update();
-            BurnAll = Draw(burn.BurnAll);
+            //BurnAll = Draw(burn.BurnAll);
 
             BurnChart.Clear();
             foreach (var item in burn.BurnChart)

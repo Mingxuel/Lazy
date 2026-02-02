@@ -967,6 +967,43 @@
 					<local:KChart Grid.Row="0" Grid.RowSpan="3" Grid.Column="2" KRecords="{Binding StrategyDetailKRecords}" Margin="5" Background="Black"/>
 				</Grid>
 			</TabItem>
+			<TabItem Header="MOTION" FontSize="36" Width="240" Height="60" Foreground="#FF8000" FontWeight="Bold" Background="Black">
+				<Grid>
+					<Grid.RowDefinitions>
+						<RowDefinition/>
+						<RowDefinition/>
+						<RowDefinition/>
+						<RowDefinition/>
+					</Grid.RowDefinitions>
+					<Grid.ColumnDefinitions>
+						<ColumnDefinition Width="48"/>
+						<ColumnDefinition Width="*"/>
+						<ColumnDefinition Width="*"/>
+					</Grid.ColumnDefinitions>
+					<TextBlock Grid.Row="0" Grid.Column="0" Text="MOTION 1" Margin="5,5,5,4" FontSize="30">
+						<TextBlock.LayoutTransform>
+							<RotateTransform Angle="90"/>
+						</TextBlock.LayoutTransform>
+					</TextBlock>
+					<ListBox Grid.Row="3" Grid.Column="1" Grid.ColumnSpan="2" Margin="3,5,3,4" ItemsSource="{Binding MotionData}" Background="Black" VerticalContentAlignment="Center" FontSize="24">
+						<ListBox.ItemTemplate>
+							<DataTemplate>
+								<StackPanel Orientation="Horizontal">
+									<TextBlock Text="{Binding Date}" Foreground="White" Width="160"/>
+									<TextBlock Text="{Binding StockCode}" Foreground="White" Width="160"/>
+									<TextBlock Text="{Binding StockName}" Foreground="White" Width="160"/>
+									<TextBlock Text="{Binding DAY1}" Foreground="White" Width="180"/>
+									<TextBlock Text="{Binding DAY2}" Foreground="White" Width="180"/>
+									<TextBlock Text="{Binding DAY3}" Foreground="White" Width="180"/>
+									<TextBlock Text="{Binding DAY4}" Foreground="White" Width="180"/>
+									<TextBlock Text="{Binding DAY5}" Foreground="White" Width="180"/>
+								</StackPanel>
+							</DataTemplate>
+						</ListBox.ItemTemplate>
+					</ListBox>
+					<local:KChart Grid.Row="0" Grid.RowSpan="3" Grid.Column="2" KRecords="{Binding StrategyDetailKRecords}" Margin="5" Background="Black"/>
+				</Grid>
+			</TabItem>
 		</TabControl>
 	</Grid>
 </UserControl>
