@@ -73,6 +73,7 @@ namespace MyDream
                     total *= (1 + double.Parse(ticket.CloseRatio) / 100.0);
                 }
 
+                item.Time = ticket.Date!;
                 item.Count = (int)total;
                 BurnChart.Add(item);
             }

@@ -143,6 +143,12 @@ namespace MyDream
             UpdateMotion();
         }
 
+        [RelayCommand]
+        private void UPDATE5MClick()
+        {
+            ZZ5005M.Instance.WriteConfig();
+        }
+
         private void UpdateStrategy()
         {
             //更新ZZ500数据

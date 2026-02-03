@@ -40,6 +40,7 @@
 						<Button Content="SYNC THX" Command="{Binding StrategyListSyncClickCommand}" FontWeight="Bold" Height="50" Margin="10"/>
 						<Button Content="RUNTIME" Command="{Binding RuntimeClickCommand}" FontWeight="Bold" Height="50" Margin="10"/>
 						<Button Content="VWAP UPDATE" Command="{Binding VWAPClickCommand}" FontWeight="Bold" Height="50" Margin="10"/>
+						<Button Content="UPDATE 5M" Command="{Binding UPDATE5MClickCommand}" FontWeight="Bold" Height="50" Margin="10"/>
 					</StackPanel>
 					<TextBox Grid.Row="1" Text="{Binding Output}" TextWrapping="Wrap" Background="Transparent" Foreground="White" Height="120" Margin="5" FontSize="24"/>
 				</Grid>
@@ -846,8 +847,8 @@
 									<ListBox.ItemTemplate>
 										<DataTemplate>
 											<StackPanel Orientation="Horizontal">
-												<TextBlock Foreground="#FF8000" Text="{Binding Time}" Margin="5 0 5 0" FontSize="6" Width="30"/>
-												<TextBlock Foreground="#FF8000" Text="{Binding Count}" Margin="5 0 5 0" FontSize="6" Width="20"/>
+												<TextBlock Foreground="#FF8000" Text="{Binding Time}" Margin="5 0 5 0" FontSize="6" Width="60"/>
+												<TextBlock Foreground="#FF8000" Text="{Binding Count}" Margin="5 0 5 0" FontSize="6" Width="40"/>
 												<Rectangle Fill="#FF8000" Width="{Binding Count}" Margin="5 0 0 0" Height="6">
 												</Rectangle>
 											</StackPanel>

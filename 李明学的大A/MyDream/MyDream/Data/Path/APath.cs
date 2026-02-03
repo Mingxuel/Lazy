@@ -82,6 +82,11 @@ namespace MyDream
             return GetRoot() + "\\Data\\1M\\";
         }
 
+        public static string Get5M()
+        {
+            return GetRoot() + "\\Data\\5M\\";
+        }
+
         public static string Get3B()
         {
             return GetRoot() + "\\Data\\3B\\";
