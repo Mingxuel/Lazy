@@ -63,8 +63,8 @@ namespace MyDream
             foreach (var ticket in StrategyDetail.Instance.DataVWAPTickets)
             {
                 BurnChartItem item = new BurnChartItem();
-                var data = ZZ5001D.Instance[ticket.StockCode!]![ticket.Date];
-                if (data.IsToped)
+                var data = ZZ5001D.Instance[ticket.StockCode!]![ticket.Date!];
+                if (data!.IsToped)
                 {
                     total *= (1 + (data.High - data.PreClose) / data.PreClose);
                 }

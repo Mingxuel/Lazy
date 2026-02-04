@@ -146,7 +146,7 @@ namespace MyDream
         [RelayCommand]
         private void UPDATE5MClick()
         {
-            ZZ5005M.Instance.WriteConfig();
+            ZZ5005M.Instance.Write();
         }
 
         private void UpdateStrategy()

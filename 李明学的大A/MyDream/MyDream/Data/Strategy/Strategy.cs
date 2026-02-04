@@ -94,7 +94,7 @@ namespace MyDream
                     {
                         var next_date = TradingDates.NextDate(date, i);
                         if (next_date == null) continue;
-                        var item = ZZ5001D.Instance.Records[data.StockCode][next_date];
+                        var item = ZZ5001D.Instance.Records[data.StockCode!]![next_date];
                         if (item != null && item.IsTop)
                         {
                             StrategyItem strategy_item = new StrategyItem();

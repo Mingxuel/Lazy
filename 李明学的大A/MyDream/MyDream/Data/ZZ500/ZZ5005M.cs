@@ -14,7 +14,7 @@ namespace MyDream
         public static ZZ5005M Instance { get => _instance == null ? _instance = new ZZ5005M() : _instance; }
         public Dictionary<string, Record5M?> Records { get; } = new Dictionary<string, Record5M?>();
 
-        public void WriteConfig()
+        public void Write()
         {
             foreach(var stock_code in ZZ500StockCodes.StockCodes)
             {
@@ -25,7 +25,7 @@ namespace MyDream
                     string file = directory + "\\" + date;
                     if (File.Exists(file)) continue;
 
-                    var records = ZZ5001M.Instance[stock_code][date];
+                    var records = ZZ5001M.Instance[stock_code!]![date];
                     if (records.Count == 0) continue;
                     string time = "";
                     double open = 0.0;
@@ -61,6 +61,11 @@ namespace MyDream
                     }
                 }
             }
+        }
+
+        public void Read()
+        {
+            
         }
     }
 }
