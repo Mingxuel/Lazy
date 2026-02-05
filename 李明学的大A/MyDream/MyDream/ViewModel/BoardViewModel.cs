@@ -43,7 +43,7 @@ namespace MyDream
         }
 
         [RelayCommand]
-        private async Task UpdateDataClick()
+        private async Task Update1DClick()
         {
             if (MessageBox.Show("确定要更新所有数据吗?", "更新数据", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
             {
@@ -71,11 +71,15 @@ namespace MyDream
                 Output += await CallPythonAPI.DownloadHistory1DAsync();
                 //更新1D数据
                 Output += await CallPythonAPI.UpdateHistory1DAsync();
-                //下载1M数据
-                //Output += await CallPythonAPI.DownloadHistory1MAsync();
-                //更新1M数据
-                //Output += await CallPythonAPI.UpdateHistory1MAsync();
             }
+        }
+
+        [RelayCommand]
+        private async Task UPDATE1M5MClick()
+        {
+            Output += await CallPythonAPI.DownloadHistory1MAsync();
+            Output += await CallPythonAPI.UpdateHistory1MAsync();
+            ZZ5005M.Instance.Write();
         }
 
         [RelayCommand]
@@ -141,12 +145,6 @@ namespace MyDream
             UpdateStrategyDetail();
             UpdateBurn();
             UpdateMotion();
-        }
-
-        [RelayCommand]
-        private void UPDATE5MClick()
-        {
-            ZZ5005M.Instance.Write();
         }
 
         private void UpdateStrategy()
