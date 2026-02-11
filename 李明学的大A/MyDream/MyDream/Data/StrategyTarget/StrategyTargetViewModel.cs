@@ -26,6 +26,21 @@ namespace MyDream
         private string slopeRatio = string.Empty;
 
         [ObservableProperty]
+        private ObservableCollection<StrategyTargetItem> strategyTarget2Data = new ObservableCollection<StrategyTargetItem>();
+
+        private int strategyTarget2DataIndex = -1;
+        public int StrategyTarget2DataIndex
+        {
+            get => strategyTarget2DataIndex;
+            set
+            {
+                strategyTarget2DataIndex = value;
+                OnPropertyChanged();
+                UpdateRecordsStrategyTarget2();
+            }
+        }
+
+        [ObservableProperty]
         private ObservableCollection<StrategyTargetItem> strategyTarget3Data = new ObservableCollection<StrategyTargetItem>();
 
         private int strategyTarget3DataIndex = -1;
@@ -92,12 +107,18 @@ namespace MyDream
 
         private void UpdateDataStrategyTarget()
         {
+            StrategyTarget2Data.Clear();
             StrategyTarget3Data.Clear();
             StrategyTarget31Data.Clear();
             StrategyTargetTopData.Clear();
             StrategyTargetTopHistoryData.Clear();
 
             StrategyTarget.Instance.Init();
+
+            foreach (var item in StrategyTarget.Instance.Data2)
+            {
+                StrategyTarget2Data.Add(item);
+            }
 
             foreach (var item in StrategyTarget.Instance.Data3)
             {
@@ -118,6 +139,25 @@ namespace MyDream
             {
                 StrategyTargetTopHistoryData.Add(item);
             }
+        }
+
+        private void UpdateRecordsStrategyTarget2()
+        {
+            if (StrategyTarget3DataIndex == -1) return;
+
+            List<Record1DItem?> records = new List<Record1DItem?>();
+            string stock_code = StrategyTarget2Data[StrategyTarget2DataIndex].StockCode!;
+            int count = ZZ5001D.Instance[stock_code]!.Data!.Count;
+            for (int i = 0; i <= count; i++)
+            {
+                if (i == count)
+                {
+                    if (RealRecords.Keys.Contains(stock_code)) records.Add(RealRecords[stock_code]);
+                    break;
+                }
+                records.Add(ZZ5001D.Instance[stock_code]!.Data![i]);
+            }
+            StrategyTargetKRecords = records!;
         }
 
         private void UpdateRecordsStrategyTarget3()
@@ -199,6 +239,14 @@ namespace MyDream
         [RelayCommand]
         private void StrategyListSyncClick()
         {
+            string tpo2 = string.Empty;
+            foreach (var data in StrategyTarget2Data)
+            {
+                string stock_code = data!.StockCode!.Replace(".SH", "").Replace(".SZ", "");
+                tpo2 += FormatTHSLine(stock_code);
+            }
+            if (!string.IsNullOrEmpty(tpo2) && tpo2.Last() == '\n') tpo2 = tpo2.Remove(tpo2.Count() - 1);
+
             string tpo3 = string.Empty;
             foreach (var data in StrategyTarget3Data)
             {
@@ -232,7 +280,7 @@ namespace MyDream
             if (!string.IsNullOrEmpty(top_history) && top_history.Last() == '\n') top_history = top_history.Remove(top_history.Count() - 1);
 
             string file_content = File.ReadAllText(APath.GetTHSStrategyFileOrigin());
-            file_content = file_content.Replace("===TPO3===", tpo3).Replace("===TPO31===", tpo31).Replace("===TOP===", top).Replace("===TOPHISTORY===", top_history);
+            file_content = file_content.Replace("===TPO2===", tpo2).Replace("===TPO3===", tpo3).Replace("===TPO31===", tpo31).Replace("===TOP===", top).Replace("===TOPHISTORY===", top_history);
             File.WriteAllText(APath.GetTHSStrategyFileTarget(), file_content);
         }
 
@@ -275,6 +323,54 @@ namespace MyDream
 
                 Application.Current.Dispatcher.Invoke(() =>
                 {
+                    var collection2 = new ObservableCollection<StrategyTargetItem>();
+                    foreach (var data in StrategyTarget2Data)
+                    {
+                        List<Record1DItem?> records = new List<Record1DItem?>();
+                        int count = ZZ5001D.Instance[data!.StockCode!]!.Data!.Count;
+                        for (int i = 0; i <= count; i++)
+                        {
+                            if (i == count)
+                            {
+                                if (RealRecords.Keys.Contains(data!.StockCode!)) records.Add(RealRecords[data!.StockCode!]);
+                                break;
+                            }
+                            records.Add(ZZ5001D.Instance[data!.StockCode!]!.Data![i]);
+                        }
+
+                        double total_high = records[records.Count - 1]!.High * records[records.Count - 1]!.Volume +
+                                            records[records.Count - 2]!.High * records[records.Count - 2]!.Volume +
+                                            records[records.Count - 3]!.High * records[records.Count - 3]!.Volume +
+                                            records[records.Count - 4]!.High * records[records.Count - 4]!.Volume;
+                        double total_close = records[records.Count - 1]!.Close * records[records.Count - 1]!.Volume +
+                                            records[records.Count - 2]!.Close * records[records.Count - 2]!.Volume +
+                                            records[records.Count - 3]!.Close * records[records.Count - 3]!.Volume +
+                                            records[records.Count - 4]!.Close * records[records.Count - 4]!.Volume;
+                        double total_volume = records[records.Count - 1]!.Volume + records[records.Count - 2]!.Volume + records[records.Count - 3]!.Volume + records[records.Count - 4]!.Volume;
+
+                        data.VWAPHigh = (((total_high / total_volume) - records[records.Count - 1]!.Close) / records[records.Count - 1]!.Close).ToString("00.00%");
+                        data.VWAPClose = (((total_close / total_volume) - records[records.Count - 1]!.Close) / records[records.Count - 1]!.Close).ToString("00.00%");
+
+                        double ma5 = (records[records.Count - 1]!.Close + records[records.Count - 2]!.Close + records[records.Count - 3]!.Close + records[records.Count - 4]!.Close + records[records.Count - 5]!.Close) / 5.0;
+
+                        records[records.Count - 1]!.PreClose = records[records.Count - 2]!.Close;
+                        if (records[records.Count - 1]!.Volume > records[records.Count - 2]!.Volume &&
+                            records[records.Count - 1]!.IsRed &&
+                            records[records.Count - 1]!.IsUp &&
+                            !records[records.Count - 1]!.IsTop &&
+                            records[records.Count - 1]!.Close > ma5)
+                        {
+                            data.Flag = "Y";
+                        }
+                        else
+                        {
+                            data.Flag = "N";
+                        }
+
+                        collection2.Add(data);
+                    }
+                    StrategyTarget2Data = collection2;
+
                     var collection3 = new ObservableCollection<StrategyTargetItem>();
                     foreach (var data in StrategyTarget3Data)
                     {

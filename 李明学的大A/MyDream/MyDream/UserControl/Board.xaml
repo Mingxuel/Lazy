@@ -77,14 +77,14 @@
 							<RowDefinition Height="*"/>
 						</Grid.RowDefinitions>
 						<StackPanel Grid.Row="0" Grid.Column="0" Orientation="Horizontal">
-							<TextBlock Text="THREE" Margin="5" FontSize="30">
+							<TextBlock Text="TWO" Margin="5" FontSize="30">
 								<TextBlock.LayoutTransform>
 									<RotateTransform Angle="90"/>
 								</TextBlock.LayoutTransform>
 							</TextBlock>
 						</StackPanel>
 						<Grid Grid.Row="0" Grid.Column="1">
-							<ListBox Margin="5" ItemsSource="{Binding StrategyTarget3Data, Mode=TwoWay}" SelectedIndex="{Binding StrategyTarget3DataIndex}" Background="Black" FontSize="24" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+							<ListBox Margin="5" ItemsSource="{Binding StrategyTarget2Data, Mode=TwoWay}" SelectedIndex="{Binding StrategyTarget2DataIndex}" Background="Black" FontSize="24" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
 								<ListBox.ItemTemplate>
 									<DataTemplate>
 										<StackPanel Orientation="Horizontal">
@@ -101,14 +101,14 @@
 							</ListBox>
 						</Grid>
 						<StackPanel Grid.Row="1" Grid.Column="0" Orientation="Horizontal">
-							<TextBlock Text="THREE+ONE" Margin="5" FontSize="30">
+							<TextBlock Text="THREE" Margin="5" FontSize="30">
 								<TextBlock.LayoutTransform>
 									<RotateTransform Angle="90"/>
 								</TextBlock.LayoutTransform>
 							</TextBlock>
 						</StackPanel>
 						<Grid Grid.Row="1" Grid.Column="1">
-							<ListBox Margin="5" ItemsSource="{Binding StrategyTarget31Data, Mode=TwoWay}" SelectedIndex="{Binding StrategyTarget31DataIndex}" Background="Black" FontSize="24" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+							<ListBox Margin="5" ItemsSource="{Binding StrategyTarget3Data, Mode=TwoWay}" SelectedIndex="{Binding StrategyTarget3DataIndex}" Background="Black" FontSize="24" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
 								<ListBox.ItemTemplate>
 									<DataTemplate>
 										<StackPanel Orientation="Horizontal">
@@ -125,14 +125,14 @@
 							</ListBox>
 						</Grid>
 						<StackPanel Grid.Row="2" Grid.Column="0" Orientation="Horizontal">
-							<TextBlock Text="TOP" Margin="5" FontSize="30">
+							<TextBlock Text="THREE+ONE" Margin="5" FontSize="30">
 								<TextBlock.LayoutTransform>
 									<RotateTransform Angle="90"/>
 								</TextBlock.LayoutTransform>
 							</TextBlock>
 						</StackPanel>
 						<Grid Grid.Row="2" Grid.Column="1">
-							<ListBox Margin="5" ItemsSource="{Binding StrategyTargetTopData, Mode=TwoWay}" SelectedIndex="{Binding StrategyTargetTopDataIndex}" Background="Black" FontSize="24" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+							<ListBox Margin="5" ItemsSource="{Binding StrategyTarget31Data, Mode=TwoWay}" SelectedIndex="{Binding StrategyTarget31DataIndex}" Background="Black" FontSize="24" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
 								<ListBox.ItemTemplate>
 									<DataTemplate>
 										<StackPanel Orientation="Horizontal">
@@ -149,14 +149,14 @@
 							</ListBox>
 						</Grid>
 						<StackPanel Grid.Row="3" Grid.Column="0" Orientation="Horizontal">
-							<TextBlock Text="TOP HISTORY" Margin="5" FontSize="30">
+							<TextBlock Text="TOP" Margin="5" FontSize="30">
 								<TextBlock.LayoutTransform>
 									<RotateTransform Angle="90"/>
 								</TextBlock.LayoutTransform>
 							</TextBlock>
 						</StackPanel>
 						<Grid Grid.Row="3" Grid.Column="1">
-							<ListBox Margin="5" ItemsSource="{Binding StrategyTargetTopHistoryData, Mode=TwoWay}" SelectedIndex="{Binding StrategyTargetTopHistoryDataIndex}" Background="Black" FontSize="24" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+							<ListBox Margin="5" ItemsSource="{Binding StrategyTargetTopData, Mode=TwoWay}" SelectedIndex="{Binding StrategyTargetTopDataIndex}" Background="Black" FontSize="24" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
 								<ListBox.ItemTemplate>
 									<DataTemplate>
 										<StackPanel Orientation="Horizontal">
