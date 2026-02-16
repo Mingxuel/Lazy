@@ -75,11 +75,17 @@ namespace MyDream
         }
 
         [RelayCommand]
-        private async Task UPDATE1M5MClick()
+        private async Task UPDATE1MClick()
         {
             Output += await CallPythonAPI.DownloadHistory1MAsync();
             Output += await CallPythonAPI.UpdateHistory1MAsync();
-            ZZ5005M.Instance.Write();
+        }
+
+        [RelayCommand]
+        private async Task UPDATE5MClick()
+        {
+            Output += await CallPythonAPI.DownloadHistory5MAsync();
+            Output += await CallPythonAPI.UpdateHistory5MAsync();
         }
 
         [RelayCommand]

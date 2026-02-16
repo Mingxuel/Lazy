@@ -45,7 +45,8 @@
 						<RadioButton Grid.Row="0" Grid.Column="0" Content="SZ200" Foreground="White" VerticalContentAlignment="Center" GroupName="Tickets" Margin="10" FontWeight="Bold" IsChecked="{Binding SZ200IsSelected}"/>
 						<RadioButton Grid.Row="0" Grid.Column="1" Content="ZZ500" Foreground="White" VerticalContentAlignment="Center" GroupName="Tickets" Margin="10" FontWeight="Bold" IsChecked="{Binding ZZ500IsSelected}"/>
 						<Button Grid.Row="1" Grid.Column="0" Content="更新 QMT" Command="{Binding Update1DClickCommand}" FontWeight="Bold" Height="50" Margin="10"/>
-						<Button Grid.Row="1" Grid.Column="1" Content="更新1M+5M" Command="{Binding UPDATE1M5MClickCommand}" FontWeight="Bold" Height="50" Margin="10"/>
+						<Button Grid.Row="1" Grid.Column="1" Content="更新1M" Command="{Binding UPDATE1MClickCommand}" FontWeight="Bold" Height="50" Margin="10"/>
+						<Button Grid.Row="1" Grid.Column="1" Content="更新5M" Command="{Binding UPDATE5MClickCommand}" FontWeight="Bold" Height="50" Margin="10"/>
 						<Button Grid.Row="2" Grid.Column="0" Content="清除TARGET" Command="{Binding ClearTPOClickCommand}" FontWeight="Bold" Height="50" Margin="10"/>
 						<Button Grid.Row="2" Grid.Column="1" Content="更新TARGET" Command="{Binding UpdateTPOClickCommand}" FontWeight="Bold" Height="50" Margin="10"/>
 						<Button Grid.Row="3" Grid.Column="0" Content="清除TEST" Command="{Binding ClearTestingClickCommand}" FontWeight="Bold" Height="50" Margin="10"/>
@@ -92,8 +93,8 @@
 											<TextBlock Text="[" Foreground="White"/>
 											<TextBlock Text="{Binding StockCode}" Foreground="White" Width="150"/>
 											<TextBlock Text="]  " Foreground="White"/>
+											<TextBlock Text="{Binding VWAPAll}" Foreground="White" Width="160"/>
 											<TextBlock Text="{Binding VWAPHigh}" Foreground="White" Width="160"/>
-											<TextBlock Text="{Binding VWAPClose}" Foreground="White" Width="160"/>
 											<TextBlock Text="{Binding Flag}" Foreground="White" Width="100"/>
 										</StackPanel>
 									</DataTemplate>
@@ -116,8 +117,8 @@
 											<TextBlock Text="[" Foreground="White"/>
 											<TextBlock Text="{Binding StockCode}" Foreground="White" Width="150"/>
 											<TextBlock Text="]  " Foreground="White"/>
+											<TextBlock Text="{Binding VWAPAll}" Foreground="White" Width="160"/>
 											<TextBlock Text="{Binding VWAPHigh}" Foreground="White" Width="160"/>
-											<TextBlock Text="{Binding VWAPClose}" Foreground="White" Width="160"/>
 											<TextBlock Text="{Binding Flag}" Foreground="White" Width="100"/>
 										</StackPanel>
 									</DataTemplate>
@@ -140,8 +141,8 @@
 											<TextBlock Text="[" Foreground="White"/>
 											<TextBlock Text="{Binding StockCode}" Foreground="White" Width="150"/>
 											<TextBlock Text="]  " Foreground="White"/>
+											<TextBlock Text="{Binding VWAPAll}" Foreground="White" Width="160"/>
 											<TextBlock Text="{Binding VWAPHigh}" Foreground="White" Width="160"/>
-											<TextBlock Text="{Binding VWAPClose}" Foreground="White" Width="160"/>
 											<TextBlock Text="{Binding Flag}" Foreground="White" Width="100"/>
 										</StackPanel>
 									</DataTemplate>
@@ -164,8 +165,8 @@
 											<TextBlock Text="[" Foreground="White"/>
 											<TextBlock Text="{Binding StockCode}" Foreground="White" Width="150"/>
 											<TextBlock Text="]  " Foreground="White"/>
+											<TextBlock Text="{Binding VWAPAll}" Foreground="White" Width="160"/>
 											<TextBlock Text="{Binding VWAPHigh}" Foreground="White" Width="160"/>
-											<TextBlock Text="{Binding VWAPClose}" Foreground="White" Width="160"/>
 											<TextBlock Text="{Binding Flag}" Foreground="White" Width="100"/>
 										</StackPanel>
 									</DataTemplate>
@@ -186,12 +187,12 @@
 						<RowDefinition Height="36"/>
 						<RowDefinition Height="48"/>
 						<RowDefinition Height="*"/>
-						<RowDefinition Height="*"/>
 					</Grid.RowDefinitions>
 					<Grid.ColumnDefinitions>
-						<ColumnDefinition Width="*"/>
+						<ColumnDefinition Width="2.5*"/>
+						<ColumnDefinition Width="1.5*"/>
 					</Grid.ColumnDefinitions>
-					<StackPanel Grid.Row="0" Grid.Column="0" Orientation="Horizontal">
+					<StackPanel Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" Orientation="Horizontal">
 						<ComboBox Margin="5" ItemsSource="{Binding StrategyTradingDates}" SelectedIndex="{Binding StrategyTradingDatesIndex}" Width="240" FontSize="30"/>
 						<Button Margin="5" Content="↑" Width="50" Command="{Binding UpClickCommand}"/>
 						<Button Margin="5" Content="↓" Width="50" Command="{Binding DownClickCommand}"/>
@@ -201,7 +202,7 @@
 						<RadioButton Margin="10 5 10 5" Content="10-DAY" IsChecked="{Binding StrategyIs10Day}" Foreground="White" VerticalContentAlignment="Center" FontSize="30"/>
 						<RadioButton Margin="10 5 10 5" Content="20-DAY" IsChecked="{Binding StrategyIs20Day}" Foreground="White" VerticalContentAlignment="Center" FontSize="30"/>
 					</StackPanel>
-					<StackPanel Grid.Row="1" Grid.Column="0" Orientation="Horizontal">
+					<StackPanel Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" Orientation="Horizontal">
 						<TextBlock Text="       类型" Width="250"/>
 						<TextBlock Text="交易次数" Width="200"/>
 						<TextBlock Text="可买票数" Width="200"/>
@@ -209,7 +210,7 @@
 						<TextBlock Text="单票胜率" Width="200"/>
 						<TextBlock Text=" 盈亏比" Width="200"/>
 					</StackPanel>
-					<StackPanel Grid.Row="2" Grid.Column="0" Orientation="Horizontal">
+					<StackPanel Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" Orientation="Horizontal">
 						<TextBlock Text="  CLOSE卖出" Width="200"/>
 						<TextBlock Text="{Binding StrategySellCloseCount}" Width="200" Padding="60 0 60 0"/>
 						<TextBlock Text="{Binding StrategyPerSellCount}" Width="200" Padding="55 0 55 0"/>
@@ -217,7 +218,7 @@
 						<TextBlock Text="{Binding StrategyPerSellCloseWin}" Width="200" Padding="30 0 30 0"/>
 						<TextBlock Text="{Binding StrategySellCloseRatio}" Width="290" Padding="10 0 10 0"/>
 					</StackPanel>
-					<StackPanel Grid.Row="3" Grid.Column="0" Orientation="Horizontal">
+					<StackPanel Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="2" Orientation="Horizontal">
 						<TextBlock Text="  OPEN卖出" Width="200"/>
 						<TextBlock Text="{Binding StrategySellOpenCount}" Width="200" Padding="60 0 60 0"/>
 						<TextBlock Text="{Binding StrategyPerSellCount}" Width="200" Padding="55 0 55 0"/>
@@ -225,7 +226,7 @@
 						<TextBlock Text="{Binding StrategyPerSellOpenWin}" Width="200" Padding="30 0 30 0"/>
 						<TextBlock Text="{Binding StrategySellOpenRatio}" Width="200" Padding="10 0 10 0"/>
 					</StackPanel>
-					<StackPanel Grid.Row="4" Grid.Column="0" Orientation="Horizontal">
+					<StackPanel Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="2" Orientation="Horizontal">
 						<TextBlock Text="  HIGH卖出" Width="200"/>
 						<TextBlock Text="{Binding StrategySellHighCount}" Width="200" Padding="60 0 60 0"/>
 						<TextBlock Text="{Binding StrategyPerSellCount}" Width="200" Padding="55 0 55 0"/>
@@ -233,37 +234,33 @@
 						<TextBlock Text="{Binding StrategyPerSellHighWin}" Width="200" Padding="30 0 30 0"/>
 						<TextBlock Text="{Binding StrategySellHighRatio}" Width="200" Padding="10 0 10 0"/>
 					</StackPanel>
-					<StackPanel Grid.Row="5" Grid.Column="0" Orientation="Horizontal" Margin="5 10 5 0">
+					<StackPanel Grid.Row="5" Grid.Column="0" Grid.ColumnSpan="2" Orientation="Horizontal" Margin="5 10 5 0">
 						<TextBlock Text="NAME" Width="120" FontSize="24" Margin="26 0 0 0"/>
-						<TextBlock Text="CODE" Width="160" FontSize="24" Margin="40 0 0 0"/>
-						<TextBlock Text="CLOSE" Width="160" FontSize="24" Margin="10 0 0 0"/>
-						<TextBlock Text="HIGH" Width="160" FontSize="24" Margin="10 0 0 0"/>
-						<TextBlock Text="LOW" Width="160" FontSize="24" Margin="5 0 0 0"/>
-						<TextBlock Text="OPEN" Width="120" FontSize="24"/>
-						<TextBlock Text="VW-HIGH" Width="160" FontSize="24" Margin="5 0 0 0"/>
-						<TextBlock Text="VW-CLOSE" Width="160" FontSize="24" Margin="5 0 0 0"/>
+						<TextBlock Text="CODE" Width="140" FontSize="24" Margin="40 0 0 0"/>
+						<TextBlock Text="CLOSE" Width="140" FontSize="24" Margin="10 0 0 0"/>
+						<TextBlock Text="HIGH" Width="120" FontSize="24" Margin="10 0 0 0"/>
+						<TextBlock Text="VW-ALL" Width="140" FontSize="24" Margin="5 0 0 0"/>
+						<TextBlock Text="VW-HIGH" Width="135" FontSize="24" Margin="5 0 0 0"/>
 					</StackPanel>
 					<Grid Grid.Row="6" Grid.Column="0">
 						<ListBox Margin="5" ItemsSource="{Binding StrategyData}" SelectedIndex="{Binding StrategyDataIndex}" FontSize="24" Background="Black">
 							<ListBox.ItemTemplate>
 								<DataTemplate>
 									<StackPanel Orientation="Horizontal">
-										<TextBlock Text="{Binding StockName}" Foreground="White" Width="120" Margin="10 0 0 0"/>
+										<TextBlock Text="{Binding StockName}" Foreground="White" Width="110" Margin="10 0 0 0"/>
 										<TextBlock Text="[" Foreground="White"/>
 										<TextBlock Text="{Binding StockCode}" Foreground="White" Width="150"/>
 										<TextBlock Text="]   " Foreground="White"/>
-										<TextBlock Text="{Binding CloseRatio, Converter={StaticResource StringToPercentStringConverter}}" Foreground="White" Width="160"/>
-										<TextBlock Text="{Binding HighRatio, Converter={StaticResource StringToPercentStringConverter}}" Foreground="White" Width="160"/>
-										<TextBlock Text="{Binding LowRatio, Converter={StaticResource StringToPercentStringConverter}}" Foreground="White" Width="160"/>
-										<TextBlock Text="{Binding OpenRatio, Converter={StaticResource StringToPercentStringConverter}}" Foreground="White" Width="160"/>
-										<TextBlock Text="{Binding VWAPHighRatio, Converter={StaticResource StringToPercentStringConverter}}" Foreground="White" Width="160"/>
-										<TextBlock Text="{Binding VWAPCloseRatio, Converter={StaticResource StringToPercentStringConverter}}" Foreground="White" Width="160"/>
+										<TextBlock Text="{Binding CloseRatio, Converter={StaticResource StringToPercentStringConverter}}" Foreground="White" Width="140"/>
+										<TextBlock Text="{Binding HighRatio, Converter={StaticResource StringToPercentStringConverter}}" Foreground="White" Width="140"/>
+										<TextBlock Text="{Binding VWAPAllRatio, Converter={StaticResource StringToPercentStringConverter}}" Foreground="White" Width="145"/>
+										<TextBlock Text="{Binding VWAPHighRatio, Converter={StaticResource StringToPercentStringConverter}}" Foreground="White" Width="145"/>
 									</StackPanel>
 								</DataTemplate>
 							</ListBox.ItemTemplate>
 						</ListBox>
 					</Grid>
-					<local:KChart Grid.Row="7" Grid.Column="0" KRecords="{Binding StrategyKRecords}" Margin="5" Background="Black"/>
+					<local:KChart Grid.Row="6" Grid.Column="1" KRecords="{Binding StrategyKRecords}" Margin="5" Background="Black"/>
 				</Grid>
 			</TabItem>
 			<TabItem Header="TOTAL" Width="240" Height="60" Foreground="#FF8000" FontWeight="Bold" FontSize="36" Background="Black">
@@ -852,16 +849,16 @@
 								<ListBox ItemsSource="{Binding BurnChart}" Background="Black" FontSize="30" FontWeight="Bold" ScrollViewer.HorizontalScrollBarVisibility="Disabled" ScrollViewer.VerticalScrollBarVisibility="Disabled">
 									<ListBox.ItemContainerStyle>
 										<Style TargetType="ListBoxItem">
-											<Setter Property="Height" Value="10"/>
+											<Setter Property="Height" Value="14"/>
 											<Setter Property="Padding" Value="0"/>
 										</Style>
 									</ListBox.ItemContainerStyle>
 									<ListBox.ItemTemplate>
 										<DataTemplate>
 											<StackPanel Orientation="Horizontal">
-												<TextBlock Foreground="#FF8000" Text="{Binding Time}" Margin="5 0 5 0" FontSize="6" Width="60"/>
-												<TextBlock Foreground="#FF8000" Text="{Binding Count}" Margin="5 0 5 0" FontSize="6" Width="40"/>
-												<Rectangle Fill="#FF8000" Width="{Binding Count}" Margin="5 0 0 0" Height="6">
+												<TextBlock Foreground="#FF8000" Text="{Binding Time}" Margin="5 0 5 0" FontSize="12" Width="60"/>
+												<TextBlock Foreground="#FF8000" Text="{Binding Count}" Margin="5 0 5 0" FontSize="12" Width="60"/>
+												<Rectangle Fill="#FF8000" Width="{Binding Count}" Margin="5 0 0 0" Height="12">
 												</Rectangle>
 											</StackPanel>
 										</DataTemplate>
@@ -970,8 +967,8 @@
 										<TextBlock Text="{Binding HighRatio, Converter={StaticResource StringToPercentStringConverter}}" Foreground="White" Width="160"/>
 										<TextBlock Text="{Binding LowRatio, Converter={StaticResource StringToPercentStringConverter}}" Foreground="White" Width="160"/>
 										<TextBlock Text="{Binding OpenRatio, Converter={StaticResource StringToPercentStringConverter}}" Foreground="White" Width="160"/>
+										<TextBlock Text="{Binding VWAPAll}" Foreground="White" Width="160"/>
 										<TextBlock Text="{Binding VWAPHigh}" Foreground="White" Width="160"/>
-										<TextBlock Text="{Binding VWAPClose}" Foreground="White" Width="160"/>
 									</StackPanel>
 								</DataTemplate>
 							</ListBox.ItemTemplate>

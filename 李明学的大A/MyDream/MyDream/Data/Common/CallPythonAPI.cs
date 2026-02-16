@@ -16,6 +16,8 @@ namespace MyDream
         private const string _update_history_1d = "--update_history_1d";
         private const string _download_history_1m = "--download_history_1m";
         private const string _update_history_1m = "--update_history_1m";
+        private const string _download_history_5m = "--download_history_5m";
+        private const string _update_history_5m = "--update_history_5m";
 
         public static async Task<string?> UpdateTradingDatesAsync()
         {
@@ -40,6 +42,16 @@ namespace MyDream
         public static async Task<string?> UpdateHistory1MAsync()
         {
             return await Task.Run(() => Call(_update_history_1m));
+        }
+
+        public static async Task<string?> DownloadHistory5MAsync()
+        {
+            return await Task.Run(() => Call(_download_history_5m));
+        }
+
+        public static async Task<string?> UpdateHistory5MAsync()
+        {
+            return await Task.Run(() => Call(_update_history_5m));
         }
 
         public static void RunAsync(List<string> stock_list)

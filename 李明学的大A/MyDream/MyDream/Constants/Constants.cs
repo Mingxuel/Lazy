@@ -12,5 +12,7 @@ namespace MyDream
         public const double ScaleX = 10.0;
 
         public const double PlanRatio = 0.45;
+
+        public const double MinVWAP = -2.3;
     }
 }

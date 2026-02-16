@@ -1,8 +1,10 @@
-﻿using System;
+﻿using NPOI.SS.Formula.Functions;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace MyDream
 {
@@ -161,6 +163,7 @@ namespace MyDream
 
                         vwap_high = (vwap_high - record_1.Close) / record_1.Close * 100;
                         vwap_close = (vwap_close - record_1.Close) / record_1.Close * 100;
+                        vwap_high = vwap_high + vwap_close;
 
                         if (vwap_high > max_vwap_high)
                         {
@@ -172,6 +175,8 @@ namespace MyDream
 
                     if (max_index == -1) continue;
 
+                    if (max_vwap_high <= Constants.MinVWAP) continue;
+
                     StrategyDetailVWAPTicketItem ticket_item = new StrategyDetailVWAPTicketItem();
                     ticket_item.Date = date;
                     ticket_item.StockCode = strategy_items[max_index].StockCode;
@@ -180,18 +185,19 @@ namespace MyDream
                     ticket_item.HighRatio = strategy_items[max_index].HighRatio;
                     ticket_item.LowRatio = strategy_items[max_index].LowRatio;
                     ticket_item.OpenRatio = strategy_items[max_index].OpenRatio;
+                    ticket_item.VWAPAll = max_vwap_close.ToString("00.00") + "%";
                     ticket_item.VWAPHigh = max_vwap_high.ToString("00.00") + "%";
-                    ticket_item.VWAPClose = max_vwap_close.ToString("00.00") + "%";
                     DataVWAPTickets.Add(ticket_item);
 
-                    var ratio = GetRatio(strategy_items[max_index]);
+                    var ratio = GetM5Ratio(strategy_items[max_index]);
+                    if (ratio == null) ratio = GetRatio(strategy_items[max_index]);
 
                     if (date.StartsWith("2024"))
-                        ratio_2024 *= (1 + ratio / 100.0);
+                        ratio_2024 *= (1 + (double)ratio / 100.0);
                     else if (date.StartsWith("2025"))
-                        ratio_2025 *= (1 + ratio / 100.0);
+                        ratio_2025 *= (1 + (double)ratio / 100.0);
                     else if (date.StartsWith("2026"))
-                        ratio_2026 *= (1 + ratio / 100.0);
+                        ratio_2026 *= (1 + (double)ratio / 100.0);
                 }
                 StrategyDetailItem detail_item = new StrategyDetailItem();
                 detail_item.ID = i.ToString();
@@ -224,13 +230,37 @@ namespace MyDream
 
         private double GetRatio(StrategyItem item)
         {
-            var value = double.Parse(item.HighRatio);
+            var value = double.Parse(item.CloseRatio);
             return value;
         }
 
         private double GetPrice(Record1DItem? item)
         {
             return item!.High;
+        }
+
+        private double? GetM5Ratio(StrategyItem item)
+        {
+            var records = ZZ5005M.Instance.Read(item.StockCode, item.Date);
+
+            if (records == null) return null;
+            var record_1 = ZZ5001D.Instance.PreRecord(item.StockCode!, item.Date!, 1);
+            if (record_1 == null) return null;
+
+            var default_rate = (records?[records.Count - 1].Close / record_1.Close - 1.0) * 100.0;
+            if (records?.Count < 47) return default_rate;
+
+            int index = 42;
+
+            var rate = records?.Count > index ? (records?[index].Close / record_1.Close - 1.0) * 100.0 : default_rate;
+            return rate;
+        }
+
+        private double? Round(double? rate)
+        {
+            decimal dec_rate = (decimal)rate!;
+            decimal dec_result = Math.Round(dec_rate, 3, MidpointRounding.AwayFromZero);
+            return (double?)Math.Round(dec_result, 2, MidpointRounding.AwayFromZero);
         }
 
         private double GetLow(Record1DItem? item)

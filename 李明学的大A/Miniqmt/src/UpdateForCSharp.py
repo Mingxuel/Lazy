@@ -158,6 +158,60 @@ def UPDATE_HISTORY_1M():
                     file.write("\n")
     return True
 
+def DOWNLOAD_HISTORY_5M():
+    stock_codes = ZZ500_STOCK_CODES()
+    trading_dates = TRADING_DATES()
+    start_time = trading_dates[0] + "091500"
+    end_time = trading_dates[-1] + "150000"
+    xtdata.download_history_data2(stock_codes, "5m", start_time, end_time)
+    xtdata.subscribe_whole_quote(stock_codes)
+    xtdata.get_market_data_ex([], stock_codes, "5m", start_time, end_time, 1, dividend_type="front_ratio", fill_data=False)
+
+def UPDATE_HISTORY_5M():
+    stock_codes = ZZ500_STOCK_CODES()
+    trading_dates = TRADING_DATES()
+    start_time = trading_dates[0] + "091500"
+    end_time = trading_dates[-1] + "150000"
+
+    count_all = len(stock_codes)
+    count = 0
+    for stock_code in stock_codes:
+        xtdata.subscribe_whole_quote([stock_code])
+        data_5m = xtdata.get_market_data_ex([], [stock_code], "5m", start_time, end_time, -1, dividend_type="front_ratio", fill_data=False)
+
+        count = count + 1
+        print(f"5M数据更新进度：[{count}/{count_all}]")
+
+        if stock_code not in data_5m.keys():
+            continue
+        config_directory = GET_ROOT_PATH() + f"\\Data\\5M\\{stock_code}"
+        if not os.path.exists(config_directory):
+            os.makedirs(config_directory)
+
+        data = data_5m[stock_code]
+        exists = False
+        for date, row in data.iterrows():
+            config_file = config_directory + "\\" + str(date)[:8]
+            if date[8:] == "093500":
+                if os.path.exists(config_file):
+                    exists = True
+                else:
+                    exists = False
+            if exists:
+                continue
+            with open(config_file, 'a') as file:
+                item_time = date[8:]
+                item_open = str(ROUNDOFF(row.iloc[1]))
+                item_high = str(ROUNDOFF(row.iloc[2]))
+                item_low = str(ROUNDOFF(row.iloc[3]))
+                item_close = str(ROUNDOFF(row.iloc[4]))
+                item_volume = str(ROUNDOFF(row.iloc[5]))
+                item_amount = str(ROUNDOFF(row.iloc[6]))
+                item_pre_close = str(ROUNDOFF(row[9]))
+                file.write(f"{item_time}|{item_open}|{item_high}|{item_low}|{item_close}|{item_volume}|{item_amount}|{item_pre_close}\n")
+
+    return True
+
 # PRIVATE ################################################################################################
 def TRADING_DATES():
     config_file_trading_dates = GET_ROOT_PATH() + "/Data/交易日.config"
@@ -195,8 +249,12 @@ if __name__ == "__main__":
     parser.add_argument("-uh1d", "--update_history_1d", action="store_true", help="")
     parser.add_argument("-dh1m", "--download_history_1m", action="store_true", help="")
     parser.add_argument("-uh1m", "--update_history_1m", action="store_true", help="")
+    parser.add_argument("-dh5m", "--download_history_5m", action="store_true", help="")
+    parser.add_argument("-uh5m", "--update_history_5m", action="store_true", help="")
     parser.add_argument("-minute", "--minute", help="")
     args = parser.parse_args()
+
+    UPDATE_HISTORY_5M()
 
     if args.update_trading_dates:
         if UPDATE_TRADING_DATES():
@@ -216,4 +274,12 @@ if __name__ == "__main__":
 
     if args.update_history_1m:
         if UPDATE_HISTORY_1M():
+            print("1M数据更新成功")
+
+    if args.download_history_5m:
+        if DOWNLOAD_HISTORY_5M():
+            print("1M数据下载成功")
+
+    if args.update_history_5m:
+        if UPDATE_HISTORY_5M():
             print("1M数据更新成功")

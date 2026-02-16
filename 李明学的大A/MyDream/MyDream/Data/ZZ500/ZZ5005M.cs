@@ -14,58 +14,23 @@ namespace MyDream
         public static ZZ5005M Instance { get => _instance == null ? _instance = new ZZ5005M() : _instance; }
         public Dictionary<string, Record5M?> Records { get; } = new Dictionary<string, Record5M?>();
 
-        public void Write()
+        public List<Record5MItem>? Read(string? stock_code, string? date)
         {
-            foreach(var stock_code in ZZ500StockCodes.StockCodes)
+            string file = string.Format("{0}{1}\\{2}", APath.Get5M(), stock_code, date);
+            if (!File.Exists(file)) return null;
+
+            List<Record5MItem>? list = new List<Record5MItem>();
+
+            var lines = File.ReadAllLines(file);
+            foreach(var line in lines)
             {
-                foreach (var date in TradingDates.Dates)
-                {
-                    string directory = APath.Get5M() + stock_code;
-                    if (!Directory.Exists(directory)) Directory.CreateDirectory(directory);
-                    string file = directory + "\\" + date;
-                    if (File.Exists(file)) continue;
-
-                    var records = ZZ5001M.Instance[stock_code!]![date];
-                    if (records.Count == 0) continue;
-                    string time = "";
-                    double open = 0.0;
-                    double high = 0.0;
-                    double low = 10000.0;
-                    double close = 0.0;
-                    int volumn = 0;
-                    foreach (var record in records)
-                    {
-                        int index = records.IndexOf(record);
-                        if (index % 5 == 0)
-                        {
-                            open = record.Open;
-                            time = record.Time;
-                        }
-                        high = Math.Max(high, record.High);
-                        low = Math.Min(low, record.Low);
-                        if (index % 5 == 4) close = record.Close;
-                        volumn += record.Volume;
-
-                        if (index % 5 == 4)
-                        {
-                            if (!File.Exists(file)) File.Create(file).Close();
-                            Record5MItem record_5m = new Record5MItem(time, open, high, low, close, volumn);
-                            File.AppendAllLines(file, new []{ record_5m.ToString() });
-                            time = "";
-                            open = 0.0;
-                            high = 0.0;
-                            low = 10000.0;
-                            close = 0.0;
-                            volumn = 0;
-                        }
-                    }
-                }
+                if (line.Trim().Length == 0) continue;
+                var items = line.Split("|");
+                Record5MItem record = new Record5MItem(items[0], double.Parse(items[1]), double.Parse(items[2]), double.Parse(items[3]), double.Parse(items[4]), (int)double.Parse(items[5]), (int)double.Parse(items[6]), double.Parse(items[7]));
+                list.Add(record);
             }
-        }
 
-        public void Read()
-        {
-            
+            return list;
         }
     }
 }

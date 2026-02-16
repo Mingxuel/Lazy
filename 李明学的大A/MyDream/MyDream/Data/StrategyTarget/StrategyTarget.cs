@@ -155,7 +155,7 @@ namespace MyDream
                     double vwap_close = record_1.Close * record_1.Volume + record_2.Close * record_2.Volume + record_3.Close * record_3.Volume + record_4.Close * record_4.Volume;
                     double vwap_volume = record_1.Volume + record_2.Volume + record_3.Volume + record_4.Volume;
                     StrategyTarget_item.VWAPHigh = ((vwap_high / vwap_volume - record_1.Close) / record_1.Close).ToString("P2");
-                    StrategyTarget_item.VWAPClose = ((vwap_close / vwap_volume - record_1.Close) / record_1.Close).ToString("P2");
+                    StrategyTarget_item.VWAPAll = ((vwap_high / vwap_volume + vwap_close / vwap_volume - record_1.Close * 2) / record_1.Close).ToString("P2");
 
                     Data31.Add(StrategyTarget_item);
                 }

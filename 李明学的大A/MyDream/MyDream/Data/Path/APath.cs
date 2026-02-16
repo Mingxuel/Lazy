@@ -84,7 +84,7 @@ namespace MyDream
 
         public static string Get5M()
         {
-            return GetRoot() + "\\..\\..\\5M\\5M\\";
+            return GetRoot() + "\\Data\\5M\\";
         }
 
         public static string Get3B()

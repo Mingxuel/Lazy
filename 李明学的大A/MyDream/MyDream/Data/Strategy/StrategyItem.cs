@@ -20,10 +20,10 @@ namespace MyDream
         public string LowRatio { get; set; } = "00.00%";
         public string OpenRatio { get; set; } = "00.00%";
         public string VWAPHighRatio { get; set; } = "00.00%";
-        public string VWAPCloseRatio { get; set; } = "00.00%";
+        public string VWAPAllRatio { get; set; } = "00.00%";
         public override string ToString()
         {
-            return $"{StockName}|{StockCode}|{Date}|{Open}|{High}|{Low}|{Close}|{CloseRatio}|{HighRatio}|{LowRatio}|{OpenRatio}|{VWAPHighRatio}|{VWAPCloseRatio}";
+            return $"{StockName}|{StockCode}|{Date}|{Open}|{High}|{Low}|{Close}|{CloseRatio}|{HighRatio}|{LowRatio}|{OpenRatio}|{VWAPHighRatio}|{VWAPAllRatio}";
         }
     }
 }
