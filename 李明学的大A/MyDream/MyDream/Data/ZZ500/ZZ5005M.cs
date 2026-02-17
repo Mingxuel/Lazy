@@ -32,5 +32,32 @@ namespace MyDream
 
             return list;
         }
+
+        public double? GetVWAP(string stock_code, string date)
+        {
+            double total_high_value = 0.0;
+            double total_close_value = 0.0;
+            double total_volume = 0.0;
+            for (int i = 1; i < 5; i++)
+            {
+                var records = Read(stock_code, TradingDates.PreDate(date, i));
+                if (records == null) return null;
+                foreach (var record in records)
+                {
+                    total_high_value += record!.High * record!.Volume;
+                    total_close_value += record!.Close * record!.Volume;
+                    total_volume += record!.Volume;
+                }
+            }
+
+            var record_1 = ZZ5001D.Instance.PreRecord(stock_code, date, 1);
+            if (record_1 == null) return null;
+
+            double vwap_high = total_high_value / total_volume;
+            double vwap_close = total_close_value / total_volume;
+            var vwap = (vwap_high - record_1.Close) / record_1.Close * 100.0;
+
+            return vwap;
+        }
     }
 }

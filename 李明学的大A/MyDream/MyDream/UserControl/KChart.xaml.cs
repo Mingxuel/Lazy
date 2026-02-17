@@ -59,17 +59,25 @@ namespace MyDream
 
         private async static void OnKRecordsChangedAsync(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            List<Record1DItem> records = new List<Record1DItem>();
-            var temps= (List<Record1DItem>)((KChart)d).GetValue(KRecordsProperty);
-            foreach(var temp in temps)
+            try
             {
-                if (temp != null) records.Add(temp);
+                List<Record1DItem> records = new List<Record1DItem>();
+                var temps = (List<Record1DItem>)((KChart)d).GetValue(KRecordsProperty);
+                foreach (var temp in temps)
+                {
+                    if (temp != null) records.Add(temp);
+                }
+
+                if (records.Count == 0) return;
+
+                string jsonData = JsonConvert.SerializeObject(records);
+                if (((KChart)d).webView.CoreWebView2 != null)
+                    await ((KChart)d).webView.CoreWebView2.ExecuteScriptAsync(@$"window.AppInterface.setData1D({jsonData})");
             }
+            catch
+            {
 
-            if (records.Count == 0) return;
-
-            string jsonData = JsonConvert.SerializeObject(records);
-            await ((KChart)d).webView.CoreWebView2.ExecuteScriptAsync(@$"window.AppInterface.setData1D({jsonData})");
+            }
         }
     }
 }

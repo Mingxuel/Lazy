@@ -143,7 +143,7 @@ namespace MyDream
 
         private void UpdateRecordsStrategyTarget2()
         {
-            if (StrategyTarget3DataIndex == -1) return;
+            if (StrategyTarget2DataIndex == -1) return;
 
             List<Record1DItem?> records = new List<Record1DItem?>();
             string stock_code = StrategyTarget2Data[StrategyTarget2DataIndex].StockCode!;

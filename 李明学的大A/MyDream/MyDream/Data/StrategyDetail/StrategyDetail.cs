@@ -70,6 +70,7 @@ namespace MyDream
             detail_total.Detail2024 = (total_ratio_2024 / RANDOM_COUNT).ToString("P2");
             detail_total.Detail2025 = (total_ratio_2025 / RANDOM_COUNT).ToString("P2");
             detail_total.Detail2026 = (total_ratio_2026 / RANDOM_COUNT).ToString("P2");
+            Data1.Clear();
             Data1.Insert(0, detail_total);
         }
 
@@ -127,6 +128,7 @@ namespace MyDream
             detail_total.Detail2024 = (total_ratio_2024 / RANDOM_COUNT).ToString("P2");
             detail_total.Detail2025 = (total_ratio_2025 / RANDOM_COUNT).ToString("P2");
             detail_total.Detail2026 = (total_ratio_2026 / RANDOM_COUNT).ToString("P2");
+            Data2.Clear();
             Data2.Insert(0, detail_total);
         }
 
@@ -160,10 +162,7 @@ namespace MyDream
                         double total_volume = record_1.Volume + record_2.Volume + record_3.Volume + record_4.Volume;
                         double vwap_high = total_value_high / total_volume;
                         double vwap_close = total_value_close / total_volume;
-
-                        vwap_high = (vwap_high - record_1.Close) / record_1.Close * 100;
-                        vwap_close = (vwap_close - record_1.Close) / record_1.Close * 100;
-                        vwap_high = vwap_high + vwap_close;
+                        vwap_high = (vwap_high + vwap_close - record_1.Close * 2) / record_1.Close * 100;
 
                         if (vwap_high > max_vwap_high)
                         {
@@ -185,8 +184,8 @@ namespace MyDream
                     ticket_item.HighRatio = strategy_items[max_index].HighRatio;
                     ticket_item.LowRatio = strategy_items[max_index].LowRatio;
                     ticket_item.OpenRatio = strategy_items[max_index].OpenRatio;
-                    ticket_item.VWAPAll = max_vwap_close.ToString("00.00") + "%";
-                    ticket_item.VWAPHigh = max_vwap_high.ToString("00.00") + "%";
+                    ticket_item.VWAPAll = max_vwap_high.ToString("00.00") + "%";
+                    ticket_item.VWAPHigh = max_vwap_close.ToString("00.00") + "%";
                     DataVWAPTickets.Add(ticket_item);
 
                     var ratio = GetM5Ratio(strategy_items[max_index]);
@@ -220,6 +219,7 @@ namespace MyDream
             detail_total.Detail2024 = (total_ratio_2024 / 1).ToString("P2");
             detail_total.Detail2025 = (total_ratio_2025 / 1).ToString("P2");
             detail_total.Detail2026 = (total_ratio_2026 / 1).ToString("P2");
+            DataVWAP.Clear();
             DataVWAP.Insert(0, detail_total);
         }
 

@@ -95,8 +95,7 @@ namespace MyDream
                 else if (pre_index != index)
                 {
                     pre_index = index;
-                    if (month_total > 100.0)
-                        total *= month_total / 100.0;
+                    total *= month_total / 100.0;
                     BurnChart[index-1].Count = (int)total;
                     month_total = 100.0;
                 }
@@ -108,8 +107,7 @@ namespace MyDream
 
                 if (StrategyDetail.Instance.DataVWAPTickets.IndexOf(ticket) == StrategyDetail.Instance.DataVWAPTickets.Count - 1)
                 {
-                    if (month_total > 100.0)
-                        total *= month_total / 100.0;
+                    total *= month_total / 100.0;
                     BurnChart[index].Count = (int)total;
                 }
             }

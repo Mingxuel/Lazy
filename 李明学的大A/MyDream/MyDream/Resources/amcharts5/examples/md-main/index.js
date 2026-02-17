@@ -239,12 +239,12 @@ sbSeries.fills.template.setAll({
   fillOpacity: 0.3
 });
 
-var movingAverage = stockChart.indicators.push(am5stock.MovingAverage.new(root, {
+var movingAverage5 = stockChart.indicators.push(am5stock.MovingAverage.new(root, {
     stockChart: stockChart,
     stockSeries: valueSeries,
     legend: valueLegend
 }));
-movingAverage.set("period", 5);
+movingAverage5.set("period", 5);
 
 // Set up series type switcher
 // -------------------------------------------------------------------------------

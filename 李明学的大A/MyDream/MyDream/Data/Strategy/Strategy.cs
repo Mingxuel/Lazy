@@ -175,7 +175,7 @@ namespace MyDream
                     double total_close = record_1.Close * record_1.Volume + record_2.Close * record_2.Volume + record_3.Close * record_3.Volume + record_4.Close * record_4.Volume;
                     double total_volume = record_1.Volume + record_2.Volume + record_3.Volume + record_4.Volume;
                     strategy_item.VWAPHighRatio = ((total_high / total_volume - record_1.Close) / record_1.Close * 100).ToString("00.00");
-                    strategy_item.VWAPAllRatio = ((total_high / total_volume + total_close / total_volume - record_1.Close) / record_1.Close * 100).ToString("00.00");
+                    strategy_item.VWAPAllRatio = ((total_high / total_volume + total_close / total_volume - record_1.Close * 2) / record_1.Close * 100).ToString("00.00");
                     Data[trading_date!].Add(strategy_item);
                     using (StreamWriter writer = new StreamWriter(file!, true))
                     {
