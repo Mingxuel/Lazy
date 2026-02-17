@@ -358,8 +358,7 @@ namespace MyDream
                             records[records.Count - 1]!.IsRed &&
                             records[records.Count - 1]!.IsUp &&
                             !records[records.Count - 1]!.IsTop &&
-                            records[records.Count - 1]!.Close > ma5 &&
-                            double.Parse(data.VWAPAll.Replace("%", "")) < Constants.MinVWAP)
+                            records[records.Count - 1]!.Close > ma5)
                         {
                             data.Flag = "Y";
                         }
@@ -407,7 +406,7 @@ namespace MyDream
                             records[records.Count - 1]!.IsDown &&
                             !records[records.Count - 1]!.IsBottom &&
                             records[records.Count - 1]!.Close > ma5 &&
-                            double.Parse(data.VWAPAll.Replace("%", "")) < Constants.MinVWAP)
+                            double.Parse(data.VWAPAll.Replace("%", "")) > Constants.MinVWAP)
                         {
                             data.Flag = "Y";
                         }
@@ -458,7 +457,7 @@ namespace MyDream
                         } else {
                             data.Flag = "";
                         }
-                            collection31.Add(data);
+                        collection31.Add(data);
                     }
                     StrategyTarget31Data = collection31;
 
