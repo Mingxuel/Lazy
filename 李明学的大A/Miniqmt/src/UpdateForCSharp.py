@@ -254,8 +254,6 @@ if __name__ == "__main__":
     parser.add_argument("-minute", "--minute", help="")
     args = parser.parse_args()
 
-    UPDATE_HISTORY_5M()
-
     if args.update_trading_dates:
         if UPDATE_TRADING_DATES():
             print("交易日更新成功")
