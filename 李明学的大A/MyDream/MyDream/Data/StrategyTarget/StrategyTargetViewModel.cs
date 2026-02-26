@@ -280,7 +280,8 @@ namespace MyDream
             if (!string.IsNullOrEmpty(top_history) && top_history.Last() == '\n') top_history = top_history.Remove(top_history.Count() - 1);
 
             string file_content = File.ReadAllText(APath.GetTHSStrategyFileOrigin());
-            file_content = file_content.Replace("===TPO2===", tpo2).Replace("===TPO3===", tpo3).Replace("===TPO31===", tpo31).Replace("===TOP===", top).Replace("===TOPHISTORY===", top_history);
+            //file_content = file_content.Replace("===TPO2===", tpo2).Replace("===TPO3===", tpo3).Replace("===TPO31===", tpo31).Replace("===TOP===", top).Replace("===TOPHISTORY===", top_history);
+            file_content = file_content.Replace("===TPO3===", tpo3).Replace("===TPO31===", tpo31).Replace("===TOP===", top);
             File.WriteAllText(APath.GetTHSStrategyFileTarget(), file_content);
         }
 
@@ -321,7 +322,7 @@ namespace MyDream
                     }
                 }
 
-                Application.Current.Dispatcher.Invoke(() =>
+/*                Application.Current.Dispatcher.Invoke(() =>
                 {
                     var collection2 = new ObservableCollection<StrategyTargetItem>();
                     foreach (var data in StrategyTarget2Data)
@@ -370,7 +371,7 @@ namespace MyDream
                         collection2.Add(data);
                     }
                     StrategyTarget2Data = collection2;
-
+*/
                     var collection3 = new ObservableCollection<StrategyTargetItem>();
                     foreach (var data in StrategyTarget3Data)
                     {
@@ -418,7 +419,7 @@ namespace MyDream
                         collection3.Add(data);
                     }
                     StrategyTarget3Data = collection3;
-
+/*
                     var collection31 = new ObservableCollection<StrategyTargetItem>();
                     foreach (var data in StrategyTarget31Data)
                     {
@@ -491,7 +492,7 @@ namespace MyDream
                         collectiontop.Add(data);
                     }
                     StrategyTargetTopData = collectiontop;
-                });
+                });*/
             }
             catch{
 
