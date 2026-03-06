@@ -25,7 +25,6 @@
 				<Grid>
 					<Grid.RowDefinitions>
 						<RowDefinition Height="*"/>
-						<RowDefinition Height="130"/>
 					</Grid.RowDefinitions>
 					<Grid Grid.Row="0">
 						<Grid.ColumnDefinitions>
@@ -40,141 +39,107 @@
 							<RowDefinition Height="Auto"/>
 							<RowDefinition Height="Auto"/>
 							<RowDefinition Height="Auto"/>
+							<RowDefinition Height="Auto"/>
+							<RowDefinition Height="Auto"/>
+							<RowDefinition Height="Auto"/>
 							<RowDefinition Height="*"/>
 						</Grid.RowDefinitions>
 						<RadioButton Grid.Row="0" Grid.Column="0" Content="SZ200" Foreground="White" VerticalContentAlignment="Center" GroupName="Tickets" Margin="10" FontWeight="Bold" IsChecked="{Binding SZ200IsSelected}"/>
 						<RadioButton Grid.Row="0" Grid.Column="1" Content="ZZ500" Foreground="White" VerticalContentAlignment="Center" GroupName="Tickets" Margin="10" FontWeight="Bold" IsChecked="{Binding ZZ500IsSelected}"/>
-						<Button Grid.Row="1" Grid.Column="0" Content="更新 QMT" Command="{Binding Update1DClickCommand}" FontWeight="Bold" Height="50" Margin="10"/>
-						<Button Grid.Row="1" Grid.Column="1" Content="更新1M" Command="{Binding UPDATE1MClickCommand}" FontWeight="Bold" Height="50" Margin="10"/>
-						<Button Grid.Row="1" Grid.Column="1" Content="更新5M" Command="{Binding UPDATE5MClickCommand}" FontWeight="Bold" Height="50" Margin="10"/>
-						<Button Grid.Row="2" Grid.Column="0" Content="清除TARGET" Command="{Binding ClearTPOClickCommand}" FontWeight="Bold" Height="50" Margin="10"/>
-						<Button Grid.Row="2" Grid.Column="1" Content="更新TARGET" Command="{Binding UpdateTPOClickCommand}" FontWeight="Bold" Height="50" Margin="10"/>
-						<Button Grid.Row="3" Grid.Column="0" Content="清除TEST" Command="{Binding ClearTestingClickCommand}" FontWeight="Bold" Height="50" Margin="10"/>
-						<Button Grid.Row="3" Grid.Column="1" Content="更新TEST" Command="{Binding UpdateTestingClickCommand}" FontWeight="Bold" Height="50" Margin="10"/>
-						<Button Grid.Row="4" Grid.Column="0" Content="同步同花顺" Command="{Binding StrategyListSyncClickCommand}" FontWeight="Bold" Height="50" Margin="10"/>
-						<Button Grid.Row="4" Grid.Column="1" Content="运行时" Command="{Binding RuntimeClickCommand}" FontWeight="Bold" Height="50" Margin="10"/>
-						<Button Grid.Row="5" Grid.Column="0" Content="更新VWAP" Command="{Binding VWAPClickCommand}" FontWeight="Bold" Height="50" Margin="10"/>
-						<TextBox Grid.Row="7" Grid.Column="0" Grid.ColumnSpan="2" Text="{Binding Output}" TextWrapping="Wrap" Background="Transparent" Foreground="White" Margin="5" FontSize="24"/>
+						<Button Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" Content="更新 QMT" Command="{Binding Update1DClickCommand}" FontWeight="Bold" Height="50" Margin="10"/>
+						<Button Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" Content="更新1M" Command="{Binding UPDATE1MClickCommand}" FontWeight="Bold" Height="50" Margin="10"/>
+						<Button Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="2" Content="更新5M" Command="{Binding UPDATE5MClickCommand}" FontWeight="Bold" Height="50" Margin="10"/>
+						<Button Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="2" Content="清除TARGET" Command="{Binding ClearTPOClickCommand}" FontWeight="Bold" Height="50" Margin="10"/>
+						<Button Grid.Row="5" Grid.Column="0" Grid.ColumnSpan="2" Content="更新TARGET" Command="{Binding UpdateTPOClickCommand}" FontWeight="Bold" Height="50" Margin="10"/>
+						<Button Grid.Row="6" Grid.Column="0" Grid.ColumnSpan="2" Content="清除TEST" Command="{Binding ClearTestingClickCommand}" FontWeight="Bold" Height="50" Margin="10"/>
+						<Button Grid.Row="7" Grid.Column="0" Grid.ColumnSpan="2" Content="更新TEST" Command="{Binding UpdateTestingClickCommand}" FontWeight="Bold" Height="50" Margin="10"/>
+						<Button Grid.Row="8" Grid.Column="0" Grid.ColumnSpan="2" Content="同步同花顺" Command="{Binding StrategyListSyncClickCommand}" FontWeight="Bold" Height="50" Margin="10"/>
+						<Button Grid.Row="9" Grid.Column="0" Grid.ColumnSpan="2" Content="运行时" Command="{Binding RuntimeClickCommand}" FontWeight="Bold" Height="50" Margin="10"/>
+						<TextBox Grid.Row="10" Grid.Column="0" Grid.ColumnSpan="2" Text="{Binding Output}" TextWrapping="Wrap" Background="Transparent" Foreground="White" Margin="5" FontSize="24"/>
 					</Grid>
 				</Grid>
 			</GroupBox>
 		</Grid>
-		<TabControl Grid.Row="0" Grid.Column="1" Grid.ColumnSpan="2" Background="Black" Margin="5" >
+		<TabControl Grid.Row="0" Grid.Column="1" Grid.ColumnSpan="2" Background="Black" Margin="5">
 			<TabItem Header="TARGET" FontSize="36" Width="240" Height="60" Foreground="#FF8000" FontWeight="Bold" Background="Black">
 				<Grid>
-					<Grid.ColumnDefinitions>
-						<ColumnDefinition Width="3*"/>
-						<ColumnDefinition Width="2*"/>
-					</Grid.ColumnDefinitions>
-					<Grid  Grid.Column="0">
-						<Grid.ColumnDefinitions>
-							<ColumnDefinition Width="42"/>
-							<ColumnDefinition Width="*"/>
-						</Grid.ColumnDefinitions>
-						<Grid.RowDefinitions>
-							<RowDefinition Height="*"/>
-							<RowDefinition Height="*"/>
-							<RowDefinition Height="*"/>
-							<RowDefinition Height="*"/>
-						</Grid.RowDefinitions>
-						<StackPanel Grid.Row="0" Grid.Column="0" Orientation="Horizontal">
-							<TextBlock Text="TWO" Margin="5" FontSize="30">
-								<TextBlock.LayoutTransform>
-									<RotateTransform Angle="90"/>
-								</TextBlock.LayoutTransform>
-							</TextBlock>
-						</StackPanel>
-						<Grid Grid.Row="0" Grid.Column="1">
-							<ListBox Margin="5" ItemsSource="{Binding StrategyTarget2Data, Mode=TwoWay}" SelectedIndex="{Binding StrategyTarget2DataIndex}" Background="Black" FontSize="24" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
-								<ListBox.ItemTemplate>
-									<DataTemplate>
-										<StackPanel Orientation="Horizontal">
-											<TextBlock Text="{Binding StockName}" Foreground="White" Width="100"/>
-											<TextBlock Text="[" Foreground="White"/>
-											<TextBlock Text="{Binding StockCode}" Foreground="White" Width="150"/>
-											<TextBlock Text="]  " Foreground="White"/>
-											<TextBlock Text="{Binding VWAPAll}" Foreground="White" Width="160"/>
-											<TextBlock Text="{Binding VWAPHigh}" Foreground="White" Width="160"/>
-											<TextBlock Text="{Binding Flag}" Foreground="White" Width="100"/>
-										</StackPanel>
-									</DataTemplate>
-								</ListBox.ItemTemplate>
-							</ListBox>
-						</Grid>
-						<StackPanel Grid.Row="1" Grid.Column="0" Orientation="Horizontal">
-							<TextBlock Text="THREE" Margin="5" FontSize="30">
-								<TextBlock.LayoutTransform>
-									<RotateTransform Angle="90"/>
-								</TextBlock.LayoutTransform>
-							</TextBlock>
-						</StackPanel>
-						<Grid Grid.Row="1" Grid.Column="1">
-							<ListBox Margin="5" ItemsSource="{Binding StrategyTarget3Data, Mode=TwoWay}" SelectedIndex="{Binding StrategyTarget3DataIndex}" Background="Black" FontSize="24" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
-								<ListBox.ItemTemplate>
-									<DataTemplate>
-										<StackPanel Orientation="Horizontal">
-											<TextBlock Text="{Binding StockName}" Foreground="White" Width="100"/>
-											<TextBlock Text="[" Foreground="White"/>
-											<TextBlock Text="{Binding StockCode}" Foreground="White" Width="150"/>
-											<TextBlock Text="]  " Foreground="White"/>
-											<TextBlock Text="{Binding VWAPAll}" Foreground="White" Width="160"/>
-											<TextBlock Text="{Binding VWAPHigh}" Foreground="White" Width="160"/>
-											<TextBlock Text="{Binding Flag}" Foreground="White" Width="100"/>
-										</StackPanel>
-									</DataTemplate>
-								</ListBox.ItemTemplate>
-							</ListBox>
-						</Grid>
-						<StackPanel Grid.Row="2" Grid.Column="0" Orientation="Horizontal">
-							<TextBlock Text="THREE+ONE" Margin="5" FontSize="30">
-								<TextBlock.LayoutTransform>
-									<RotateTransform Angle="90"/>
-								</TextBlock.LayoutTransform>
-							</TextBlock>
-						</StackPanel>
-						<Grid Grid.Row="2" Grid.Column="1">
-							<ListBox Margin="5" ItemsSource="{Binding StrategyTarget31Data, Mode=TwoWay}" SelectedIndex="{Binding StrategyTarget31DataIndex}" Background="Black" FontSize="24" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
-								<ListBox.ItemTemplate>
-									<DataTemplate>
-										<StackPanel Orientation="Horizontal">
-											<TextBlock Text="{Binding StockName}" Foreground="White" Width="100"/>
-											<TextBlock Text="[" Foreground="White"/>
-											<TextBlock Text="{Binding StockCode}" Foreground="White" Width="150"/>
-											<TextBlock Text="]  " Foreground="White"/>
-											<TextBlock Text="{Binding VWAPAll}" Foreground="White" Width="160"/>
-											<TextBlock Text="{Binding VWAPHigh}" Foreground="White" Width="160"/>
-											<TextBlock Text="{Binding Flag}" Foreground="White" Width="100"/>
-										</StackPanel>
-									</DataTemplate>
-								</ListBox.ItemTemplate>
-							</ListBox>
-						</Grid>
-						<StackPanel Grid.Row="3" Grid.Column="0" Orientation="Horizontal">
-							<TextBlock Text="TOP" Margin="5" FontSize="30">
-								<TextBlock.LayoutTransform>
-									<RotateTransform Angle="90"/>
-								</TextBlock.LayoutTransform>
-							</TextBlock>
-						</StackPanel>
-						<Grid Grid.Row="3" Grid.Column="1">
-							<ListBox Margin="5" ItemsSource="{Binding StrategyTargetTopData, Mode=TwoWay}" SelectedIndex="{Binding StrategyTargetTopDataIndex}" Background="Black" FontSize="24" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
-								<ListBox.ItemTemplate>
-									<DataTemplate>
-										<StackPanel Orientation="Horizontal">
-											<TextBlock Text="{Binding StockName}" Foreground="White" Width="100"/>
-											<TextBlock Text="[" Foreground="White"/>
-											<TextBlock Text="{Binding StockCode}" Foreground="White" Width="150"/>
-											<TextBlock Text="]  " Foreground="White"/>
-											<TextBlock Text="{Binding VWAPAll}" Foreground="White" Width="160"/>
-											<TextBlock Text="{Binding VWAPHigh}" Foreground="White" Width="160"/>
-											<TextBlock Text="{Binding Flag}" Foreground="White" Width="100"/>
-										</StackPanel>
-									</DataTemplate>
-								</ListBox.ItemTemplate>
-							</ListBox>
-						</Grid>
+					<Grid.RowDefinitions>
+						<RowDefinition Height="*"/>
+						<RowDefinition Height="*"/>
+					</Grid.RowDefinitions>
+					<Grid Grid.Row="0">
+						<TabControl TabStripPlacement="Left">
+							<TabItem Header="THREE" FontSize="24" Width="200" Height="60" Foreground="#FF8000" FontWeight="Bold" Background="Black">
+								<ListBox Margin="5" ItemsSource="{Binding StrategyTarget3Data, Mode=TwoWay}" SelectedIndex="{Binding StrategyTarget3DataIndex}" Background="Black" FontSize="24" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+									<ListBox.ItemTemplate>
+										<DataTemplate>
+											<StackPanel Orientation="Horizontal">
+												<TextBlock Text="{Binding StockName}" Foreground="White" Width="100"/>
+												<TextBlock Text="[" Foreground="White"/>
+												<TextBlock Text="{Binding StockCode}" Foreground="White" Width="150"/>
+												<TextBlock Text="]  " Foreground="White"/>
+												<TextBlock Text="{Binding VWAPAll}" Foreground="White" Width="160"/>
+												<TextBlock Text="{Binding VWAPHigh}" Foreground="White" Width="160"/>
+												<TextBlock Text="{Binding Flag}" Foreground="White" Width="100"/>
+											</StackPanel>
+										</DataTemplate>
+									</ListBox.ItemTemplate>
+								</ListBox>
+							</TabItem>
+							<TabItem Header="THREE+ONE" FontSize="24" Width="200" Height="60" Foreground="#FF8000" FontWeight="Bold" Background="Black">
+								<ListBox Margin="5" ItemsSource="{Binding StrategyTarget31Data, Mode=TwoWay}" SelectedIndex="{Binding StrategyTarget31DataIndex}" Background="Black" FontSize="24" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+									<ListBox.ItemTemplate>
+										<DataTemplate>
+											<StackPanel Orientation="Horizontal">
+												<TextBlock Text="{Binding StockName}" Foreground="White" Width="100"/>
+												<TextBlock Text="[" Foreground="White"/>
+												<TextBlock Text="{Binding StockCode}" Foreground="White" Width="150"/>
+												<TextBlock Text="]  " Foreground="White"/>
+												<TextBlock Text="{Binding VWAPAll}" Foreground="White" Width="160"/>
+												<TextBlock Text="{Binding VWAPHigh}" Foreground="White" Width="160"/>
+												<TextBlock Text="{Binding Flag}" Foreground="White" Width="100"/>
+											</StackPanel>
+										</DataTemplate>
+									</ListBox.ItemTemplate>
+								</ListBox>
+							</TabItem>
+							<TabItem Header="TOP" FontSize="24" Width="200" Height="60" Foreground="#FF8000" FontWeight="Bold" Background="Black">
+								<ListBox Margin="5" ItemsSource="{Binding StrategyTargetTopData, Mode=TwoWay}" SelectedIndex="{Binding StrategyTargetTopDataIndex}" Background="Black" FontSize="24" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+									<ListBox.ItemTemplate>
+										<DataTemplate>
+											<StackPanel Orientation="Horizontal">
+												<TextBlock Text="{Binding StockName}" Foreground="White" Width="100"/>
+												<TextBlock Text="[" Foreground="White"/>
+												<TextBlock Text="{Binding StockCode}" Foreground="White" Width="150"/>
+												<TextBlock Text="]  " Foreground="White"/>
+												<TextBlock Text="{Binding VWAPAll}" Foreground="White" Width="160"/>
+												<TextBlock Text="{Binding VWAPHigh}" Foreground="White" Width="160"/>
+												<TextBlock Text="{Binding Flag}" Foreground="White" Width="100"/>
+											</StackPanel>
+										</DataTemplate>
+									</ListBox.ItemTemplate>
+								</ListBox>
+							</TabItem>
+							<TabItem Header="HIS" FontSize="24" Width="200" Height="60" Foreground="#FF8000" FontWeight="Bold" Background="Black">
+								<ListBox Margin="5" ItemsSource="{Binding StrategyTargetHisData, Mode=TwoWay}" SelectedIndex="{Binding StrategyTargetHisDataIndex}" Background="Black" FontSize="24" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+									<ListBox.ItemTemplate>
+										<DataTemplate>
+											<StackPanel Orientation="Horizontal">
+												<TextBlock Text="{Binding StockName}" Foreground="White" Width="100"/>
+												<TextBlock Text="[" Foreground="White"/>
+												<TextBlock Text="{Binding StockCode}" Foreground="White" Width="150"/>
+												<TextBlock Text="]  " Foreground="White"/>
+												<TextBlock Text="{Binding VWAPAll}" Foreground="White" Width="160"/>
+												<TextBlock Text="{Binding VWAPHigh}" Foreground="White" Width="160"/>
+												<TextBlock Text="{Binding Flag}" Foreground="White" Width="100"/>
+											</StackPanel>
+										</DataTemplate>
+									</ListBox.ItemTemplate>
+								</ListBox>
+							</TabItem>
+						</TabControl>
 					</Grid>
-					<local:KChart Grid.Row="0" Grid.Column="1" KRecords="{Binding StrategyTargetKRecords}" Margin="5" Background="Black"/>
+					<local:KChart Grid.Row="1" KRecords="{Binding StrategyTargetKRecords}" Margin="5" Background="Black"/>
 				</Grid>
 			</TabItem>
 			<TabItem Header="HISTORY" FontSize="30" Width="240" Height="60" Foreground="#FF8000" FontWeight="Bold" Background="Black">

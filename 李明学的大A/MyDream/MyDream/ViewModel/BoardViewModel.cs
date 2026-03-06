@@ -104,6 +104,9 @@ namespace MyDream
         {
             Strategy.Instance.StrategyType = EStrategy.ThreePlusOne;
             UpdateStrategy();
+            UpdateStrategyDetail();
+            UpdateBurn();
+            UpdateMotion();
         }
 
         [RelayCommand]
@@ -148,9 +151,7 @@ namespace MyDream
         [RelayCommand]
         private void VWAPClick()
         {
-            UpdateStrategyDetail();
-            UpdateBurn();
-            UpdateMotion();
+
         }
 
         private void UpdateStrategy()
@@ -190,8 +191,6 @@ namespace MyDream
             UpdateCalendar();
             UpdateDistributionDate();
             UpdateDistribution();
-
-            //UpdateBurn();
         }
     }
 }
