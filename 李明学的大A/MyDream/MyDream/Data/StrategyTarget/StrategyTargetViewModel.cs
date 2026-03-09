@@ -322,179 +322,130 @@ namespace MyDream
                     }
                 }
 
-/*                Application.Current.Dispatcher.Invoke(() =>
+                var collection3 = new ObservableCollection<StrategyTargetItem>();
+                foreach (var data in StrategyTarget3Data)
                 {
-                    var collection2 = new ObservableCollection<StrategyTargetItem>();
-                    foreach (var data in StrategyTarget2Data)
+                    List<Record1DItem?> records = new List<Record1DItem?>();
+                    int count = ZZ5001D.Instance[data!.StockCode!]!.Data!.Count;
+                    for (int i = 0; i <= count; i++)
                     {
-                        List<Record1DItem?> records = new List<Record1DItem?>();
-                        int count = ZZ5001D.Instance[data!.StockCode!]!.Data!.Count;
-                        for (int i = 0; i <= count; i++)
+                        if (i == count)
                         {
-                            if (i == count)
-                            {
-                                if (RealRecords.Keys.Contains(data!.StockCode!)) records.Add(RealRecords[data!.StockCode!]);
-                                break;
-                            }
-                            records.Add(ZZ5001D.Instance[data!.StockCode!]!.Data![i]);
+                            if (RealRecords.Keys.Contains(data!.StockCode!)) records.Add(RealRecords[data!.StockCode!]);
+                            break;
                         }
-
-                        double total_high = records[records.Count - 1]!.High * records[records.Count - 1]!.Volume +
-                                            records[records.Count - 2]!.High * records[records.Count - 2]!.Volume +
-                                            records[records.Count - 3]!.High * records[records.Count - 3]!.Volume +
-                                            records[records.Count - 4]!.High * records[records.Count - 4]!.Volume;
-                        double total_close = records[records.Count - 1]!.Close * records[records.Count - 1]!.Volume +
-                                            records[records.Count - 2]!.Close * records[records.Count - 2]!.Volume +
-                                            records[records.Count - 3]!.Close * records[records.Count - 3]!.Volume +
-                                            records[records.Count - 4]!.Close * records[records.Count - 4]!.Volume;
-                        double total_volume = records[records.Count - 1]!.Volume + records[records.Count - 2]!.Volume + records[records.Count - 3]!.Volume + records[records.Count - 4]!.Volume;
-
-                        data.VWAPHigh = (((total_high / total_volume) - records[records.Count - 1]!.Close) / records[records.Count - 1]!.Close).ToString("00.00%");
-                        data.VWAPAll = (((total_high / total_volume) + (total_close / total_volume) - records[records.Count - 1]!.Close * 2) / records[records.Count - 1]!.Close).ToString("00.00%");
-
-                        double ma5 = (records[records.Count - 1]!.Close + records[records.Count - 2]!.Close + records[records.Count - 3]!.Close + records[records.Count - 4]!.Close + records[records.Count - 5]!.Close) / 5.0;
-
-                        records[records.Count - 1]!.PreClose = records[records.Count - 2]!.Close;
-                        if (records[records.Count - 1]!.Volume > records[records.Count - 2]!.Volume &&
-                            records[records.Count - 1]!.IsRed &&
-                            records[records.Count - 1]!.IsUp &&
-                            !records[records.Count - 1]!.IsTop &&
-                            records[records.Count - 1]!.Close > ma5)
-                        {
-                            data.Flag = "Y";
-                        }
-                        else
-                        {
-                            data.Flag = "N";
-                        }
-
-                        collection2.Add(data);
+                        records.Add(ZZ5001D.Instance[data!.StockCode!]!.Data![i]);
                     }
-                    StrategyTarget2Data = collection2;
-*/
-                    var collection3 = new ObservableCollection<StrategyTargetItem>();
-                    foreach (var data in StrategyTarget3Data)
+
+                    double total_high = records[records.Count - 1]!.High * records[records.Count - 1]!.Volume +
+                                        records[records.Count - 2]!.High * records[records.Count - 2]!.Volume +
+                                        records[records.Count - 3]!.High * records[records.Count - 3]!.Volume +
+                                        records[records.Count - 4]!.High * records[records.Count - 4]!.Volume;
+                    double total_close = records[records.Count - 1]!.Close * records[records.Count - 1]!.Volume +
+                                        records[records.Count - 2]!.Close * records[records.Count - 2]!.Volume +
+                                        records[records.Count - 3]!.Close * records[records.Count - 3]!.Volume +
+                                        records[records.Count - 4]!.Close * records[records.Count - 4]!.Volume;
+                    double total_volume = records[records.Count - 1]!.Volume + records[records.Count - 2]!.Volume + records[records.Count - 3]!.Volume + records[records.Count - 4]!.Volume;
+
+                    data.VWAPHigh = (((total_high / total_volume) - records[records.Count - 1]!.Close) / records[records.Count - 1]!.Close).ToString("00.00%");
+                    data.VWAPAll = (((total_high / total_volume) + (total_close / total_volume) - records[records.Count - 1]!.Close * 2) / records[records.Count - 1]!.Close).ToString("00.00%");
+
+                    double ma5 = (records[records.Count - 1]!.Close + records[records.Count - 2]!.Close + records[records.Count - 3]!.Close + records[records.Count - 4]!.Close + records[records.Count - 5]!.Close) / 5.0;
+
+                    records[records.Count - 1]!.PreClose = records[records.Count - 2]!.Close;
+                    if (records[records.Count - 1]!.Volume < records[records.Count - 2]!.Volume &&
+                        records[records.Count - 1]!.IsDown &&
+                        !records[records.Count - 1]!.IsBottom &&
+                        records[records.Count - 1]!.Close > ma5 &&
+                        double.Parse(data.VWAPAll.Replace("%", "")) > Constants.MinVWAP)
                     {
-                        List<Record1DItem?> records = new List<Record1DItem?>();
-                        int count = ZZ5001D.Instance[data!.StockCode!]!.Data!.Count;
-                        for (int i = 0; i <= count; i++)
-                        {
-                            if (i == count)
-                            {
-                                if (RealRecords.Keys.Contains(data!.StockCode!)) records.Add(RealRecords[data!.StockCode!]);
-                                break;
-                            }
-                            records.Add(ZZ5001D.Instance[data!.StockCode!]!.Data![i]);
-                        }
-
-                        double total_high = records[records.Count - 1]!.High * records[records.Count - 1]!.Volume +
-                                            records[records.Count - 2]!.High * records[records.Count - 2]!.Volume +
-                                            records[records.Count - 3]!.High * records[records.Count - 3]!.Volume +
-                                            records[records.Count - 4]!.High * records[records.Count - 4]!.Volume;
-                        double total_close = records[records.Count - 1]!.Close * records[records.Count - 1]!.Volume +
-                                            records[records.Count - 2]!.Close * records[records.Count - 2]!.Volume +
-                                            records[records.Count - 3]!.Close * records[records.Count - 3]!.Volume +
-                                            records[records.Count - 4]!.Close * records[records.Count - 4]!.Volume;
-                        double total_volume = records[records.Count - 1]!.Volume + records[records.Count - 2]!.Volume + records[records.Count - 3]!.Volume + records[records.Count - 4]!.Volume;
-
-                        data.VWAPHigh = (((total_high / total_volume) - records[records.Count - 1]!.Close) / records[records.Count - 1]!.Close).ToString("00.00%");
-                        data.VWAPAll = (((total_high / total_volume) + (total_close / total_volume) - records[records.Count - 1]!.Close * 2) / records[records.Count - 1]!.Close).ToString("00.00%");
-
-                        double ma5 = (records[records.Count - 1]!.Close + records[records.Count - 2]!.Close + records[records.Count - 3]!.Close + records[records.Count - 4]!.Close + records[records.Count - 5]!.Close) / 5.0;
-
-                        records[records.Count - 1]!.PreClose = records[records.Count - 2]!.Close;
-                        if (records[records.Count - 1]!.Volume < records[records.Count - 2]!.Volume &&
-                            records[records.Count - 1]!.IsDown &&
-                            !records[records.Count - 1]!.IsBottom &&
-                            records[records.Count - 1]!.Close > ma5 &&
-                            double.Parse(data.VWAPAll.Replace("%", "")) > Constants.MinVWAP)
-                        {
-                            data.Flag = "Y";
-                        }
-                        else
-                        {
-                            data.Flag = "N";
-                        }
-
-                        collection3.Add(data);
+                        data.Flag = "Y";
                     }
-                    StrategyTarget3Data = collection3;
-/*
-                    var collection31 = new ObservableCollection<StrategyTargetItem>();
-                    foreach (var data in StrategyTarget31Data)
+                    else
                     {
-                        List<Record1DItem?> records = new List<Record1DItem?>();
-                        int count = ZZ5001D.Instance[data!.StockCode!]!.Data!.Count;
-                        for (int i = 0; i <= count; i++)
-                        {
-                            if (i == count)
-                            {
-                                if (RealRecords.Keys.Contains(data!.StockCode!)) records.Add(RealRecords[data!.StockCode!]);
-                                break;
-                            }
-                            records.Add(ZZ5001D.Instance[data!.StockCode!]!.Data![i]);
-                        }
-
-                        double total_high = records[records.Count - 1]!.High * records[records.Count - 1]!.Volume +
-                                            records[records.Count - 2]!.High * records[records.Count - 2]!.Volume +
-                                            records[records.Count - 3]!.High * records[records.Count - 3]!.Volume +
-                                            records[records.Count - 4]!.High * records[records.Count - 4]!.Volume +
-                                            records[records.Count - 5]!.High * records[records.Count - 5]!.Volume;
-                        double total_close = records[records.Count - 1]!.Close * records[records.Count - 1]!.Volume +
-                                            records[records.Count - 2]!.Close * records[records.Count - 2]!.Volume +
-                                            records[records.Count - 3]!.Close * records[records.Count - 3]!.Volume +
-                                            records[records.Count - 4]!.Close * records[records.Count - 4]!.Volume +
-                                            records[records.Count - 5]!.Close * records[records.Count - 5]!.Volume;
-                        double total_volume = records[records.Count - 1]!.Volume + records[records.Count - 2]!.Volume + records[records.Count - 3]!.Volume + records[records.Count - 4]!.Volume + records[records.Count - 5]!.Volume;
-
-                        data.VWAPHigh = (((total_high / total_volume) - records[records.Count - 1]!.Close) / records[records.Count - 1]!.Close).ToString("P2");
-                        data.VWAPAll = (((total_high / total_volume) + (total_close / total_volume) - records[records.Count - 1]!.Close * 2) / records[records.Count - 1]!.Close).ToString("P2");
-                        if (total_high / total_volume > records[records.Count - 1]!.High) {
-                            data.Flag = "H>H";
-                        } else if (total_high / total_volume > records[records.Count - 1]!.Close) {
-                            data.Flag = "H>C";
-                        } else if (total_close / total_volume > records[records.Count - 1]!.Close){
-                            data.Flag = "C>C";
-                        } else {
-                            data.Flag = "";
-                        }
-                        collection31.Add(data);
+                        data.Flag = "N";
                     }
-                    StrategyTarget31Data = collection31;
 
-                    var collectiontop = new ObservableCollection<StrategyTargetItem>();
-                    foreach (var data in StrategyTargetTopData)
-                    {
-                        List<Record1DItem?> records = new List<Record1DItem?>();
-                        int count = ZZ5001D.Instance[data!.StockCode!]!.Data!.Count;
-                        for (int i = 0; i <= count; i++)
-                        {
-                            if (i == count)
-                            {
-                                if (RealRecords.Keys.Contains(data!.StockCode!)) records.Add(RealRecords[data!.StockCode!]);
-                                break;
-                            }
-                            records.Add(ZZ5001D.Instance[data!.StockCode!]!.Data![i]);
-                        }
+                    collection3.Add(data);
+                }
+                StrategyTarget3Data = collection3;
+                /*
+                                    var collection31 = new ObservableCollection<StrategyTargetItem>();
+                                    foreach (var data in StrategyTarget31Data)
+                                    {
+                                        List<Record1DItem?> records = new List<Record1DItem?>();
+                                        int count = ZZ5001D.Instance[data!.StockCode!]!.Data!.Count;
+                                        for (int i = 0; i <= count; i++)
+                                        {
+                                            if (i == count)
+                                            {
+                                                if (RealRecords.Keys.Contains(data!.StockCode!)) records.Add(RealRecords[data!.StockCode!]);
+                                                break;
+                                            }
+                                            records.Add(ZZ5001D.Instance[data!.StockCode!]!.Data![i]);
+                                        }
 
-                        double total_high = records[records.Count - 1]!.High * records[records.Count - 1]!.Volume +
-                                            records[records.Count - 2]!.High * records[records.Count - 2]!.Volume +
-                                            records[records.Count - 3]!.High * records[records.Count - 3]!.Volume +
-                                            records[records.Count - 4]!.High * records[records.Count - 4]!.Volume;
-                        double total_close = records[records.Count - 1]!.Close * records[records.Count - 1]!.Volume +
-                                            records[records.Count - 2]!.Close * records[records.Count - 2]!.Volume +
-                                            records[records.Count - 3]!.Close * records[records.Count - 3]!.Volume +
-                                            records[records.Count - 4]!.Close * records[records.Count - 4]!.Volume;
-                        double total_volume = records[records.Count - 1]!.Volume + records[records.Count - 2]!.Volume + records[records.Count - 3]!.Volume + records[records.Count - 4]!.Volume;
+                                        double total_high = records[records.Count - 1]!.High * records[records.Count - 1]!.Volume +
+                                                            records[records.Count - 2]!.High * records[records.Count - 2]!.Volume +
+                                                            records[records.Count - 3]!.High * records[records.Count - 3]!.Volume +
+                                                            records[records.Count - 4]!.High * records[records.Count - 4]!.Volume +
+                                                            records[records.Count - 5]!.High * records[records.Count - 5]!.Volume;
+                                        double total_close = records[records.Count - 1]!.Close * records[records.Count - 1]!.Volume +
+                                                            records[records.Count - 2]!.Close * records[records.Count - 2]!.Volume +
+                                                            records[records.Count - 3]!.Close * records[records.Count - 3]!.Volume +
+                                                            records[records.Count - 4]!.Close * records[records.Count - 4]!.Volume +
+                                                            records[records.Count - 5]!.Close * records[records.Count - 5]!.Volume;
+                                        double total_volume = records[records.Count - 1]!.Volume + records[records.Count - 2]!.Volume + records[records.Count - 3]!.Volume + records[records.Count - 4]!.Volume + records[records.Count - 5]!.Volume;
 
-                        data.VWAPHigh = (((total_high / total_volume) - records[records.Count - 1]!.Close) / records[records.Count - 1]!.Close * 100).ToString("00.00%");
-                        data.VWAPAll = (((total_high / total_volume) + (total_close / total_volume) - records[records.Count - 1]!.Close * 2) / records[records.Count - 1]!.Close * 100).ToString("00.00%");
-                        collectiontop.Add(data);
-                    }
-                    StrategyTargetTopData = collectiontop;
-                });*/
+                                        data.VWAPHigh = (((total_high / total_volume) - records[records.Count - 1]!.Close) / records[records.Count - 1]!.Close).ToString("P2");
+                                        data.VWAPAll = (((total_high / total_volume) + (total_close / total_volume) - records[records.Count - 1]!.Close * 2) / records[records.Count - 1]!.Close).ToString("P2");
+                                        if (total_high / total_volume > records[records.Count - 1]!.High) {
+                                            data.Flag = "H>H";
+                                        } else if (total_high / total_volume > records[records.Count - 1]!.Close) {
+                                            data.Flag = "H>C";
+                                        } else if (total_close / total_volume > records[records.Count - 1]!.Close){
+                                            data.Flag = "C>C";
+                                        } else {
+                                            data.Flag = "";
+                                        }
+                                        collection31.Add(data);
+                                    }
+                                    StrategyTarget31Data = collection31;
+
+                                    var collectiontop = new ObservableCollection<StrategyTargetItem>();
+                                    foreach (var data in StrategyTargetTopData)
+                                    {
+                                        List<Record1DItem?> records = new List<Record1DItem?>();
+                                        int count = ZZ5001D.Instance[data!.StockCode!]!.Data!.Count;
+                                        for (int i = 0; i <= count; i++)
+                                        {
+                                            if (i == count)
+                                            {
+                                                if (RealRecords.Keys.Contains(data!.StockCode!)) records.Add(RealRecords[data!.StockCode!]);
+                                                break;
+                                            }
+                                            records.Add(ZZ5001D.Instance[data!.StockCode!]!.Data![i]);
+                                        }
+
+                                        double total_high = records[records.Count - 1]!.High * records[records.Count - 1]!.Volume +
+                                                            records[records.Count - 2]!.High * records[records.Count - 2]!.Volume +
+                                                            records[records.Count - 3]!.High * records[records.Count - 3]!.Volume +
+                                                            records[records.Count - 4]!.High * records[records.Count - 4]!.Volume;
+                                        double total_close = records[records.Count - 1]!.Close * records[records.Count - 1]!.Volume +
+                                                            records[records.Count - 2]!.Close * records[records.Count - 2]!.Volume +
+                                                            records[records.Count - 3]!.Close * records[records.Count - 3]!.Volume +
+                                                            records[records.Count - 4]!.Close * records[records.Count - 4]!.Volume;
+                                        double total_volume = records[records.Count - 1]!.Volume + records[records.Count - 2]!.Volume + records[records.Count - 3]!.Volume + records[records.Count - 4]!.Volume;
+
+                                        data.VWAPHigh = (((total_high / total_volume) - records[records.Count - 1]!.Close) / records[records.Count - 1]!.Close * 100).ToString("00.00%");
+                                        data.VWAPAll = (((total_high / total_volume) + (total_close / total_volume) - records[records.Count - 1]!.Close * 2) / records[records.Count - 1]!.Close * 100).ToString("00.00%");
+                                        collectiontop.Add(data);
+                                    }
+                                    StrategyTargetTopData = collectiontop;
+                                });*/
             }
-            catch{
+            catch
+            {
 
             }
         }
