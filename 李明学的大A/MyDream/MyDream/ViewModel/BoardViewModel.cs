@@ -9,6 +9,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Configuration;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -149,9 +150,25 @@ namespace MyDream
         }
 
         [RelayCommand]
-        private void VWAPClick()
+        private void PushCodeClick()
         {
+            try
+            {
+                string bat_file = APath.GetGitFile();
 
+                var process = Process.Start(new ProcessStartInfo
+                {
+                    FileName = bat_file,
+                    UseShellExecute = true,
+                    CreateNoWindow = false
+                });
+                string? output = process?.StandardOutput.ReadToEnd();
+                Output += output;
+            }
+            catch
+            {
+                MessageBox.Show("执行失败！检查bat路径或权限", "错误");
+            }
         }
 
         private void UpdateStrategy()

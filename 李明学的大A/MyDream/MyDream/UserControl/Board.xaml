@@ -42,6 +42,7 @@
 							<RowDefinition Height="Auto"/>
 							<RowDefinition Height="Auto"/>
 							<RowDefinition Height="Auto"/>
+							<RowDefinition Height="Auto"/>
 							<RowDefinition Height="*"/>
 						</Grid.RowDefinitions>
 						<RadioButton Grid.Row="0" Grid.Column="0" Content="SZ200" Foreground="White" VerticalContentAlignment="Center" GroupName="Tickets" Margin="10" FontWeight="Bold" IsChecked="{Binding SZ200IsSelected}"/>
@@ -55,7 +56,8 @@
 						<Button Grid.Row="7" Grid.Column="0" Grid.ColumnSpan="2" Content="更新TEST" Command="{Binding UpdateTestingClickCommand}" FontWeight="Bold" Height="50" Margin="10"/>
 						<Button Grid.Row="8" Grid.Column="0" Grid.ColumnSpan="2" Content="同步同花顺" Command="{Binding StrategyListSyncClickCommand}" FontWeight="Bold" Height="50" Margin="10"/>
 						<Button Grid.Row="9" Grid.Column="0" Grid.ColumnSpan="2" Content="运行时" Command="{Binding RuntimeClickCommand}" FontWeight="Bold" Height="50" Margin="10"/>
-						<TextBox Grid.Row="10" Grid.Column="0" Grid.ColumnSpan="2" Text="{Binding Output}" TextWrapping="Wrap" Background="Transparent" Foreground="White" Margin="5" FontSize="24"/>
+						<Button Grid.Row="10" Grid.Column="0" Grid.ColumnSpan="2" Content="更新Git" Command="{Binding PushCodeClickCommand}" FontWeight="Bold" Height="50" Margin="10"/>
+						<TextBox Grid.Row="11" Grid.Column="0" Grid.ColumnSpan="2" Text="{Binding Output}" TextWrapping="Wrap" Background="Transparent" Foreground="White" Margin="5" FontSize="24"/>
 					</Grid>
 				</Grid>
 			</GroupBox>

@@ -141,5 +141,10 @@ namespace MyDream
         {
             return GetRoot() + "\\Data\\Runtime";
         }
+
+        public static string GetGitFile()
+        {
+            return GetRoot() + "\\..\\Update.bat";
+        }
     }
 }
