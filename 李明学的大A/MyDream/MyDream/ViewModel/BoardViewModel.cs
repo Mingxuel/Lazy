@@ -159,8 +159,9 @@ namespace MyDream
                 var process = Process.Start(new ProcessStartInfo
                 {
                     FileName = bat_file,
-                    UseShellExecute = true,
-                    CreateNoWindow = false
+                    UseShellExecute = false,
+                    CreateNoWindow = false,
+                    RedirectStandardOutput = true,
                 });
                 string? output = process?.StandardOutput.ReadToEnd();
                 Output += output;
