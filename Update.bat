@@ -3,12 +3,12 @@
 cd /d "%~dp0"
 
 git add .
-echo git add .：%~dp0
+echo git add .
 
 git commit -m "Updated."
-echo git commit：%~dp0
+echo git commit
 
 git push
-echo git push：%~dp0
+echo git push
 
 
