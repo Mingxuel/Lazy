@@ -1,4 +1,4 @@
-<hevo version="4306" sort_list="23,24,25,26,">
+<hevo version="4407" sort_list="23,24,25,">
   <Block name="3" id="35" IsLock="false" IsNameChanged="false" IsSecuritiesChanged="true">
     <security market="URFI" code="883957" />
     <security market="USHI" code="1A0001" />
@@ -15,8 +15,5 @@
   </Block>
   <Block name="HIS" id="37" IsLock="false" IsNameChanged="false" IsSecuritiesChanged="true">
 ===HIS===
-  </Block>
-  <Block name="TOP" id="38" IsLock="false" IsNameChanged="false" IsSecuritiesChanged="true">
-===TOP===
   </Block>
 </hevo>

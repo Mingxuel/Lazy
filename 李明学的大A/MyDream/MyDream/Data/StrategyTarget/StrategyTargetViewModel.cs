@@ -281,7 +281,7 @@ namespace MyDream
 
             string file_content = File.ReadAllText(APath.GetTHSStrategyFileOrigin());
             //file_content = file_content.Replace("===TPO2===", tpo2).Replace("===TPO3===", tpo3).Replace("===TPO31===", tpo31).Replace("===TOP===", top).Replace("===TOPHISTORY===", top_history);
-            file_content = file_content.Replace("===TPO3===", tpo3).Replace("===TPO31===", tpo31).Replace("===TOP===", top).Replace("===HIS===", his);
+            file_content = file_content.Replace("===TPO3===", tpo3).Replace("===TPO31===", tpo31).Replace("===HIS===", his);
             File.WriteAllText(APath.GetTHSStrategyFileTarget(), file_content);
         }
 
