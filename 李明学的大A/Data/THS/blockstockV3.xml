@@ -13,7 +13,6 @@
   <Block name="31" id="36" IsLock="false" IsNameChanged="false" IsSecuritiesChanged="true">
 ===TPO31===
   </Block>
-  <Block name="HIS" id="37" IsLock="false" IsNameChanged="false" IsSecuritiesChanged="true">
-===HIS===
+  <Block name="GOOD" id="37" IsLock="false" IsNameChanged="false" IsSecuritiesChanged="false">
   </Block>
 </hevo>
