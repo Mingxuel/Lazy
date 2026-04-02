@@ -37,6 +37,9 @@ namespace MyDream
         [ObservableProperty]
         private bool zZ500IsSelected = false;
 
+        [ObservableProperty]
+        private bool sZ50_SZ250IsSelected = false;
+
         public BoardViewModel()
         {
             //默认选择ZZ500
@@ -56,6 +59,14 @@ namespace MyDream
                 }
                 string file_sz200 = APath.GetSZ200TicketsConfig();
                 foreach (var line in File.ReadLines(file_sz200))
+                {
+                    if (!string.IsNullOrEmpty(line.Trim()) && !stock_codes.Contains(line.Trim()))
+                    {
+                        stock_codes.Add(line.Trim());
+                    }
+                }
+                string file_sz50_sz250 = APath.GetSZ50_SZ250TicketsConfig();
+                foreach (var line in File.ReadLines(file_sz50_sz250))
                 {
                     if (!string.IsNullOrEmpty(line.Trim()) && !stock_codes.Contains(line.Trim()))
                     {
@@ -174,17 +185,22 @@ namespace MyDream
 
         private void UpdateStrategy()
         {
+            EMarket market = EMarket.ZZ500;
+            if (SZ200IsSelected) market = EMarket.SZ200;
+            else if (ZZ500IsSelected) market = EMarket.ZZ500;
+            else if (SZ50_SZ250IsSelected) market = EMarket.SZ50_SZ250;
+
             //更新ZZ500数据
             Output = "更新ZZ500数据\n";
-            ZZ500.ReadFromXlsx(ZZ500IsSelected);
-            ZZ500.WriteToConfig(ZZ500IsSelected);
+            ZZ500.ReadFromXlsx(market);
+            ZZ500.WriteToConfig(market);
             //更新板块
             Output += "更新板块\n";
-            Industry.InitData(ZZ500IsSelected);
+            Industry.InitData(market);
             Industry.WriteDataToConfig();
             //更新概念
             Output += "更新概念\n";
-            Concepts.InitData(ZZ500IsSelected);
+            Concepts.InitData(market);
             Concepts.WriteDataToConfig();
 
             //初始化数据类
@@ -192,7 +208,7 @@ namespace MyDream
             TradingDates.Init();
             TradingTimes.Init();
             //初始化ZZ500股票代码
-            ZZ500StockCodes.Init(ZZ500IsSelected);
+            ZZ500StockCodes.Init(market);
             //初始化ZZ500股票代码
             ZZ5001D.Instance.Init();
             //初始化ZZ500股票代码

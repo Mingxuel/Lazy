@@ -43,21 +43,23 @@
 							<RowDefinition Height="Auto"/>
 							<RowDefinition Height="Auto"/>
 							<RowDefinition Height="Auto"/>
+							<RowDefinition Height="Auto"/>
 							<RowDefinition Height="*"/>
 						</Grid.RowDefinitions>
 						<RadioButton Grid.Row="0" Grid.Column="0" Content="SZ200" Foreground="White" VerticalContentAlignment="Center" GroupName="Tickets" Margin="10" FontWeight="Bold" IsChecked="{Binding SZ200IsSelected}"/>
 						<RadioButton Grid.Row="0" Grid.Column="1" Content="ZZ500" Foreground="White" VerticalContentAlignment="Center" GroupName="Tickets" Margin="10" FontWeight="Bold" IsChecked="{Binding ZZ500IsSelected}"/>
-						<Button Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" Content="更新 QMT" Command="{Binding Update1DClickCommand}" FontWeight="Bold" Height="50" Margin="10"/>
-						<Button Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" Content="更新1M" Command="{Binding UPDATE1MClickCommand}" FontWeight="Bold" Height="50" Margin="10"/>
-						<Button Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="2" Content="更新5M" Command="{Binding UPDATE5MClickCommand}" FontWeight="Bold" Height="50" Margin="10"/>
-						<Button Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="2" Content="清除TARGET" Command="{Binding ClearTPOClickCommand}" FontWeight="Bold" Height="50" Margin="10"/>
-						<Button Grid.Row="5" Grid.Column="0" Grid.ColumnSpan="2" Content="更新TARGET" Command="{Binding UpdateTPOClickCommand}" FontWeight="Bold" Height="50" Margin="10"/>
-						<Button Grid.Row="6" Grid.Column="0" Grid.ColumnSpan="2" Content="清除TEST" Command="{Binding ClearTestingClickCommand}" FontWeight="Bold" Height="50" Margin="10"/>
-						<Button Grid.Row="7" Grid.Column="0" Grid.ColumnSpan="2" Content="更新TEST" Command="{Binding UpdateTestingClickCommand}" FontWeight="Bold" Height="50" Margin="10"/>
-						<Button Grid.Row="8" Grid.Column="0" Grid.ColumnSpan="2" Content="同步同花顺" Command="{Binding StrategyListSyncClickCommand}" FontWeight="Bold" Height="50" Margin="10"/>
-						<Button Grid.Row="9" Grid.Column="0" Grid.ColumnSpan="2" Content="运行时" Command="{Binding RuntimeClickCommand}" FontWeight="Bold" Height="50" Margin="10"/>
-						<Button Grid.Row="10" Grid.Column="0" Grid.ColumnSpan="2" Content="更新Git" Command="{Binding PushCodeClickCommand}" FontWeight="Bold" Height="50" Margin="10"/>
-						<TextBox Grid.Row="11" Grid.Column="0" Grid.ColumnSpan="2" Text="{Binding Output}" TextWrapping="Wrap" Background="Transparent" Foreground="White" Margin="5" FontSize="24"/>
+						<RadioButton Grid.Row="1" Grid.Column="0" Content="SZ50-250" Foreground="White" VerticalContentAlignment="Center" GroupName="Tickets" Margin="10" FontWeight="Bold" IsChecked="{Binding SZ50_SZ250IsSelected}"/>
+						<Button Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" Content="更新 QMT" Command="{Binding Update1DClickCommand}" FontWeight="Bold" Height="50" Margin="10"/>
+						<Button Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="2" Content="更新1M" Command="{Binding UPDATE1MClickCommand}" FontWeight="Bold" Height="50" Margin="10"/>
+						<Button Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="2" Content="更新5M" Command="{Binding UPDATE5MClickCommand}" FontWeight="Bold" Height="50" Margin="10"/>
+						<Button Grid.Row="5" Grid.Column="0" Grid.ColumnSpan="2" Content="清除TARGET" Command="{Binding ClearTPOClickCommand}" FontWeight="Bold" Height="50" Margin="10"/>
+						<Button Grid.Row="6" Grid.Column="0" Grid.ColumnSpan="2" Content="更新TARGET" Command="{Binding UpdateTPOClickCommand}" FontWeight="Bold" Height="50" Margin="10"/>
+						<Button Grid.Row="7" Grid.Column="0" Grid.ColumnSpan="2" Content="清除TEST" Command="{Binding ClearTestingClickCommand}" FontWeight="Bold" Height="50" Margin="10"/>
+						<Button Grid.Row="8" Grid.Column="0" Grid.ColumnSpan="2" Content="更新TEST" Command="{Binding UpdateTestingClickCommand}" FontWeight="Bold" Height="50" Margin="10"/>
+						<Button Grid.Row="9" Grid.Column="0" Grid.ColumnSpan="2" Content="同步同花顺" Command="{Binding StrategyListSyncClickCommand}" FontWeight="Bold" Height="50" Margin="10"/>
+						<Button Grid.Row="10" Grid.Column="0" Grid.ColumnSpan="2" Content="运行时" Command="{Binding RuntimeClickCommand}" FontWeight="Bold" Height="50" Margin="10"/>
+						<Button Grid.Row="11" Grid.Column="0" Grid.ColumnSpan="2" Content="更新Git" Command="{Binding PushCodeClickCommand}" FontWeight="Bold" Height="50" Margin="10"/>
+						<TextBox Grid.Row="12" Grid.Column="0" Grid.ColumnSpan="2" Text="{Binding Output}" TextWrapping="Wrap" Background="Transparent" Foreground="White" Margin="5" FontSize="24"/>
 					</Grid>
 				</Grid>
 			</GroupBox>

@@ -9,15 +9,21 @@ namespace MyDream
     {
         public static List<ZZ500Item> Data { get; } = new List<ZZ500Item>();
 
-        public static void ReadFromXlsx(bool isZZ500)
+        public static void ReadFromXlsx(EMarket market)
         {
             Data.Clear();
 
-            string FilePath = isZZ500 ? APath.GetZZ500Xlsx() : APath.GetSZ200Xlsx();
-
-            using (var stream = new FileStream(FilePath, FileMode.Open, FileAccess.Read))
+            string filePath = market switch
             {
-                IWorkbook workbook = Path.GetExtension(FilePath).Equals(".xlsx", StringComparison.OrdinalIgnoreCase) ? new XSSFWorkbook(stream) : new HSSFWorkbook(stream);
+                EMarket.ZZ500 => APath.GetZZ500Xlsx(),
+                EMarket.SZ200 => APath.GetSZ200Xlsx(),
+                EMarket.SZ50_SZ250 => APath.GetSZ50_SZ250Xlsx(),
+                _ => throw new ArgumentException("Invalid market type")
+            };
+
+            using (var stream = new FileStream(filePath, FileMode.Open, FileAccess.Read))
+            {
+                IWorkbook workbook = Path.GetExtension(filePath).Equals(".xlsx", StringComparison.OrdinalIgnoreCase) ? new XSSFWorkbook(stream) : new HSSFWorkbook(stream);
                 ISheet worksheet = workbook.GetSheetAt(0);
                 for (int i = 1; i <= worksheet.LastRowNum; i++)
                 {
@@ -33,9 +39,15 @@ namespace MyDream
             }
         }
 
-        public static void WriteToConfig(bool isZZ500)
+        public static void WriteToConfig(EMarket market)
         {
-            string ticketConfigPath = isZZ500 ? APath.GetZZ500TicketsConfig() : APath.GetSZ200TicketsConfig();
+            string ticketConfigPath = market switch
+            {
+                EMarket.ZZ500 => APath.GetZZ500TicketsConfig(),
+                EMarket.SZ200 => APath.GetSZ200TicketsConfig(),
+                EMarket.SZ50_SZ250 => APath.GetSZ50_SZ250TicketsConfig(),
+                _ => throw new ArgumentException("Invalid market type")
+            };
 
             using (StreamWriter writer = new StreamWriter(APath.GetZZ500DataConfig()))
             {

@@ -27,6 +27,11 @@ namespace MyDream
             return GetRoot() + "\\Data\\ZZ500\\Tickets_SZ200.xlsx";
         }
 
+        public static string GetSZ50_SZ250Xlsx()
+        {
+            return GetRoot() + "\\Data\\ZZ500\\Tickets_SZ50_SZ250.xlsx";
+        }
+
         public static string GetZZ500DataConfig()
         {
             return GetRoot() + "\\Data\\ZZ500\\Data.config";
@@ -40,6 +45,11 @@ namespace MyDream
         public static string GetSZ200TicketsConfig()
         {
             return GetRoot() + "\\Data\\ZZ500\\Tickets_SZ200.config";
+        }
+
+        public static string GetSZ50_SZ250TicketsConfig()
+        {
+            return GetRoot() + "\\Data\\ZZ500\\Tickets_SZ50_SZ250.config";
         }
 
         public static string GetTicketsConfig()
