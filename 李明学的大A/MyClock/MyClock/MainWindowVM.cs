@@ -16,6 +16,7 @@ namespace MyClock
 {
     public partial class MainWindowVM : ObservableObject
     {
+        private const int SIZE = 300;
         private int pre_minute = -1;
         private System.Windows.Threading.DispatcherTimer _timer;
 
@@ -29,6 +30,12 @@ namespace MyClock
         private string second = "00";
 
         [ObservableProperty]
+        private string leftTime = string.Empty;
+
+        [ObservableProperty]
+        private Brush leftTimeBrush;
+
+        [ObservableProperty]
         private double fontSize = 30;
 
         [ObservableProperty]
@@ -38,10 +45,21 @@ namespace MyClock
         public int targetCount = 0;
 
         [ObservableProperty]
+        public int ruleCount = 0;
+
+        [ObservableProperty]
         private ObservableCollection<ProcessItem> processItems = new ObservableCollection<ProcessItem>();
+
+        [ObservableProperty]
+        private ObservableCollection<RuleItem> ruleItems = new ObservableCollection<RuleItem>();
 
         public MainWindowVM()
         {
+            for (int i = 0; i < SIZE; i++)
+            {
+                RuleItems.Add(new RuleItem { Id = -1 });
+            }
+
             _timer = new System.Windows.Threading.DispatcherTimer
             {
                 Interval = TimeSpan.FromMilliseconds(1000)
@@ -67,6 +85,7 @@ namespace MyClock
             DateTime start_time = now.Date.AddHours(09).AddMinutes(14);
             TimeSpan diff = now - start_time;
             TargetCount = (int)diff.TotalMinutes;
+            UpdateRule();
             if (pre_minute != TargetCount && TargetCount >= 1 && TargetCount <= 345)
             {
                 UpdateProcess();
@@ -76,6 +95,8 @@ namespace MyClock
                 Foreground = Brushes.White;
             }
             if (pre_minute != TargetCount) pre_minute = TargetCount;
+
+            Foreground = int.Parse(Second) >= 55 ? Brushes.Red : Brushes.White;
         }
 
         public void UpdateProcess()
@@ -104,6 +125,32 @@ namespace MyClock
                     Id = i + 1, IsSolid = status
                 });
             }
+        }
+
+        public void UpdateRule()
+        {
+            int minute = DateTime.Now.Minute;
+            int second = DateTime.Now.Second;
+            int index = minute % 5 * 60 + second;
+
+            LeftTime = " " + (SIZE - index - 1).ToString("D3");
+
+            if (index <= 0)
+            {
+                foreach(var item in RuleItems)
+                {
+                    item.Id = -1;
+                }
+                return;
+            }
+
+            for(int i = 0; i <= index; i++)
+            {
+                int id = (int)((i + 1) / 5) * 2;
+                RuleItems[(int)i].Id = id;
+            }
+
+            LeftTimeBrush = new SolidColorBrush(Color.FromRgb(255, (byte)(128 - (int)((index + 1) / 5) * 2), 0));
         }
     }
 }

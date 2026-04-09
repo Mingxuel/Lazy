@@ -6,47 +6,76 @@
         xmlns:local="clr-namespace:MyClock"
         mc:Ignorable="d" d:DesignWidth="600" d:DesignHeight="400"
         Title="MainWindow" ResizeMode="NoResize" WindowState="Maximized" WindowStyle="None"
-		ShowInTaskbar="False"
+		ShowInTaskbar="False" FontFamily="Verdana"
         AllowsTransparency="True" Background="Transparent" Topmost="True">
     <!-- Window.Resources removed for transparency -->
     <Grid Background="Transparent">
-        <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Bottom" Background="Transparent">
-			<TextBlock Text=" " HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="{Binding FontSize}"  FontWeight="Bold" Foreground="White"/>
-			<TextBlock Text="{Binding Hour}" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="{Binding FontSize}" FontWeight="Bold" Foreground="{Binding Foreground}"/>
-			<TextBlock Text=":" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="{Binding FontSize}"  FontWeight="Bold" Foreground="{Binding Foreground}"/>
-			<TextBlock Text="{Binding Minute}" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="{Binding FontSize}" FontWeight="Bold" Foreground="{Binding Foreground}"/>
-			<TextBlock Text=":" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="{Binding FontSize}" FontWeight="Bold" Foreground="{Binding Foreground}"/>
-			<TextBlock Text="{Binding Second}" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="{Binding FontSize}" FontWeight="Bold" Foreground="{Binding Foreground}"/>
-			<TextBlock Text=" " HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="{Binding FontSize}"  FontWeight="Bold" Foreground="White"/>
-			<ItemsControl ItemsSource="{Binding ProcessItems, Mode=TwoWay}" Height="25">
-				<ItemsControl.ItemsPanel>
-					<ItemsPanelTemplate>
-						<WrapPanel Orientation="Vertical"/>
-					</ItemsPanelTemplate>
-				</ItemsControl.ItemsPanel>
-				<ItemsControl.ItemTemplate>
-					<DataTemplate DataType="{x:Type local:ProcessItem}">
-						<Rectangle Width="{Binding Width}" Height="{Binding Height}" StrokeThickness="{Binding StrokeThickness}" Margin="1 1 0 0">
-							<Rectangle.Style>
-								<Style TargetType="Rectangle">
-									<Setter Property="Fill" Value="{Binding HollowFill}"/>
-									<Setter Property="Stroke" Value="{Binding HollowStroke}"/>
-									<Style.Triggers>
-										<DataTrigger Binding="{Binding IsSolid}" Value="2">
-											<Setter Property="Fill" Value="{Binding SolidFill}"/>
-											<Setter Property="Stroke" Value="{Binding SolidStroke}"/>
-										</DataTrigger>
-										<DataTrigger Binding="{Binding IsSolid}" Value="3">
-											<Setter Property="Fill" Value="{Binding SolidBiddingFill}"/>
-											<Setter Property="Stroke" Value="{Binding SolidBiddingStroke}"/>
-										</DataTrigger>
-									</Style.Triggers>
-								</Style>
-							</Rectangle.Style>
-						</Rectangle>
-					</DataTemplate>
-				</ItemsControl.ItemTemplate>
-			</ItemsControl>
-		</StackPanel>
+        <Grid HorizontalAlignment="Left" VerticalAlignment="Bottom" Background="Transparent">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="14"/>
+                <RowDefinition Height="2"/>
+                <RowDefinition Height="25"/>
+                <RowDefinition Height="3"/>
+            </Grid.RowDefinitions>
+            <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="4 0 0 0" Background="Transparent">
+                <ItemsControl ItemsSource="{Binding RuleItems, Mode=TwoWay}" Height="11" BorderThickness="1" BorderBrush="#444444" Padding="0 0 0 0" Margin="0">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <WrapPanel Orientation="Vertical"/>
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate DataType="{x:Type local:RuleItem}">
+                            <Rectangle Width="{Binding Width}" Height="{Binding Height}" StrokeThickness="{Binding StrokeThickness}" Margin="-1 0 0 -1">
+                                <Rectangle.Style>
+                                    <Style TargetType="Rectangle">
+                                        <Setter Property="Fill" Value="{Binding Fill}"/>
+                                        <Setter Property="Stroke" Value="{Binding Stroke}"/>
+                                    </Style>
+                                </Rectangle.Style>
+                            </Rectangle>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </StackPanel>
+            <StackPanel Grid.Row="2" Orientation="Horizontal" Background="Transparent" Height="25" Margin="-10 0 0 0">
+                <TextBlock Text=" " HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="{Binding FontSize}" Padding="0 0 0 1" FontWeight="Bold" Foreground="White"/>
+                <TextBlock Text="{Binding Hour}" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="{Binding FontSize}" Padding="0 0 0 1" FontWeight="Bold" Foreground="{Binding Foreground}"/>
+                <TextBlock Text=":" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="{Binding FontSize}" Padding="0 0 0 1" FontWeight="Bold" Foreground="{Binding Foreground}"/>
+                <TextBlock Text="{Binding Minute}" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="{Binding FontSize}" Padding="0 0 0 1" FontWeight="Bold" Foreground="{Binding Foreground}"/>
+                <TextBlock Text=":" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="{Binding FontSize}" Padding="0 0 0 1" FontWeight="Bold" Foreground="{Binding Foreground}"/>
+                <TextBlock Text="{Binding Second}" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="{Binding FontSize}" Padding="0 0 0 1" FontWeight="Bold" Foreground="{Binding Foreground}"/>
+                <ItemsControl ItemsSource="{Binding ProcessItems, Mode=TwoWay}" Height="25" Padding="0" Margin="6 0 0 0" Width="345">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <WrapPanel Orientation="Vertical"/>
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate DataType="{x:Type local:ProcessItem}">
+                            <Rectangle Width="{Binding Width}" Height="{Binding Height}" StrokeThickness="{Binding StrokeThickness}" Margin="1 1 0 0">
+                                <Rectangle.Style>
+                                    <Style TargetType="Rectangle">
+                                        <Setter Property="Fill" Value="{Binding HollowFill}"/>
+                                        <Setter Property="Stroke" Value="{Binding HollowStroke}"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsSolid}" Value="2">
+                                                <Setter Property="Fill" Value="{Binding SolidFill}"/>
+                                                <Setter Property="Stroke" Value="{Binding SolidStroke}"/>
+                                            </DataTrigger>
+                                            <DataTrigger Binding="{Binding IsSolid}" Value="3">
+                                                <Setter Property="Fill" Value="{Binding SolidBiddingFill}"/>
+                                                <Setter Property="Stroke" Value="{Binding SolidBiddingStroke}"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Rectangle.Style>
+                            </Rectangle>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+                <TextBlock HorizontalAlignment="Right" VerticalAlignment="Center" Width="86" Text="{Binding LeftTime}" FontSize="{Binding FontSize}" Padding="0 0 0 1" FontWeight="Bold" Foreground="{Binding LeftTimeBrush}"/>
+            </StackPanel>
+        </Grid>
     </Grid>
 </Window>
