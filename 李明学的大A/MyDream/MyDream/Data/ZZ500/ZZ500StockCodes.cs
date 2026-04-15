@@ -18,7 +18,7 @@ namespace MyDream
             {
                 EMarket.ZZ500 => APath.GetZZ500TicketsConfig(),
                 EMarket.SZ200 => APath.GetSZ200TicketsConfig(),
-                EMarket.SZ50_SZ250 => APath.GetSZ50_SZ250TicketsConfig(),
+                EMarket.SZ100_SZ200 => APath.GetSZ100_SZ200TicketsConfig(),
                 _ => throw new Exception("Invalid market")
             };
 

@@ -48,7 +48,7 @@
 						</Grid.RowDefinitions>
 						<RadioButton Grid.Row="0" Grid.Column="0" Content="SZ200" Foreground="White" VerticalContentAlignment="Center" GroupName="Tickets" Margin="10" FontWeight="Bold" IsChecked="{Binding SZ200IsSelected}"/>
 						<RadioButton Grid.Row="0" Grid.Column="1" Content="ZZ500" Foreground="White" VerticalContentAlignment="Center" GroupName="Tickets" Margin="10" FontWeight="Bold" IsChecked="{Binding ZZ500IsSelected}"/>
-						<RadioButton Grid.Row="1" Grid.Column="0" Content="SZ50-250" Foreground="White" VerticalContentAlignment="Center" GroupName="Tickets" Margin="10" FontWeight="Bold" IsChecked="{Binding SZ50_SZ250IsSelected}"/>
+						<RadioButton Grid.Row="1" Grid.Column="0" Content="SZ100-200" Foreground="White" VerticalContentAlignment="Center" GroupName="Tickets" Margin="10" FontWeight="Bold" IsChecked="{Binding SZ100_SZ200IsSelected}"/>
 						<Button Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" Content="更新 QMT" Command="{Binding Update1DClickCommand}" FontWeight="Bold" Height="50" Margin="10"/>
 						<Button Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="2" Content="更新1M" Command="{Binding UPDATE1MClickCommand}" FontWeight="Bold" Height="50" Margin="10"/>
 						<Button Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="2" Content="更新5M" Command="{Binding UPDATE5MClickCommand}" FontWeight="Bold" Height="50" Margin="10"/>

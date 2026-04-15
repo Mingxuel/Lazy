@@ -10,6 +10,6 @@ namespace MyDream
     {
         ZZ500,
         SZ200,
-        SZ50_SZ250
+        SZ100_SZ200
     }
 }
