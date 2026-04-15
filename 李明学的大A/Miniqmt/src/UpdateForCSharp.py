@@ -11,7 +11,7 @@ import os, sys
 import ast
 import pandas as pd
 
-HISTORY_1D_COUNT = 5
+HISTORY_1D_COUNT = 3
 ACTIVE_COUNT = 1240
 
 def UPDATE_TRADING_DATES():
