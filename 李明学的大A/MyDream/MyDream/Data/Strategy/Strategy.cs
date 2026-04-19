@@ -214,8 +214,7 @@ namespace MyDream
                     record_3.High < record_2.High && record_2.High < record_1.High &&
                     !record_3.IsTop && !record_2.IsTop && !record_1.IsTop &&
                     record_3.IsUp && record_2.IsUp && record_1.IsUp &&
-                    record_1.Ratio < record_2.Ratio &&
-                    (record_2.High - record_2.Low) > (record_1.High - record_1.Low) &&
+                    record_3.Ratio < record_2.Ratio && record_1.Ratio < record_2.Ratio &&
                     record_3.IsRed && record_2.IsRed && record_1.IsRed &&
                     m5 > pre_m5 && pre_m5 > pre_pre_m5)
                 {
