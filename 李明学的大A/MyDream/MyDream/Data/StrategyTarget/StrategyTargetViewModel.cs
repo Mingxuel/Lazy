@@ -2,6 +2,7 @@
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Win32;
 using MyDream;
+using NPOI.HSSF.Record;
 using NPOI.SS.Formula.Functions;
 using System;
 using System.Collections.Generic;
@@ -298,17 +299,18 @@ namespace MyDream
                                         records[records.Count - 4]!.Close * records[records.Count - 4]!.Volume;
                     double total_volume = records[records.Count - 1]!.Volume + records[records.Count - 2]!.Volume + records[records.Count - 3]!.Volume + records[records.Count - 4]!.Volume;
 
-                    data.VWAPHigh = (((total_high / total_volume) - records[records.Count - 1]!.Close) / records[records.Count - 1]!.Close).ToString("00.00%");
-                    data.VWAPAll = (((total_high / total_volume) + (total_close / total_volume) - records[records.Count - 1]!.Close * 2) / records[records.Count - 1]!.Close).ToString("00.00%");
+                    double m5 = (records[records.Count - 1]!.Close + records[records.Count - 2]!.Close + records[records.Count - 3]!.Close + records[records.Count - 4]!.Close + records[records.Count - 5]!.Close) / 5.0;
+                    double pre_m5 = (records[records.Count - 2]!.Close + records[records.Count - 3]!.Close + records[records.Count - 4]!.Close + records[records.Count - 5]!.Close + records[records.Count - 6]!.Close) / 5.0;
+                    double pre_pre_m5 = (records[records.Count - 3]!.Close + records[records.Count - 4]!.Close + records[records.Count - 5]!.Close + records[records.Count - 6]!.Close + records[records.Count - 7]!.Close) / 5.0;
 
-                    double ma5 = (records[records.Count - 1]!.Close + records[records.Count - 2]!.Close + records[records.Count - 3]!.Close + records[records.Count - 4]!.Close + records[records.Count - 5]!.Close) / 5.0;
-
-                    records[records.Count - 1]!.PreClose = records[records.Count - 2]!.Close;
-                    if (records[records.Count - 1]!.Volume < records[records.Count - 2]!.Volume &&
-                        records[records.Count - 1]!.IsDown &&
-                        !records[records.Count - 1]!.IsBottom &&
-                        records[records.Count - 1]!.Close > ma5 &&
-                        double.Parse(data.VWAPAll.Replace("%", "")) > Constants.MinVWAP)
+                        if (records[records.Count - 3]!.Volume < records[records.Count - 2]!.Volume && records[records.Count - 2]!.Volume > records[records.Count - 1]!.Volume && records[records.Count - 3]!.Volume < records[records.Count - 1]!.Volume &&
+                        records[records.Count - 3]!.Low < records[records.Count - 2]!.Low && records[records.Count - 2]!.Low < records[records.Count - 1]!.Low &&
+                        records[records.Count - 3]!.High < records[records.Count - 2]!.High && records[records.Count - 2]!.High < records[records.Count - 1]!.High &&
+                        records[records.Count - 3]!.Ratio < records[records.Count - 2]!.Ratio &&
+                        !records[records.Count - 3]!.IsTop && !records[records.Count - 2]!.IsTop && !records[records.Count - 1]!.IsTop &&
+                        records[records.Count - 3]!.IsUp && records[records.Count - 2]!.IsUp && records[records.Count - 1]!.IsUp &&
+                        records[records.Count - 3]!.IsRed && records[records.Count - 2]!.IsRed && records[records.Count - 1]!.IsRed &&
+                        m5 > pre_m5 && pre_m5 > pre_pre_m5)
                     {
                         data.Flag = "Y";
                     }

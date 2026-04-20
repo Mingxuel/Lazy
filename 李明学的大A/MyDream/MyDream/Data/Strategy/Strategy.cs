@@ -154,17 +154,18 @@ namespace MyDream
                                     m5 > pre_m5 && pre_m5 > pre_pre_m5 && pre_pre_m5 > pre_pre_pre_m5 &&
                                     record_1.Close > m5)
                 */
+                var pre_pre_pre_pre_m5 = (record_5.Close + record_6.Close + record_7.Close + record_8.Close) / 5.0;
                 var pre_pre_pre_m5 = (record_4.Close + record_5.Close + record_6.Close + record_7.Close + record_8.Close) / 5.0;
                 var pre_pre_m5 = (record_3.Close + record_4.Close + record_5.Close + record_6.Close + record_7.Close) / 5.0;
                 var pre_m5 = (record_2.Close + record_3.Close + record_4.Close + record_5.Close + record_6.Close) / 5.0;
                 var m5 = (record_1.Close + record_2.Close + record_3.Close + record_4.Close + record_5.Close) / 5.0;
                 var next_m5 = (record_1.Close + record_2.Close + record_3.Close + record_4.Close + record_1.Close) / 5.0;
-                if (record_3.Volume < record_2.Volume && record_2.Volume > record_1.Volume &&
+                if (record_3.Volume < record_2.Volume && record_2.Volume > record_1.Volume && record_3.Volume < record_1.Volume &&
                     record_3.Low < record_2.Low && record_2.Low < record_1.Low &&
                     record_3.High < record_2.High && record_2.High < record_1.High &&
                     !record_3.IsTop && !record_2.IsTop && !record_1.IsTop &&
+                    record_3.Ratio < record_2.Ratio &&
                     record_3.IsUp && record_2.IsUp && record_1.IsUp &&
-                    record_3.Ratio < record_2.Ratio && record_2.Ratio > record_1.Ratio &&
                     record_3.IsRed && record_2.IsRed && record_1.IsRed &&
                     m5 > pre_m5 && pre_m5 > pre_pre_m5)
                 {
@@ -224,12 +225,11 @@ namespace MyDream
                 var pre_m5 = (record_2.Close + record_3.Close + record_4.Close + record_5.Close + record_6.Close) / 5.0;
                 var m5 = (record_1.Close + record_2.Close + record_3.Close + record_4.Close + record_5.Close) / 5.0;
                 var next_m5 = (record_1.Close + record_2.Close + record_3.Close + record_4.Close + record_1.Close) / 5.0;
-                if (record_3.Volume < record_2.Volume && record_2.Volume > record_1.Volume &&
+                if (record_3.Volume < record_2.Volume && record_2.Volume > record_1.Volume && record_3.Volume < record_1.Volume &&
                     record_3.Low < record_2.Low && record_2.Low < record_1.Low &&
                     record_3.High < record_2.High && record_2.High < record_1.High &&
                     !record_3.IsTop && !record_2.IsTop && !record_1.IsTop &&
                     record_3.IsUp && record_2.IsUp && record_1.IsUp &&
-                    record_3.Ratio < record_2.Ratio && record_2.Ratio > record_1.Ratio &&
                     record_3.IsRed && record_2.IsRed && record_1.IsRed &&
                     m5 > pre_m5 && pre_m5 > pre_pre_m5)
                 {
