@@ -57,36 +57,6 @@ namespace MyDream
         }
 
         [ObservableProperty]
-        private ObservableCollection<StrategyTargetItem> strategyTargetTopData = new ObservableCollection<StrategyTargetItem>();
-
-        private int strategyTargetTopDataIndex = -1;
-        public int StrategyTargetTopDataIndex
-        {
-            get => strategyTargetTopDataIndex;
-            set
-            {
-                strategyTargetTopDataIndex = value;
-                OnPropertyChanged();
-                UpdateRecordsStrategyTargetTop();
-            }
-        }
-
-        [ObservableProperty]
-        private ObservableCollection<StrategyTargetItem> strategyTargetHisData = new ObservableCollection<StrategyTargetItem>();
-
-        private int strategyTargetHisDataIndex = -1;
-        public int StrategyTargetHisDataIndex
-        {
-            get => strategyTargetHisDataIndex;
-            set
-            {
-                strategyTargetHisDataIndex = value;
-                OnPropertyChanged();
-                UpdateRecordsStrategyTargetHis();
-            }
-        }
-
-        [ObservableProperty]
         private List<Record1DItem> strategyTargetKRecords = new List<Record1DItem>();
 
         private Dictionary<string, Record1DItem> RealRecords = new Dictionary<string, Record1DItem>();
@@ -95,8 +65,6 @@ namespace MyDream
         {
             StrategyTarget3Data.Clear();
             StrategyTarget31Data.Clear();
-            StrategyTargetTopData.Clear();
-            StrategyTargetHisData.Clear();
 
             StrategyTarget.Instance.Init();
 
@@ -108,16 +76,6 @@ namespace MyDream
             foreach (var item in StrategyTarget.Instance.Data31)
             {
                 StrategyTarget31Data.Add(item);
-            }
-
-            foreach (var item in StrategyTarget.Instance.DataTop)
-            {
-                StrategyTargetTopData.Add(item);
-            }
-
-            foreach (var item in StrategyTarget.Instance.DataHis)
-            {
-                StrategyTargetHisData.Add(item);
             }
         }
 
@@ -159,44 +117,6 @@ namespace MyDream
             StrategyTargetKRecords = records!;
         }
 
-        private void UpdateRecordsStrategyTargetTop()
-        {
-            if (StrategyTargetTopDataIndex == -1) return;
-
-            List<Record1DItem?> records = new List<Record1DItem?>();
-            string stock_code = StrategyTargetTopData[StrategyTargetTopDataIndex].StockCode!;
-            int count = ZZ5001D.Instance[stock_code]!.Data!.Count;
-            for (int i = 0; i <= count; i++)
-            {
-                if (i == count)
-                {
-                    if (RealRecords.Keys.Contains(stock_code)) records.Add(RealRecords[stock_code]);
-                    break;
-                }
-                records.Add(ZZ5001D.Instance[stock_code]!.Data![i]);
-            }
-            StrategyTargetKRecords = records!;
-        }
-
-        private void UpdateRecordsStrategyTargetHis()
-        {
-            if (StrategyTargetHisDataIndex == -1) return;
-
-            List<Record1DItem?> records = new List<Record1DItem?>();
-            string stock_code = StrategyTargetHisData[StrategyTargetHisDataIndex].StockCode!;
-            int count = ZZ5001D.Instance[stock_code]!.Data!.Count;
-            for (int i = 0; i <= count; i++)
-            {
-                if (i == count)
-                {
-                    if (RealRecords.Keys.Contains(stock_code)) records.Add(RealRecords[stock_code]);
-                    break;
-                }
-                records.Add(ZZ5001D.Instance[stock_code]!.Data![i]);
-            }
-            StrategyTargetKRecords = records!;
-        }
-
         [RelayCommand]
         private void StrategyListSyncClick()
         {
@@ -216,24 +136,8 @@ namespace MyDream
             }
             if (!string.IsNullOrEmpty(tpo31) && tpo31.Last() == '\n') tpo31 = tpo31.Remove(tpo31.Count() - 1);
 
-            string top = string.Empty;
-            foreach (var data in StrategyTargetTopData)
-            {
-                string stock_code = data!.StockCode!.Replace(".SH", "").Replace(".SZ", "");
-                top += FormatTHSLine(stock_code);
-            }
-            if (!string.IsNullOrEmpty(top) && top.Last() == '\n') top = top.Remove(top.Count() - 1);
-
-            string his = string.Empty;
-            foreach (var data in StrategyTargetHisData)
-            {
-                string stock_code = data!.StockCode!.Replace(".SH", "").Replace(".SZ", "");
-                his += FormatTHSLine(stock_code);
-            }
-            if (!string.IsNullOrEmpty(his) && his.Last() == '\n') his = his.Remove(his.Count() - 1);
-
             string file_content = File.ReadAllText(APath.GetTHSStrategyFileOrigin());
-            file_content = file_content.Replace("===TPO3===", tpo3).Replace("===TPO31===", tpo31).Replace("===HIS===", his);
+            file_content = file_content.Replace("===TPO3===", tpo3).Replace("===TPO31===", tpo31);
             File.WriteAllText(APath.GetTHSStrategyFileTarget(), file_content);
         }
 
