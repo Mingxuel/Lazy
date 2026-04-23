@@ -213,7 +213,7 @@ namespace MyDream
                     record_3.High < record_2.High &&
                     !record_4.IsTop && record_3.IsTop && !record_2.IsTop && !record_1.IsBottom &&
                     record_2.IsUp && record_1.IsDown &&
-                    record_4.Close <= record_1.Low)
+                    record_1.Close > m5)
                 {
                     StrategyItem strategy_item = new StrategyItem();
                     strategy_item.StockCode = stock_code;
