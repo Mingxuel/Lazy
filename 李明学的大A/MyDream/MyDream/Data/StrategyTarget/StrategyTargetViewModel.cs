@@ -136,8 +136,28 @@ namespace MyDream
             }
             if (!string.IsNullOrEmpty(tpo31) && tpo31.Last() == '\n') tpo31 = tpo31.Remove(tpo31.Count() - 1);
 
+            string history = string.Empty;
+            string? select_date = StrategyTradingDatesIndex != -1 ? StrategyTradingDates[StrategyTradingDatesIndex] : null;
+
+            if (select_date != null)
+            {
+                string year = select_date.Substring(0, 4);
+                foreach(var trading_date in TradingDates.Dates)
+                {
+                    if (trading_date.StartsWith(year))
+                    {
+                        var dates = Strategy.Instance.Data[trading_date];
+                        foreach (var item in dates)
+                        {
+                            string stock_code = item.StockCode!.Replace(".SH", "").Replace(".SZ", "");
+                            history += FormatTHSLine(stock_code);
+                        }
+                    }
+                }
+            }
+
             string file_content = File.ReadAllText(APath.GetTHSStrategyFileOrigin());
-            file_content = file_content.Replace("===TPO3===", tpo3).Replace("===TPO31===", tpo31);
+            file_content = file_content.Replace("===TPO3===", tpo3).Replace("===TPO31===", tpo31).Replace("===GOOD===", history);
             File.WriteAllText(APath.GetTHSStrategyFileTarget(), file_content);
         }
 

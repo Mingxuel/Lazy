@@ -145,12 +145,9 @@ namespace MyDream
                 var m5 = (record_1.Close + record_2.Close + record_3.Close + record_4.Close + record_5.Close) / 5.0;
                 var next_m5 = (record_1.Close + record_2.Close + record_3.Close + record_4.Close + record_1.Close) / 5.0;
                 if (record_4.Volume < record_3.Volume && record_3.Volume < record_2.Volume && record_2.Volume > record_1.Volume &&
-                    record_4.Low < record_3.Low && record_3.Low < record_2.Low &&
-                    record_4.High < record_3.High && record_3.High < record_2.High &&
-                    !record_4.IsTop && !record_3.IsTop && !record_2.IsTop && !record_1.IsBottom &&
-                    record_4.IsUp && record_3.IsUp && record_2.IsUp && record_1.IsDown &&
-                    record_4.IsRed && record_3.IsRed && record_2.IsRed &&
-                    m5 > pre_m5 && pre_m5 > pre_pre_m5 && pre_pre_m5 > pre_pre_pre_m5 &&
+                    record_3.High < record_2.High &&
+                    !record_4.IsTop && record_3.IsTop && !record_2.IsTop && !record_2.IsBottom && !record_1.IsBottom &&
+                    record_2.IsUp && record_1.Ratio < 0.03 &&
                     record_1.Close > m5)
                 {
                     StrategyItem strategy_item = new StrategyItem();
@@ -171,9 +168,9 @@ namespace MyDream
                     strategy_item.HighRatio = ((item.High - item.PreClose) / item.PreClose * 100).ToString("00.00");
                     strategy_item.LowRatio = ((item.Low - item.PreClose) / item.PreClose * 100).ToString("00.00");
                     strategy_item.OpenRatio = ((item.Open - item.PreClose) / item.PreClose * 100).ToString("00.00");
-                    double total_high = record_1.High * record_1.Volume + record_2.High * record_2.Volume + record_3.High * record_3.Volume + record_4.High * record_4.Volume;
-                    double total_close = record_1.Close * record_1.Volume + record_2.Close * record_2.Volume + record_3.Close * record_3.Volume + record_4.Close * record_4.Volume;
-                    double total_volume = record_1.Volume + record_2.Volume + record_3.Volume + record_4.Volume;
+                    double total_high = record_1.High * record_1.Volume + record_2.High * record_2.Volume;
+                    double total_close = record_1.Close * record_1.Volume + record_2.Close * record_2.Volume;
+                    double total_volume = record_1.Volume + record_2.Volume;
                     strategy_item.VWAPHighRatio = ((total_high / total_volume - record_1.Close) / record_1.Close * 100).ToString("00.00");
                     strategy_item.VWAPAllRatio = ((total_high / total_volume + total_close / total_volume - record_1.Close * 2) / record_1.Close * 100).ToString("00.00");
                     Data[trading_date!].Add(strategy_item);
@@ -211,7 +208,7 @@ namespace MyDream
                 var next_m5 = (record_1.Close + record_2.Close + record_3.Close + record_4.Close + record_1.Close) / 5.0;
                 if (record_4.Volume < record_3.Volume && record_3.Volume < record_2.Volume && record_2.Volume > record_1.Volume &&
                     record_3.High < record_2.High &&
-                    !record_4.IsTop && record_3.IsTop && !record_2.IsTop && !record_1.IsBottom &&
+                    !record_4.IsTop && record_3.IsTop && !record_2.IsBottom && !record_1.IsBottom &&
                     record_2.IsUp && record_1.IsDown &&
                     record_1.Close > m5)
                 {

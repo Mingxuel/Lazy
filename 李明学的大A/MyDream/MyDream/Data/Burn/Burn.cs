@@ -115,19 +115,49 @@ namespace MyDream
 
         private double? GetM5Ratio(StrategyDetailVWAPTicketItem item)
         {
-            var records = ZZ5005M.Instance.Read(item.StockCode, item.Date);
+            var record_1 = ZZ5001D.Instance.PreRecord(item.StockCode!, item.Date!, 0);
+            var record_2 = ZZ5001D.Instance.PreRecord(item.StockCode!, item.Date!, 1);
 
-            if (records == null) return null;
-            var record_1 = ZZ5001D.Instance.PreRecord(item.StockCode!, item.Date!, 1);
-            if (record_1 == null) return null;
+            var records = ZZ5005M.Instance.Read(item.StockCode!, item.Date!);
+            if (records == null || records.Count < 43)
+            {
+                if ((record_1.Open / record_2.Close - 1.0) <= -0.05)
+                    return (record_1.Open / record_2.Close - 1.0) * 100.0;
+                else if ((record_1.Low / record_2.Close - 1.0) <= -0.06)
+                    return -6.0;
+                if (record_1.IsToped)
+                    return (record_1.Top / record_2.Close - 1.0) * 100.0;
+                else
+                    return (record_1.Close / record_2.Close - 1.0) * 100.0;
+            }
+            else
+            {
+                for (int i = 0; i < records.Count; i++)
+                {
+                    if (i == 0)
+                    {
+                        if ((records[i].Open / record_2.Close - 1.0) <= -0.05)
+                            return (records[i].Open / record_2.Close - 1.0) * 100.0;
+                    }
 
-            var default_rate = (records?[records.Count - 1].Close / record_1.Close - 1.0) * 100.0;
-            if (records?.Count < 47) return default_rate;
+                    if (Math.Abs(records[i].High - record_1.Top) < 0.001)
+                    {
+                        return (record_1.Top / record_2.Close - 1.0) * 100.0;
+                    }
 
-            int index = 42;
+                    if ((records[i].Low / record_2.Close - 1.0) <= -0.06)
+                    {
+                        return (records[i].Low / record_2.Close - 1.0) * 100.0;
+                    }
 
-            var rate = records?.Count > index ? (records?[index].Close / record_1.Close - 1.0) * 100.0 : default_rate;
-            return rate;
+                    if (i == 42)
+                    {
+                        return (records[i].Close / record_2.Close - 1.0) * 100.0;
+                    }
+                }
+
+                return (record_1.Close / record_2.Close - 1.0) * 100.0;
+            }
         }
     }
 }
