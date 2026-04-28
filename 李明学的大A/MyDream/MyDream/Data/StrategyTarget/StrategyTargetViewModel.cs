@@ -145,7 +145,7 @@ namespace MyDream
                 foreach(var trading_date in TradingDates.Dates)
                 {
                     if (trading_date.StartsWith(year))
-                    {
+                    { 
                         var dates = Strategy.Instance.Data[trading_date];
                         foreach (var item in dates)
                         {
