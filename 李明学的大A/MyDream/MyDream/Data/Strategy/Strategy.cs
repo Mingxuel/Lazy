@@ -129,6 +129,7 @@ namespace MyDream
             {
                 var item = ZZ5001D.Instance.Records[stock_code!]![trading_date!];
                 if (item == null) continue;
+                var record_0 = ZZ5001D.Instance.PreRecord(stock_code, trading_date!, 0, true);
                 var record_1 = ZZ5001D.Instance.PreRecord(stock_code, trading_date!, 1, true);
                 var record_2 = ZZ5001D.Instance.PreRecord(stock_code, trading_date!, 2, true);
                 var record_3 = ZZ5001D.Instance.PreRecord(stock_code, trading_date!, 3, true);
@@ -146,7 +147,7 @@ namespace MyDream
                 var next_m5 = (record_1.Close + record_2.Close + record_3.Close + record_4.Close + record_1.Close) / 5.0;
                 if (record_4.Volume < record_3.Volume && record_3.Volume < record_2.Volume && record_2.Volume > record_1.Volume &&
                     record_3.High < record_2.High &&
-                    !record_4.IsTop && record_3.IsTop && !record_2.IsTop && !record_2.IsBottom && !record_1.IsBottom &&
+                    !record_4.IsTop && record_3.IsTop && !record_2.IsTop && !record_2.IsBottom && !record_1.IsTop && !record_1.IsBottom &&
                     record_2.IsUp && record_1.Ratio < 0.03 &&
                     record_1.Close > m5)
                 {
@@ -206,11 +207,11 @@ namespace MyDream
                 var pre_m5 = (record_2.Close + record_3.Close + record_4.Close + record_5.Close + record_6.Close) / 5.0;
                 var m5 = (record_1.Close + record_2.Close + record_3.Close + record_4.Close + record_5.Close) / 5.0;
                 var next_m5 = (record_1.Close + record_2.Close + record_3.Close + record_4.Close + record_1.Close) / 5.0;
-                if (record_4.Volume < record_3.Volume && record_3.Volume < record_2.Volume && record_2.Volume > record_1.Volume &&
-                    record_3.High < record_2.High &&
-                    !record_4.IsTop && record_3.IsTop && !record_2.IsBottom && !record_1.IsBottom &&
-                    record_2.IsUp && record_1.IsDown &&
-                    record_1.Close > m5)
+                if (record_5.Volume < record_4.Volume && record_4.Volume < record_3.Volume && record_3.Volume > record_2.Volume &&
+                    record_4.High < record_3.High &&
+                    !record_5.IsTop && record_4.IsTop && !record_3.IsTop && !record_3.IsBottom && !record_2.IsBottom && !record_1.IsTop &&
+                    record_3.IsUp && record_2.Ratio < 0.03 &&
+                    record_2.Close > m5)
                 {
                     StrategyItem strategy_item = new StrategyItem();
                     strategy_item.StockCode = stock_code;

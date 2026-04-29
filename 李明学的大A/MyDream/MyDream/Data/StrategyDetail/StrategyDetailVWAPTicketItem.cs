@@ -16,7 +16,8 @@ namespace MyDream
         public string HighRatio { get; set; } = "00.00%";
         public string LowRatio { get; set; } = "00.00%";
         public string OpenRatio { get; set; } = "00.00%";
-        public string? VWAPAll { get; set; }
-        public string? VWAPHigh { get; set; }
+        public string Ratio { get; set; } = "00.00%";
+        public double BuyPrice { get; set; }
+        public double SellPrice { get; set; }
     }
 }

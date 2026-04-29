@@ -33,31 +33,73 @@ namespace MyDream
             return list;
         }
 
-        public double? GetVWAP(string stock_code, string date)
+        public List<double> GetM5Ratio(string stock_code, string date)
         {
-            double total_high_value = 0.0;
-            double total_close_value = 0.0;
-            double total_volume = 0.0;
-            for (int i = 1; i < 5; i++)
+            var record_1 = ZZ5001D.Instance.PreRecord(stock_code, date, 0);
+            var record_2 = ZZ5001D.Instance.PreRecord(stock_code, date, 1);
+
+            double botton_ratio = -0.05;
+
+            double price_buy = 0.0;
+            double price_sell = 0.0;
+
+            string pre_date = TradingDates.PreDate(date)!;
+            var pre_records = ZZ5005M.Instance.Read(stock_code, pre_date);
+            if (pre_records != null && pre_records.Count == 48)
             {
-                var records = Read(stock_code, TradingDates.PreDate(date, i));
-                if (records == null) return null;
-                foreach (var record in records)
+                price_buy = pre_records[42].Close;
+            }
+            else
+            {
+                price_buy = record_2!.Close;
+            }
+
+            var records = ZZ5005M.Instance.Read(stock_code, date);
+            if (records == null || records.Count < 48)
+            {
+                if ((record_1!.Open / record_2!.Close - 1.0) <= botton_ratio)
+                    price_sell = record_1.Open;
+                else if ((record_1.Low / record_2.Close - 1.0) <= botton_ratio)
+                    price_sell = record_2.Close * (1 + botton_ratio);
+                else if (record_1.IsToped)
+                    price_sell = record_1.Top;
+                else
+                    price_sell = record_1.Close;
+            }
+            else
+            {
+                for (int i = 0; i < records.Count; i++)
                 {
-                    total_high_value += record!.High * record!.Volume;
-                    total_close_value += record!.Close * record!.Volume;
-                    total_volume += record!.Volume;
+                    if (i == 0)
+                    {
+                        if ((records[i].Open / record_2!.Close - 1.0) <= botton_ratio)
+                        {
+                            price_sell = records[i].Open;
+                            break;
+                        }
+                    }
+
+                    if ((records[i].Low / record_2!.Close - 1.0) <= botton_ratio)
+                    {
+                        price_sell = record_2.Close * (1 + botton_ratio);
+                        break;
+                    }
+
+                    if (Math.Abs(records[i].High - record_1!.Top) < 0.001)
+                    {
+                        price_sell = record_1.Top;
+                        break;
+                    }
+
+                    if (i == 42)
+                    {
+                        price_sell = records[i].Close;
+                        break;
+                    }
                 }
             }
 
-            var record_1 = ZZ5001D.Instance.PreRecord(stock_code, date, 1);
-            if (record_1 == null) return null;
-
-            double vwap_high = total_high_value / total_volume;
-            double vwap_close = total_close_value / total_volume;
-            var vwap = (vwap_high - record_1.Close) / record_1.Close * 100.0;
-
-            return vwap;
+            return new List<Double> { Math.Round(price_buy, 2), Math.Round(price_sell, 2) };
         }
     }
 }

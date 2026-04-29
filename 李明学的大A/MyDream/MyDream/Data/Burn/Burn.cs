@@ -74,18 +74,22 @@ namespace MyDream
             double total = 100.0;
             double month_total = 100.0;
             int pre_index = -1;
+            double day_ratio = 0.0;
+            int day_count = 1;
+            string pre_date = "";
+            double pre_ratio = 0.0;
 
             foreach (var ticket in StrategyDetail.Instance.DataVWAPTickets)
             {
                 int index = 0;
                 var year = ticket!.Date!.Substring(0, 4);
-                var nonth = ticket!.Date!.Substring(4, 2);
+                string month = ticket!.Date!.Substring(4, 2)!;
                 if (year == "2024") {
-                    index = int.Parse(nonth) - 1;
+                    index = int.Parse(month) - 1;
                 } else if (year == "2025") {
-                    index = 12 + int.Parse(nonth) - 1;
+                    index = 12 + int.Parse(month) - 1;
                 } else if (year == "2026") {
-                    index = 24 + int.Parse(nonth) - 1;
+                    index = 24 + int.Parse(month) - 1;
                 }
 
                 if (pre_index == -1)
@@ -101,8 +105,24 @@ namespace MyDream
                 }
 
                 var data = ZZ5001D.Instance[ticket.StockCode!]![ticket.Date!];
-                var ratio = GetM5Ratio(ticket);
-                if (ratio == null) ratio = double.Parse(ticket.CloseRatio);
+                var values = ZZ5005M.Instance.GetM5Ratio(ticket.StockCode!, ticket.Date!);
+                var ratio  = (values[1] / values[0] - 1.0) * 100.0;
+
+                if (pre_date == ticket!.Date!)
+                {
+                    day_ratio += ratio;
+                    day_count += 1;
+                    ratio = day_ratio / day_count;
+                    month_total /= (1 + (double)pre_ratio / 100.0);
+                }
+                else
+                {
+                    day_ratio = ratio;
+                    day_count = 1;
+                    pre_date = ticket!.Date!;
+                }
+                pre_ratio = ratio;
+
                 month_total *= (1 + (double)ratio / 100.0);
 
                 if (StrategyDetail.Instance.DataVWAPTickets.IndexOf(ticket) == StrategyDetail.Instance.DataVWAPTickets.Count - 1)
@@ -110,53 +130,6 @@ namespace MyDream
                     total *= month_total / 100.0;
                     BurnChart[index].Count = (int)total;
                 }
-            }
-        }
-
-        private double? GetM5Ratio(StrategyDetailVWAPTicketItem item)
-        {
-            var record_1 = ZZ5001D.Instance.PreRecord(item.StockCode!, item.Date!, 0);
-            var record_2 = ZZ5001D.Instance.PreRecord(item.StockCode!, item.Date!, 1);
-
-            var records = ZZ5005M.Instance.Read(item.StockCode!, item.Date!);
-            if (records == null || records.Count < 43)
-            {
-                if ((record_1.Open / record_2.Close - 1.0) <= -0.05)
-                    return (record_1.Open / record_2.Close - 1.0) * 100.0;
-                else if ((record_1.Low / record_2.Close - 1.0) <= -0.06)
-                    return -6.0;
-                if (record_1.IsToped)
-                    return (record_1.Top / record_2.Close - 1.0) * 100.0;
-                else
-                    return (record_1.Close / record_2.Close - 1.0) * 100.0;
-            }
-            else
-            {
-                for (int i = 0; i < records.Count; i++)
-                {
-                    if (i == 0)
-                    {
-                        if ((records[i].Open / record_2.Close - 1.0) <= -0.05)
-                            return (records[i].Open / record_2.Close - 1.0) * 100.0;
-                    }
-
-                    if (Math.Abs(records[i].High - record_1.Top) < 0.001)
-                    {
-                        return (record_1.Top / record_2.Close - 1.0) * 100.0;
-                    }
-
-                    if ((records[i].Low / record_2.Close - 1.0) <= -0.06)
-                    {
-                        return (records[i].Low / record_2.Close - 1.0) * 100.0;
-                    }
-
-                    if (i == 42)
-                    {
-                        return (records[i].Close / record_2.Close - 1.0) * 100.0;
-                    }
-                }
-
-                return (record_1.Close / record_2.Close - 1.0) * 100.0;
             }
         }
     }
