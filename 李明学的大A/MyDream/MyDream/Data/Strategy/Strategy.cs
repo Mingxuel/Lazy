@@ -171,7 +171,8 @@ namespace MyDream
                     double total_high = record_1.High * record_1.Volume + record_2.High * record_2.Volume;
                     double total_close = record_1.Close * record_1.Volume + record_2.Close * record_2.Volume;
                     double total_volume = record_1.Volume + record_2.Volume;
-                    strategy_item.Score = ZZ5005M.Instance.GetScore(stock_code, TradingDates.PreDate(trading_date!)!);
+                    string date = TradingDates.PreDate(trading_date!)!;
+                    strategy_item.Score = ZZ5005M.Instance.GetScore(stock_code, date);
                     Data[trading_date!].Add(strategy_item);
                     using (StreamWriter writer = new StreamWriter(file!, true))
                     {

@@ -164,7 +164,7 @@ namespace MyDream
                     int max_index = 0;
                     foreach (var index in Enumerable.Range(0, strategy_items.Count))
                     {
-                        var pre_date = TradingDates.PreDate(strategy_items[index].Date!);
+                        var pre_date = TradingDates.PreDate(strategy_items[index].Date!, 1);
                         double score = ZZ5005M.Instance.GetScore(strategy_items[index].StockCode!, pre_date!);
 
                         if (score > max_score)
