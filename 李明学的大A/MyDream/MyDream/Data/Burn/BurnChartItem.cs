@@ -11,5 +11,6 @@ namespace MyDream
     {
         public string? Time { get; set; }
         public int Count{ get; set; }
+        public string Percent { get; set; } = "00.00%";
     }
 }

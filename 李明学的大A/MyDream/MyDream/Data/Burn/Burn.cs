@@ -101,6 +101,7 @@ namespace MyDream
                     pre_index = index;
                     total *= month_total / 100.0;
                     BurnChart[index-1].Count = (int)total;
+                    if (index > 1) BurnChart[index - 1].Percent = ((double)BurnChart[index-1].Count / (double)BurnChart[index - 2].Count - 1.0).ToString("P2");
                     month_total = 100.0;
                 }
 
@@ -129,6 +130,7 @@ namespace MyDream
                 {
                     total *= month_total / 100.0;
                     BurnChart[index].Count = (int)total;
+                    BurnChart[index].Percent = ((double)BurnChart[index].Count / (double)BurnChart[index - 1].Count - 1.0).ToString("P2");
                 }
             }
         }

@@ -64,6 +64,7 @@ namespace MyDream
                             StrategyTarget_item.StockName = data.StockName;
                         }
                     }
+                    StrategyTarget_item.Score = ZZ5005M.Instance.GetScore(stock_code, last_date);
                     Data3.Add(StrategyTarget_item);
                 }
             }
@@ -111,9 +112,7 @@ namespace MyDream
                     double vwap_high = record_1.High * record_1.Volume + record_2.High * record_2.Volume + record_3.High * record_3.Volume;
                     double vwap_close = record_1.Close * record_1.Volume + record_2.Close * record_2.Volume + record_3.Close * record_3.Volume;
                     double vwap_volume = record_1.Volume + record_2.Volume + record_3.Volume;
-                    StrategyTarget_item.VWAPHigh = (vwap_high / vwap_volume).ToString("P2");
-                    StrategyTarget_item.VWAPAll = (vwap_close / vwap_volume).ToString("P2");
-
+                    StrategyTarget_item.Score = ZZ5005M.Instance.GetScore(stock_code, TradingDates.PreDate(last_date)!);
                     Data31.Add(StrategyTarget_item);
                 }
             }

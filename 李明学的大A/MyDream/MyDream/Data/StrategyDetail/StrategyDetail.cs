@@ -164,7 +164,8 @@ namespace MyDream
                     int max_index = 0;
                     foreach (var index in Enumerable.Range(0, strategy_items.Count))
                     {
-                        double score = ZZ5005M.Instance.GetScore(strategy_items[index].StockCode!, strategy_items[index].Date!);
+                        var pre_date = TradingDates.PreDate(strategy_items[index].Date!);
+                        double score = ZZ5005M.Instance.GetScore(strategy_items[index].StockCode!, pre_date!);
 
                         if (score > max_score)
                         {
@@ -172,6 +173,8 @@ namespace MyDream
                             max_index = index;
                         }
                     }
+
+                    if (max_score < 0.0) continue;
 
                     var values = ZZ5005M.Instance.GetM5Ratio(strategy_items[max_index].StockCode!, strategy_items[max_index].Date!);
                     ratio = (values[1] / values[0] - 1.0) * 100.0;

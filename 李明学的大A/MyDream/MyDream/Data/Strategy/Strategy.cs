@@ -61,8 +61,7 @@ namespace MyDream
                             strategy_item.HighRatio = items[8];
                             strategy_item.LowRatio = items[9];
                             strategy_item.OpenRatio = items[10];
-                            strategy_item.VWAPHighRatio = items[11];
-                            strategy_item.VWAPAllRatio = items[12];
+                            strategy_item.Score = double.Parse(items[11].Trim());
                             Data[trading_date].Add(strategy_item);
                         }
                     }
@@ -172,8 +171,7 @@ namespace MyDream
                     double total_high = record_1.High * record_1.Volume + record_2.High * record_2.Volume;
                     double total_close = record_1.Close * record_1.Volume + record_2.Close * record_2.Volume;
                     double total_volume = record_1.Volume + record_2.Volume;
-                    strategy_item.VWAPHighRatio = ((total_high / total_volume - record_1.Close) / record_1.Close * 100).ToString("00.00");
-                    strategy_item.VWAPAllRatio = ((total_high / total_volume + total_close / total_volume - record_1.Close * 2) / record_1.Close * 100).ToString("00.00");
+                    strategy_item.Score = ZZ5005M.Instance.GetScore(stock_code, TradingDates.PreDate(trading_date!)!);
                     Data[trading_date!].Add(strategy_item);
                     using (StreamWriter writer = new StreamWriter(file!, true))
                     {
@@ -234,8 +232,7 @@ namespace MyDream
                     double total_high = record_1.High * record_1.Volume + record_2.High * record_2.Volume + record_3.High * record_3.Volume + record_4.High * record_4.Volume;
                     double total_close = record_1.Close * record_1.Volume + record_2.Close * record_2.Volume + record_3.Close * record_3.Volume + record_4.Close * record_4.Volume;
                     double total_volume = record_1.Volume + record_2.Volume + record_3.Volume + record_4.Volume;
-                    strategy_item.VWAPHighRatio = ((total_high / total_volume - record_1.Close) / record_1.Close * 100).ToString("00.00");
-                    strategy_item.VWAPAllRatio = ((total_high / total_volume + total_close / total_volume - record_1.Close) / record_1.Close * 100).ToString("00.00");
+                    strategy_item.Score= ZZ5005M.Instance.GetScore(stock_code, TradingDates.PreDate(trading_date!)!);
                     Data[trading_date!].Add(strategy_item);
                     using (StreamWriter writer = new StreamWriter(file!, true))
                     {

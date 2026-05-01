@@ -82,8 +82,7 @@
 												<TextBlock Text="[" Foreground="White"/>
 												<TextBlock Text="{Binding StockCode}" Foreground="White" Width="150"/>
 												<TextBlock Text="]  " Foreground="White"/>
-												<TextBlock Text="{Binding VWAPAll}" Foreground="White" Width="160"/>
-												<TextBlock Text="{Binding VWAPHigh}" Foreground="White" Width="160"/>
+												<TextBlock Text="{Binding Score}" Foreground="White" Width="160"/>
 												<TextBlock Text="{Binding Flag}" Foreground="White" Width="100"/>
 											</StackPanel>
 										</DataTemplate>
@@ -99,8 +98,7 @@
 												<TextBlock Text="[" Foreground="White"/>
 												<TextBlock Text="{Binding StockCode}" Foreground="White" Width="150"/>
 												<TextBlock Text="]  " Foreground="White"/>
-												<TextBlock Text="{Binding VWAPAll}" Foreground="White" Width="160"/>
-												<TextBlock Text="{Binding VWAPHigh}" Foreground="White" Width="160"/>
+												<TextBlock Text="{Binding Score}" Foreground="White" Width="160"/>
 												<TextBlock Text="{Binding Flag}" Foreground="White" Width="100"/>
 											</StackPanel>
 										</DataTemplate>
@@ -208,8 +206,8 @@
 						<TextBlock Text="CODE" Width="140" FontSize="24" Margin="40 0 0 0"/>
 						<TextBlock Text="CLOSE" Width="140" FontSize="24" Margin="10 0 0 0"/>
 						<TextBlock Text="HIGH" Width="120" FontSize="24" Margin="10 0 0 0"/>
-						<TextBlock Text="VW-ALL" Width="140" FontSize="24" Margin="5 0 0 0"/>
-						<TextBlock Text="VW-HIGH" Width="135" FontSize="24" Margin="5 0 0 0"/>
+						<TextBlock Text="LOW" Width="120" FontSize="24" Margin="10 0 0 0"/>
+						<TextBlock Text="SCORE" Width="140" FontSize="24" Margin="5 0 0 0"/>
 					</StackPanel>
 					<Grid Grid.Row="6" Grid.Column="0">
 						<ListBox Margin="5" ItemsSource="{Binding StrategyData}" SelectedIndex="{Binding StrategyDataIndex}" FontSize="24" Background="Black">
@@ -222,8 +220,8 @@
 										<TextBlock Text="]   " Foreground="White"/>
 										<TextBlock Text="{Binding CloseRatio, Converter={StaticResource StringToPercentStringConverter}}" Foreground="White" Width="140"/>
 										<TextBlock Text="{Binding HighRatio, Converter={StaticResource StringToPercentStringConverter}}" Foreground="White" Width="140"/>
-										<TextBlock Text="{Binding VWAPAllRatio, Converter={StaticResource StringToPercentStringConverter}}" Foreground="White" Width="145"/>
-										<TextBlock Text="{Binding VWAPHighRatio, Converter={StaticResource StringToPercentStringConverter}}" Foreground="White" Width="145"/>
+										<TextBlock Text="{Binding LowRatio, Converter={StaticResource StringToPercentStringConverter}}" Foreground="White" Width="140"/>
+										<TextBlock Text="{Binding Score}" Foreground="White" Width="145"/>
 									</StackPanel>
 								</DataTemplate>
 							</ListBox.ItemTemplate>
@@ -827,6 +825,7 @@
 											<StackPanel Orientation="Horizontal">
 												<TextBlock Foreground="#FF8000" Text="{Binding Time}" Margin="5 0 5 0" FontSize="12" Width="60"/>
 												<TextBlock Foreground="#FF8000" Text="{Binding Count}" Margin="5 0 5 0" FontSize="12" Width="60"/>
+												<TextBlock Foreground="#FF8000" Text="{Binding Percent}" Margin="5 0 5 0" FontSize="12" Width="60"/>
 												<Rectangle Fill="#FF8000" Width="{Binding Count}" Margin="5 0 0 0" Height="12">
 												</Rectangle>
 											</StackPanel>
