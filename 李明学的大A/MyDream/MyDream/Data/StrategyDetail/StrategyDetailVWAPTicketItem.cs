@@ -19,5 +19,6 @@ namespace MyDream
         public string Ratio { get; set; } = "00.00%";
         public double BuyPrice { get; set; }
         public double SellPrice { get; set; }
+        public double Score { get; set; }
     }
 }

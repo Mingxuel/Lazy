@@ -848,7 +848,7 @@
 					</Grid.RowDefinitions>
 					<Grid.ColumnDefinitions>
 						<ColumnDefinition Width="210"/>
-						<ColumnDefinition Width="620"/>
+						<ColumnDefinition Width="720"/>
 						<ColumnDefinition Width="*"/>
 					</Grid.ColumnDefinitions>
 					<TextBlock Grid.Row="0" Grid.Column="0" Text="RANDOM 1" Margin="5,5,5,4" FontSize="30">
@@ -905,6 +905,7 @@
 							<TextBlock Text="BUY" Width="110" Foreground="White" FontSize="20"/>
 							<TextBlock Text="SELL" Width="110" Foreground="White" FontSize="20"/>
 							<TextBlock Text="RATIO" Width="110" Foreground="White" FontSize="20"/>
+							<TextBlock Text="SCORE" Width="110" Foreground="White" FontSize="20"/>
 						</StackPanel>
 						<ListBox Grid.Row="1" ItemsSource="{Binding StrategyDetailVWAPTickets}" SelectedIndex="{Binding StrategyDetailVWAPTicketsIndex}" Background="Black" VerticalContentAlignment="Center" FontSize="24">
 							<ListBox.ItemTemplate>
@@ -918,6 +919,7 @@
 										<TextBlock Text="{Binding BuyPrice}" Foreground="White" Width="110"/>
 										<TextBlock Text="{Binding SellPrice}" Foreground="White" Width="110"/>
 										<TextBlock Text="{Binding Ratio}" Foreground="White" Width="110"/>
+										<TextBlock Text="{Binding Score}" Foreground="White" Width="110"/>
 									</StackPanel>
 								</DataTemplate>
 							</ListBox.ItemTemplate>
