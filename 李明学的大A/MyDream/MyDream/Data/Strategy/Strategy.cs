@@ -145,7 +145,6 @@ namespace MyDream
                 var m5 = (record_1.Close + record_2.Close + record_3.Close + record_4.Close + record_5.Close) / 5.0;
                 var next_m5 = (record_1.Close + record_2.Close + record_3.Close + record_4.Close + record_1.Close) / 5.0;
                 if (record_4.Volume < record_3.Volume && record_3.Volume < record_2.Volume && record_2.Volume > record_1.Volume &&
-                    record_3.High < record_2.High &&
                     !record_4.IsTop && record_3.IsTop && !record_2.IsTop && !record_2.IsBottom && !record_1.IsTop && !record_1.IsBottom &&
                     record_2.IsUp && record_1.Ratio < 0.03 &&
                     record_1.Close > m5)

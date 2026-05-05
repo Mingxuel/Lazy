@@ -146,6 +146,13 @@ namespace MyDream
         {
             DataVWAP.Clear();
             DataVWAPTickets.Clear();
+
+            List<string> dates = new List<string>();
+            foreach (var item in TradingDates.Dates)
+            {
+                if (item.StartsWith("2024") || item.StartsWith("2025") || item.StartsWith("2026"))
+                    dates.Add(item);
+            }
             foreach (var i in Enumerable.Range(0, 1))
             {
                 int total = 0;
@@ -154,7 +161,7 @@ namespace MyDream
                 double ratio_2024 = 1.0;
                 double ratio_2025 = 1.0;
                 double ratio_2026 = 1.0;
-                foreach (var date in TradingDates.Dates)
+                foreach (var date in dates)
                 {
                     var strategy_items = Strategy.Instance.Data[date];
                     if (strategy_items.Count == 0) continue;

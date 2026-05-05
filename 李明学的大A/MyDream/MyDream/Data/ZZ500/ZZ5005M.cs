@@ -35,8 +35,8 @@ namespace MyDream
 
         public List<double> GetM5Ratio(string stock_code, string date)
         {
-            var record_1 = ZZ5001D.Instance.PreRecord(stock_code, date, 0);
             var record_2 = ZZ5001D.Instance.PreRecord(stock_code, date, 1);
+            var record_1 = ZZ5001D.Instance.PreRecord(stock_code, date, 0);
 
             double botton_ratio = -0.05;
 
@@ -47,7 +47,7 @@ namespace MyDream
             var pre_records = ZZ5005M.Instance.Read(stock_code, pre_date);
             if (pre_records != null && pre_records.Count == 48)
             {
-                price_buy = pre_records[42].Close;
+                price_buy = pre_records[41].Close;
             }
             else
             {
@@ -59,8 +59,8 @@ namespace MyDream
             {
                 if ((record_1!.Open / record_2!.Close - 1.0) <= botton_ratio)
                     price_sell = record_1.Open;
-                else if ((record_1.Low / record_2.Close - 1.0) <= botton_ratio)
-                    price_sell = record_2.Close * (1 + botton_ratio);
+                else if ((record_1.Low / record_2.Close - 1.0) <= -0.06)
+                    price_sell = record_2.Close * (1 - 0.06);
                 else if (record_1.IsToped)
                     price_sell = record_1.Top;
                 else
@@ -91,7 +91,7 @@ namespace MyDream
                         break;
                     }
 
-                    if (i == 42)
+                    if (i == 41)
                     {
                         price_sell = records[i].Close;
                         break;
@@ -241,7 +241,7 @@ namespace MyDream
                 }
             }
 
-            return (volume_buy_3T - volume_sell_2T - volume_sell_1T) / volume_buy_3T;
+            return volume_buy_3T - volume_sell_2T - volume_sell_1T;
         }
     }
 }
