@@ -174,8 +174,6 @@ namespace MyDream
                         }
                     }
 
-                    if (max_score < 0.0) continue;
-
                     var values = ZZ5005M.Instance.GetM5Ratio(strategy_items[max_index].StockCode!, strategy_items[max_index].Date!);
                     ratio = (values[1] / values[0] - 1.0) * 100.0;
 
@@ -229,7 +227,7 @@ namespace MyDream
             DataVWAP.Clear();
             DataVWAP.Insert(0, detail_total);
         }
-
+ 
         private void UpdateStrategyDetailVWAPTickets()
         {
 

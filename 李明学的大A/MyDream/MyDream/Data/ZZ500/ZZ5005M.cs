@@ -176,17 +176,36 @@ namespace MyDream
 */
         public double GetScore(string stockCode, string date)
         {
-            string date_2T = TradingDates.PreDate(date, 2)!;
-            string date_1T = TradingDates.PreDate(date, 1)!;
+            string date_3T = TradingDates.PreDate(date, 2)!;
+            string date_2T = TradingDates.PreDate(date, 1)!;
+            string date_1T = TradingDates.PreDate(date, 0)!;
 
+            var records_3T = ZZ5005M.Instance.Read(stockCode, date_3T);
             var records_2T = ZZ5005M.Instance.Read(stockCode, date_2T);
             var records_1T = ZZ5005M.Instance.Read(stockCode, date_1T);
 
-            if (records_2T == null || records_1T == null) return 0.0;
+            if (records_3T == null || records_2T == null || records_1T == null) return 0.0;
 
             List<Record5MItem> records = new List<Record5MItem>();
+            records.AddRange(records_3T!);
             records.AddRange(records_2T!);
             records.AddRange(records_1T!);
+
+            double volume_buy_3T = 0.0;
+            double volume_sell_3T = 0.0;
+            foreach (var record in records_3T)
+            {
+                if (Math.Abs(record.High - record.Low) < 0.0001)
+                {
+                    volume_buy_3T += record.Volume / 2.0;
+                    volume_sell_3T += record.Volume / 2.0;
+                }
+                else
+                {
+                    volume_buy_3T += (record.Close - record.Low) / (record.High - record.Low) * record.Volume;
+                    volume_sell_3T += (record.High - record.Close) / (record.High - record.Low) * record.Volume;
+                }
+            }
 
             double volume_buy_2T = 0.0;
             double volume_sell_2T = 0.0;
@@ -208,6 +227,8 @@ namespace MyDream
             double volume_sell_1T = 0.0;
             foreach (var record in records_1T)
             {
+                if (records_1T.IndexOf(record) > 40) break;
+
                 if (Math.Abs(record.High - record.Low) < 0.0001)
                 {
                     volume_buy_1T += record.Volume / 2.0;
@@ -220,7 +241,7 @@ namespace MyDream
                 }
             }
 
-            return (volume_sell_1T) / (volume_buy_2T);
+            return (volume_buy_3T - volume_sell_2T - volume_sell_1T) / volume_buy_3T;
         }
     }
 }
