@@ -1,4 +1,4 @@
-time open high low close volume amount settelementPrice openInterest preClose suspendFlag 
+﻿time open high low close volume amount settelementPrice openInterest preClose suspendFlag 
 20220315 34.9 35.61 31.15 32.04 94947.0 446746848.0 0.0 15.0 34.9 0.0
 20220316 32.51 33.61 30.15 32.26 69700.0 319375552.0 0.0 15.0 32.04 0.0
 20220317 32.76 34.04 31.7 31.77 54569.0 257120130.0 0.0 15.0 32.26 0.0
