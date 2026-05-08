@@ -85,6 +85,12 @@ namespace MyDream
                         break;
                     }
 
+                    if ((records[i].Close / record_2!.Close - 1.0) > 0.08)
+                    {
+                        price_sell = records[i].Close;
+                        break;
+                    }
+
                     if (Math.Abs(records[i].High - record_1!.Top) < 0.001)
                     {
                         price_sell = record_1.Top;
