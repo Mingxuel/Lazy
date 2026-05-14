@@ -3,6 +3,7 @@ using CommunityToolkit.Mvvm.Input;
 using Microsoft.Win32;
 using MyDream;
 using NPOI.HSSF.Record;
+using NPOI.POIFS.Storage;
 using NPOI.SS.Formula.Functions;
 using System;
 using System.Collections.Generic;
@@ -138,22 +139,16 @@ namespace MyDream
 
             string history = string.Empty;
             string? select_date = StrategyTradingDatesIndex != -1 ? StrategyTradingDates[StrategyTradingDatesIndex] : null;
-
-            if (select_date != null)
+            List<StrategyItem> datas = new List<StrategyItem>();
+            foreach(int i in Enumerable.Range(0, 5))
             {
-                string year = select_date.Substring(0, 4);
-                foreach(var trading_date in TradingDates.Dates)
-                {
-                    if (trading_date.StartsWith(year))
-                    { 
-                        var dates = Strategy.Instance.Data[trading_date];
-                        foreach (var item in dates)
-                        {
-                            string stock_code = item.StockCode!.Replace(".SH", "").Replace(".SZ", "");
-                            history += FormatTHSLine(stock_code);
-                        }
-                    }
-                }
+                string? date = TradingDates.PreDate(select_date!, i);
+                datas.AddRange(Strategy.Instance.Data[date!]);
+            }
+            foreach (var item in datas)
+            {
+                string stock_code = item.StockCode!.Replace(".SH", "").Replace(".SZ", "");
+                history += FormatTHSLine(stock_code);
             }
 
             string file_content = File.ReadAllText(APath.GetTHSStrategyFileOrigin());
