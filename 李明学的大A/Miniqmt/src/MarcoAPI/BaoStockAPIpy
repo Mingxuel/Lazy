@@ -1,0 +1,84 @@
+from concurrent.futures import ProcessPoolExecutor
+from functools import partial
+import os
+import time
+import baostock as bs
+import pandas as pd
+
+from Path import GET_ROOT_PATH
+from StockCodes import SZ200_STOCK_CODES
+from TradingDates import TRADING_DATES
+
+def DOWNLOAD_HISTORY(frequency):
+    stock_codes = SZ200_STOCK_CODES()
+    with ProcessPoolExecutor(max_workers=8) as pool:
+        pool.map(partial(__DOWNLOAD_HISTORY_BAOSTOCK_PROCESS, frequency=frequency), stock_codes)
+
+def __DOWNLOAD_HISTORY_BAOSTOCK_PROCESS(stock_code, frequency):
+    file = __FILE(stock_code, frequency)
+    if os.path.exists(file):
+        return
+
+    items = stock_code.split(".")
+    stock_code_target = items[1] + "." + items[0]
+
+    start_date = __START_DATE(stock_code, frequency)
+    end_date = __END_DATE()
+
+    lg = bs.login()
+
+    timeout = 10
+    while True:
+        if timeout == 0:
+            break
+
+        result = None
+        if frequency == "d":
+            rs = bs.query_history_k_data_plus(stock_code_target, "date,code,open,high,low,close,preclose,volume,amount,adjustflag,turn,tradestatus,pctChg,isST",
+                start_date=start_date, end_date=end_date, frequency=frequency, adjustflag="2")
+        else:
+            rs = bs.query_history_k_data_plus(stock_code_target, "date,time,code,open,high,low,close,volume,amount,adjustflag",
+                start_date=start_date, end_date=end_date, frequency=frequency, adjustflag="2")
+
+        if rs.error_code != "0":
+            print("Trying to download " + file + " again.")
+            timeout -= 1
+            time.sleep(1)
+            continue
+
+        data_list = []
+        while (rs.error_code == '0') & rs.next():
+            data_list.append(rs.get_row_data())
+
+        if (data_list[-1][0] != end_date):
+            timeout -= 1
+            time.sleep(1)
+            continue
+
+        result = pd.DataFrame(data_list, columns=rs.fields)
+        result.to_csv(file, index=False)
+        break
+
+    bs.logout()
+
+    time.sleep(1)
+
+def __FILE(stock_code, frequency):
+    GET_ROOT_PATH() + "/AI/AIData/TradingDates.config"
+    match frequency:
+        case "d":
+            return GET_ROOT_PATH() + f"/AI/AIData/ORIGIN/1D/{stock_code}.csv"
+        case "5":
+            return GET_ROOT_PATH() + f"/AI/AIData/ORIGIN/5M/{stock_code}.csv"
+    return None
+
+def __START_DATE(stock_code, frequency):
+    return '2022-01-01'
+
+def __END_DATE():
+    trading_dates = TRADING_DATES()
+    return f"{trading_dates[-1][:4]}-{trading_dates[-1][4:6]}-{trading_dates[-1][6:]}"
+
+if __name__ == "__main__":
+    DOWNLOAD_HISTORY("d")
+    # DOWNLOAD_HISTORY("5")

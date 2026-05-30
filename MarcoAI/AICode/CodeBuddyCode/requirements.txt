@@ -1,4 +1,0 @@
-pyqt6>=6.4.0
-finplot>=1.9.0
-pandas>=2.0.0
-numpy>=1.23.0
