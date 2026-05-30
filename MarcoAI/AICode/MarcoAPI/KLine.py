@@ -310,7 +310,8 @@ def SHOW_K_LINE(file, title=None, ma_periods=None, intraday=False, downsample_ba
     # ── 生成 HTML ──
     html = _build_html(title, candle_data, volume_data, ma_series, intraday=intraday)
 
-    output = str(file) + '.html'
+    fname = os.path.basename(str(file)) + '.html'
+    output = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'UI', fname)
     with open(output, 'w', encoding='utf-8') as f:
         f.write(html)
     webbrowser.open(output)
@@ -526,7 +527,8 @@ def SHOW_K_LINE_WITH_SIGNALS(kl_file, sig_file, title=None, intraday=False, down
     # ── 生成 HTML ──
     html = _build_signal_html(title, candle_data, volume_data, ma_series, signals, intraday=intraday)
 
-    output = str(kl_file) + '_with_signals.html'
+    fname = os.path.basename(str(kl_file)) + '_with_signals.html'
+    output = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'UI', fname)
     with open(output, 'w', encoding='utf-8') as f:
         f.write(html)
     webbrowser.open(output)
@@ -818,7 +820,8 @@ window.addEventListener('resize', () => chart.applyOptions({{width: window.inner
 </html>'''
 
 
-    output = str(file) + '.win_count.html'
+    fname = os.path.basename(str(file)) + '.win_count.html'
+    output = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'UI', fname)
     with open(output, 'w', encoding='utf-8') as f:
         f.write(html)
     webbrowser.open(output)

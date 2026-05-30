@@ -15,6 +15,7 @@ from AICode.MarcoAPI.TradingDates import *
 from AICode.MarcoAPI.Path import *
 from AICode.MarcoAPI.SZ2001D import *
 from AICode.MarcoAPI.KLine import SHOW_K_LINE, SHOW_WIN_COUNT
+from AICode.MarcoAPI.DataAligned import WRITE_ALIGNED_FILE
 
 def CALCULATE_SZ200_MOTION_1D_PRICE():
     dataframe = GET_SZ200_1D_ALL()
@@ -118,32 +119,30 @@ def CALCULATE_SZ200_MOTION_1D_WIN_COUNT():
     dataframe = GET_SZ200_1D_ALL()
     trading_dates = TRADING_DATES()
     stock_codes = STOCK_CODES()
-    with open(f"{PATH_AIDATA_1D_WIN_COUNT()}", "w") as file:
-        for i, trading_date in enumerate(trading_dates):
-            last_trading_date = LAST_1D_MOTION_TRADING_DATE(PATH_AIDATA_1D_WIN_COUNT())
-            if last_trading_date != "" and trading_date <= last_trading_date:
-                continue
-            if i == 0:
-                continue
-            up = 0
-            flat = 0
-            down = 0
-            total = 0
-            pre_trading_date = trading_dates[i - 1]
-            for stock_code in stock_codes:
-                pre_close = dataframe["Close"].loc[pre_trading_date, stock_code]
-                _close = dataframe["Close"].loc[trading_date, stock_code]
-                if pre_close != "" and _close != "":
-                    total += 1
-                    if float(_close) > float(pre_close):
-                        up += 1
-                    elif float(_close) < float(pre_close):
-                        down += 1
-                    else:
-                        flat += 1
-            if total == 0:
-                continue
-            file.write(f"{trading_date}|{up}|{flat}|{down}|{total}\n")
+    data: dict[str, str] = {}
+    for i, trading_date in enumerate(trading_dates):
+        if i == 0:
+            continue
+        up = 0
+        flat = 0
+        down = 0
+        total = 0
+        pre_trading_date = trading_dates[i - 1]
+        for stock_code in stock_codes:
+            pre_close = dataframe["Close"].loc[pre_trading_date, stock_code]
+            _close = dataframe["Close"].loc[trading_date, stock_code]
+            if pre_close != "" and _close != "":
+                total += 1
+                if float(_close) > float(pre_close):
+                    up += 1
+                elif float(_close) < float(pre_close):
+                    down += 1
+                else:
+                    flat += 1
+        # 无数据也写入全零行，保证对齐
+        data[trading_date] = f"{up}|{flat}|{down}|{total}"
+
+    WRITE_ALIGNED_FILE(PATH_AIDATA_1D_WIN_COUNT(), data, "0|0|0|0", "{date}|{value}")
 
 def LAST_1D_MOTION_TRADING_DATE(file_path):
     last_trading_date = ""

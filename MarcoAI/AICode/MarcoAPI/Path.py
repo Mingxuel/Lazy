@@ -30,8 +30,14 @@ def PATH_AIDATA_BOTTOM() -> str:
 def PATH_AIDATA_TARGET_31() -> str:
     return GET_ROOT_PATH() + "/MarcoAI/AIData/TARGET/31"
 
+def PATH_AIDATA_TARGET_31_RATIO() -> str:
+    return GET_ROOT_PATH() + "/MarcoAI/AIData/TARGET/31_RATIO"
+
 def PATH_AIDATA_TARGET_311() -> str:
     return GET_ROOT_PATH() + "/MarcoAI/AIData/TARGET/311"
+
+def PATH_AIDATA_TARGET_311_RATIO() -> str:
+    return GET_ROOT_PATH() + "/MarcoAI/AIData/TARGET/311_RATIO"
 
 def PATH_AIDATA_1D_MOTION_PRICE() -> str:
     return GET_ROOT_PATH() + "/MarcoAI/AIData/1D_MOTION_PRICE"
