@@ -122,9 +122,9 @@ namespace MyDream
             return GetRoot() + "\\Data\\Strategy\\";
         }
 
-        public static string GetTesting()
+        public static string GetHistory()
         {
-            return GetRoot() + "\\Data\\Testing\\";
+            return GetRoot() + "\\Data\\History\\";
         }
 
         public static string GetSeven()

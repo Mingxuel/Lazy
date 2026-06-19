@@ -6,7 +6,7 @@ import webbrowser
 _root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if _root not in sys.path:
     sys.path.insert(0, os.path.dirname(_root))
-from AICode.MarcoAPI.Path import PATH_AIDATA_TARGET_31, PATH_AIDATA_1D_WIN_COUNT, PATH_AIDATA_TARGET_31_RATIO, PATH_AIDATA_TARGET_311_RATIO
+from AICode.MarcoAPI.Path import PATH_AIDATA_TARGET_31, PATH_AIDATA_1D_WIN_COUNT, PATH_AIDATA_TARGET_31_RATIO, PATH_AIDATA_TARGET_311_RATIO, PATH_AIDATA_TARGET_TOP_1_RATIO, PATH_AIDATA_TARGET_TOP_11_RATIO, PATH_AIDATA_TOP, PATH_AIDATA_TOPPED, PATH_AIDATA_BOTTOM, PATH_AIDATA_1D_MOTION_COUNT, PATH_AIDATA_MOTION, PATH_AIDATA_1D_PRICE
 from AICode.MarcoAPI.DataAligned import READ_ALIGNED_LINES
 
 
@@ -59,6 +59,7 @@ def SHOW_TARGET_1D():
                 'flat': int(parts[2]),
                 'down': int(parts[3]),
                 'total': int(parts[4]),
+                'amount': float(parts[5]) if len(parts) > 5 else 0.0,
             })
         else:
             win_data.append({
@@ -67,6 +68,7 @@ def SHOW_TARGET_1D():
                 'flat': 0,
                 'down': 0,
                 'total': 0,
+                'amount': 0.0,
             })
 
     # ratio 数据（对齐读取，确保与 win_data 行数一致）
@@ -79,7 +81,7 @@ def SHOW_TARGET_1D():
         else:
             ratio_data.append({'date': date, 'val': 0.0})
 
-    # 311_RATIO 数据（对齐读取，第6行）
+    # 311_RATIO 数据（对齐读取，第8行）
     ratio311_data = []
     ratio311_path = PATH_AIDATA_TARGET_311_RATIO()
     for date, line in READ_ALIGNED_LINES(ratio311_path):
@@ -88,6 +90,91 @@ def SHOW_TARGET_1D():
             ratio311_data.append({'date': date, 'val': float(parts[1])})
         else:
             ratio311_data.append({'date': date, 'val': 0.0})
+
+    # TOP_1_RATIO 数据（对齐读取）
+    ratio_top1_data = []
+    ratio_top1_path = PATH_AIDATA_TARGET_TOP_1_RATIO()
+    for date, line in READ_ALIGNED_LINES(ratio_top1_path):
+        if line:
+            parts = line.split('|')
+            ratio_top1_data.append({'date': date, 'val': float(parts[1])})
+        else:
+            ratio_top1_data.append({'date': date, 'val': 0.0})
+
+    # TOP_11_RATIO 数据（对齐读取）
+    ratio_top11_data = []
+    ratio_top11_path = PATH_AIDATA_TARGET_TOP_11_RATIO()
+    for date, line in READ_ALIGNED_LINES(ratio_top11_path):
+        if line:
+            parts = line.split('|')
+            ratio_top11_data.append({'date': date, 'val': float(parts[1])})
+        else:
+            ratio_top11_data.append({'date': date, 'val': 0.0})
+
+    # MOTION_COUNT 数据（对齐读取，第7行）
+    motion_data = []
+    motion_path = PATH_AIDATA_1D_MOTION_COUNT()
+    for date, line in READ_ALIGNED_LINES(motion_path):
+        if line:
+            parts = line.split('|')
+            motion_data.append({'date': date, 'up_diff': int(parts[1]), 'amount': float(parts[2])})
+        else:
+            motion_data.append({'date': date, 'up_diff': 0, 'amount': 0.0})
+
+    # 1D_PRICE 数据（对齐读取，第5.5行均价线）
+    price_data = []
+    price_path = PATH_AIDATA_1D_PRICE()
+    for date, line in READ_ALIGNED_LINES(price_path):
+        if line:
+            parts = line.split('|')
+            price_data.append({'date': date, 'avg_close': float(parts[1]), 'vwap': float(parts[2])})
+        else:
+            price_data.append({'date': date, 'avg_close': 0.0, 'vwap': 0.0})
+
+    # TOP 数据（对齐读取，第13行）
+    top_data = []
+    top_dir = PATH_AIDATA_TOP()
+    for date, _ in READ_ALIGNED_LINES(win_path):
+        fpath = os.path.join(top_dir, date)
+        if os.path.isfile(fpath):
+            with open(fpath, 'r') as f:
+                count = sum(1 for line in f if line.strip())
+        else:
+            count = 0
+        top_data.append({'date': date, 'count': count})
+
+    # BOTTOM 数据（对齐读取，第14行）
+    bottom_data = []
+    bottom_dir = PATH_AIDATA_BOTTOM()
+    for date, _ in READ_ALIGNED_LINES(win_path):
+        fpath = os.path.join(bottom_dir, date)
+        if os.path.isfile(fpath):
+            with open(fpath, 'r') as f:
+                count = sum(1 for line in f if line.strip())
+        else:
+            count = 0
+        bottom_data.append({'date': date, 'count': count})
+
+    # TOPPED 数据（对齐读取）
+    topped_data = []
+    topped_dir = PATH_AIDATA_TOPPED()
+    for date, _ in READ_ALIGNED_LINES(win_path):
+        fpath = os.path.join(topped_dir, date)
+        if os.path.isfile(fpath):
+            with open(fpath, 'r') as f:
+                count = sum(1 for line in f if line.strip())
+        else:
+            count = 0
+        topped_data.append({'date': date, 'count': count})
+
+    # 封板率数据（TOP / (TOPPED + TOP) * 100，无触板则为0%）
+    seal_data = []
+    for i in range(len(top_data)):
+        top_count = top_data[i]['count']
+        topped_count = topped_data[i]['count']
+        total = top_count + topped_count
+        rate = round(top_count / total * 100, 1) if total > 0 else 0.0
+        seal_data.append({'date': top_data[i]['date'], 'rate': rate})
 
     # 计算列宽：与D行日期标签总宽一致(10px/条)
     col_chart_w = max(3000, len(win_data) * 11)
@@ -109,6 +196,14 @@ def SHOW_TARGET_1D():
     win_json = json.dumps(win_data, ensure_ascii=False)
     ratio_json = json.dumps(ratio_data, ensure_ascii=False)
     ratio311_json = json.dumps(ratio311_data, ensure_ascii=False)
+    ratio_top1_json = json.dumps(ratio_top1_data, ensure_ascii=False)
+    ratio_top11_json = json.dumps(ratio_top11_data, ensure_ascii=False)
+    top_json = json.dumps(top_data, ensure_ascii=False)
+    bottom_json = json.dumps(bottom_data, ensure_ascii=False)
+    topped_json = json.dumps(topped_data, ensure_ascii=False)
+    seal_json = json.dumps(seal_data, ensure_ascii=False)
+    motion_json = json.dumps(motion_data, ensure_ascii=False)
+    price_json = json.dumps(price_data, ensure_ascii=False)
 
     html = f'''<!DOCTYPE html>
 <html>
@@ -155,6 +250,7 @@ def SHOW_TARGET_1D():
   .param-row input {{ flex:1; min-width:40px; padding:4px 6px; border:1px solid #2b2b43; background:#1e222d; color:#d1d4dc; font-size:11px; border-radius:4px; outline:none; }}
   .param-row input:focus {{ border-color:#2962ff; }}
   .param-row input[type="checkbox"] {{ flex:unset; min-width:unset; width:16px; height:16px; }}
+  .param-divider {{ height:1px; background:#2b2b43; margin:4px 0; }}
   .color-picker {{ position:relative; }}
   .color-swatch {{ width:22px; height:22px; border:1px solid #2b2b43; border-radius:3px; cursor:pointer; flex-shrink:0; }}
   .color-grid {{ position:fixed; z-index:31; display:none; grid-template-columns:repeat(8,18px); gap:1px; background:#1e222d; padding:3px; border:1px solid #2b2b43; border-radius:4px; }}
@@ -238,10 +334,54 @@ def SHOW_TARGET_1D():
         </td>
         <td class="col-param" style="padding:0;border-top:none;"></td>
       </tr>
-      <!-- 第5行：31_RATIO -->
+      <!-- 第5行：MOTION up_diff 柱状图 -->
+      <tr>
+        <td class="col-idx" style="padding:0;"><div style="font-size:13px;font-weight:normal;color:#d1d4dc;line-height:1.2;"><span style="font-size:10px;background:#e040fb22;color:#e040fb;border:1px solid #e040fb44;padding:1px 6px;border-radius:8px;">MOTION</span></div><div style="font-family:'Orbitron',sans-serif;font-size:44px;font-weight:900;line-height:1;">MOTION</div></td>
+        <td style="padding:0 5px 0 0;">
+          <div class="chart-box" style="height:180px;">
+            <canvas id="c-motion"></canvas>
+          </div>
+        </td>
+        <td class="col-param">
+          <div class="param-group">
+            <div class="param-row"><label>高度</label><input class="height-input" type="number" value="180" min="60" step="10" data-target="c-motion"></div>
+          </div>
+        </td>
+      </tr>
+      <!-- 第6行：居中包络通道（居中窗口 + 自适应末端预测） -->
+      <tr>
+        <td class="col-idx" style="padding:0;"><div style="font-size:13px;font-weight:normal;color:#d1d4dc;line-height:1.2;"><span style="font-size:10px;background:#ffd74022;color:#ffd740;border:1px solid #ffd74044;padding:1px 6px;border-radius:8px;">ENV</span></div><div style="font-family:'Orbitron',sans-serif;font-size:36px;font-weight:900;line-height:1;">包络<br>通道</div></td>
+        <td style="padding:0 5px 0 0;">
+          <div class="chart-box" style="height:200px;">
+            <canvas id="c-amount-ma"></canvas>
+          </div>
+        </td>
+        <td class="col-param">
+          <div class="param-group">
+            <div class="param-row"><label>窗口</label><input class="env-window" type="number" value="20" min="2" step="1"></div>
+            <div class="param-row"><label>平滑</label><input class="env-smooth" type="number" value="0.25" min="0.01" max="1" step="0.05"></div>
+            <div class="param-divider"></div>
+            <div class="param-row"><label>波峰色</label><div class="color-picker"><div class="color-swatch env-peak-swatch" style="background:#ef5350"></div></div></div>
+            <div class="param-row"><label>波谷色</label><div class="color-picker"><div class="color-swatch env-valley-swatch" style="background:#00e5ff"></div></div></div>
+            <div class="param-row"><label>成交额</label><input type="checkbox" class="env-raw-toggle" checked></div>
+            <div class="param-row"><label>高度</label><input class="height-input" type="number" value="200" min="60" step="10" data-target="c-amount-ma"></div>
+          </div>
+        </td>
+      </tr>
+      <!-- 第7行：成交额柱状图 -->
+      <tr>
+        <td class="col-idx" style="padding:0;border-bottom:none;"><div style="font-size:13px;font-weight:normal;color:#d1d4dc;line-height:1.2;"><span style="font-size:10px;background:#ffd74022;color:#ffd740;border:1px solid #ffd74044;padding:1px 6px;border-radius:8px;">AMOUNT</span></div><div style="font-family:'Orbitron',sans-serif;font-size:48px;font-weight:900;line-height:1;">成交额</div></td>
+        <td style="padding:0;border-bottom:none;line-height:0;">
+          <div class="chart-box" style="height:180px;">
+            <canvas id="c-amount-raw"></canvas>
+          </div>
+        </td>
+        <td class="col-param" style="border-bottom:none;"></td>
+      </tr>
+      <!-- 第8行：31_RATIO -->
       <tr>
         <td class="col-idx"><div style="font-size:13px;font-weight:normal;color:#d1d4dc;line-height:1.2;"><span style="font-size:10px;background:#ff8c0022;color:#ff8c00;border:1px solid #ff8c0044;padding:1px 6px;border-radius:8px;">D-DAY</span></div><div style="font-family:'Orbitron',sans-serif;font-size:48px;font-weight:900;line-height:1.1;">31<br>RATIO</div></td>
-        <td style="padding:10px 5px 10px 0;">
+        <td style="padding:10px 0;">
           <div class="chart-box" style="height:180px;">
             <canvas id="c-ratio"></canvas>
           </div>
@@ -255,10 +395,10 @@ def SHOW_TARGET_1D():
           </div>
         </td>
       </tr>
-      <!-- 第6行：311_RATIO -->
+      <!-- 第9行：311_RATIO -->
       <tr>
         <td class="col-idx"><div style="font-size:13px;font-weight:normal;color:#d1d4dc;line-height:1.2;"><span style="font-size:10px;background:#7c4dff22;color:#7c4dff;border:1px solid #7c4dff44;padding:1px 6px;border-radius:8px;">D-DAY + 1</span></div><div style="font-family:'Orbitron',sans-serif;font-size:48px;font-weight:900;line-height:1.1;">311<br>RATIO</div></td>
-        <td style="padding:10px 5px 10px 0;">
+        <td style="padding:10px 0;">
           <div class="chart-box" style="height:180px;">
             <canvas id="c-ratio311"></canvas>
           </div>
@@ -272,6 +412,81 @@ def SHOW_TARGET_1D():
           </div>
         </td>
       </tr>
+      <!-- 第10行：TOP_1_RATIO -->
+      <tr>
+        <td class="col-idx"><div style="font-size:13px;font-weight:normal;color:#d1d4dc;line-height:1.2;"><span style="font-size:10px;background:#ff8c0022;color:#ff8c00;border:1px solid #ff8c0044;padding:1px 6px;border-radius:8px;">TOP1</span></div><div style="font-family:'Orbitron',sans-serif;font-size:48px;font-weight:900;line-height:1.1;">TOP1<br>RATIO</div></td>
+        <td style="padding:10px 0;">
+          <div class="chart-box" style="height:180px;">
+            <canvas id="c-ratio-top1"></canvas>
+          </div>
+        </td>
+        <td class="col-param">
+          <div class="param-group">
+            <div class="param-row"><label>线颜色</label><div class="color-picker"><div class="color-swatch ratio-swatch ratio-line-swatch" style="background:#26a69a"></div></div></div>
+            <div class="param-row"><label>上升色</label><div class="color-picker"><div class="color-swatch ratio-swatch ratio-up-swatch" style="background:#ef5350"></div></div></div>
+            <div class="param-row"><label>下降色</label><div class="color-picker"><div class="color-swatch ratio-swatch ratio-dn-swatch" style="background:#00e5ff"></div></div></div>
+            <div class="param-row"><label>高度</label><input class="height-input" type="number" value="180" min="60" step="10" data-target="c-ratio-top1"></div>
+          </div>
+        </td>
+      </tr>
+      <!-- 第11行：TOP_11_RATIO -->
+      <tr>
+        <td class="col-idx"><div style="font-size:13px;font-weight:normal;color:#d1d4dc;line-height:1.2;"><span style="font-size:10px;background:#7c4dff22;color:#7c4dff;border:1px solid #7c4dff44;padding:1px 6px;border-radius:8px;">TOP11</span></div><div style="font-family:'Orbitron',sans-serif;font-size:48px;font-weight:900;line-height:1.1;">TOP11<br>RATIO</div></td>
+        <td style="padding:10px 0;">
+          <div class="chart-box" style="height:180px;">
+            <canvas id="c-ratio-top11"></canvas>
+          </div>
+        </td>
+        <td class="col-param">
+          <div class="param-group">
+            <div class="param-row"><label>线颜色</label><div class="color-picker"><div class="color-swatch ratio-swatch ratio-line-swatch" style="background:#26a69a"></div></div></div>
+            <div class="param-row"><label>上升色</label><div class="color-picker"><div class="color-swatch ratio-swatch ratio-up-swatch" style="background:#ef5350"></div></div></div>
+            <div class="param-row"><label>下降色</label><div class="color-picker"><div class="color-swatch ratio-swatch ratio-dn-swatch" style="background:#00e5ff"></div></div></div>
+            <div class="param-row"><label>高度</label><input class="height-input" type="number" value="180" min="60" step="10" data-target="c-ratio-top11"></div>
+          </div>
+        </td>
+      </tr>
+      <!-- 第12行：封板率 TOP/(TOPPED+TOP)*100 -->
+      <tr>
+        <td class="col-idx" style="padding:0;"><div style="font-size:13px;font-weight:normal;color:#d1d4dc;line-height:1.2;"><span style="font-size:10px;background:#ffd74022;color:#ffd740;border:1px solid #ffd74044;padding:1px 6px;border-radius:8px;">SEAL</span></div><div style="font-family:'Orbitron',sans-serif;font-size:40px;font-weight:900;line-height:1;">封板率</div></td>
+        <td style="padding:0;line-height:0;">
+          <div class="chart-box" style="height:120px;">
+            <canvas id="c-seal"></canvas>
+          </div>
+        </td>
+        <td class="col-param"></td>
+      </tr>
+      <!-- 第13行：TOPPED数量 -->
+      <tr>
+        <td class="col-idx" style="padding:0;"><div style="font-size:13px;font-weight:normal;color:#d1d4dc;line-height:1.2;"><span style="font-size:10px;background:#26a69a22;color:#26a69a;border:1px solid #26a69a44;padding:1px 6px;border-radius:8px;">TOPPED</span></div><div style="font-family:'Orbitron',sans-serif;font-size:48px;font-weight:900;line-height:1;">TOPPED</div></td>
+        <td style="padding:0;line-height:0;">
+          <div class="chart-box" style="height:120px;">
+            <canvas id="c-topped"></canvas>
+          </div>
+        </td>
+        <td class="col-param"></td>
+      </tr>
+      <!-- 第14行：TOP数量 -->
+      <tr>
+        <td class="col-idx" style="padding:0;"><div style="font-size:13px;font-weight:normal;color:#d1d4dc;line-height:1.2;"><span style="font-size:10px;background:#7c4dff22;color:#7c4dff;border:1px solid #7c4dff44;padding:1px 6px;border-radius:8px;">TOP</span></div><div style="font-family:'Orbitron',sans-serif;font-size:48px;font-weight:900;line-height:1;">TOP</div></td>
+        <td style="padding:0;line-height:0;">
+          <div class="chart-box" style="height:120px;">
+            <canvas id="c-top"></canvas>
+          </div>
+        </td>
+        <td class="col-param"></td>
+      </tr>
+      <!-- 第15行：BOTTOM数量 -->
+      <tr>
+        <td class="col-idx" style="padding:0;"><div style="font-size:13px;font-weight:normal;color:#d1d4dc;line-height:1.2;"><span style="font-size:10px;background:#ff910022;color:#ff9100;border:1px solid #ff910044;padding:1px 6px;border-radius:8px;">BOT</span></div><div style="font-family:'Orbitron',sans-serif;font-size:48px;font-weight:900;line-height:1;">BOT</div></td>
+        <td style="padding:0;line-height:0;">
+          <div class="chart-box" style="height:120px;">
+            <canvas id="c-bottom"></canvas>
+          </div>
+        </td>
+        <td class="col-param"></td>
+      </tr>
+
       <!-- 4 行空白（高度 200px） -->
       <tr style="height:200px;"><td class="col-idx"></td><td></td><td class="col-param"></td></tr>
       <tr style="height:200px;"><td class="col-idx"></td><td></td><td class="col-param"></td></tr>
@@ -286,6 +501,14 @@ const stocks = {data_json};
 const winData = {win_json};
 const ratioData = {ratio_json};
 const ratio311Data = {ratio311_json};
+const ratioTop1Data = {ratio_top1_json};
+const ratioTop11Data = {ratio_top11_json};
+const topData = {top_json};
+const bottomData = {bottom_json};
+const toppedData = {topped_json};
+const sealData = {seal_json};
+const motionData = {motion_json};
+const priceData = {price_json};
 let charts = [];
 
 /* ---- 鼠标中键拖动 ---- */
@@ -364,6 +587,9 @@ function syncAllChartsHover(e) {{
   const d = winData[dataIdx];
   const r = ratioData[dataIdx];
   const r311 = ratio311Data[dataIdx];
+  const rTop1 = dataIdx < ratioTop1Data.length ? ratioTop1Data[dataIdx] : null;
+  const rTop11 = dataIdx < ratioTop11Data.length ? ratioTop11Data[dataIdx] : null;
+  const m = motionData[dataIdx];
   const tt = document.getElementById('custom-tooltip');
   const upPct = d.total > 0 ? (d.up / d.total * 100).toFixed(1) : '0.0';
   const dnPct = d.total > 0 ? (d.down / d.total * 100).toFixed(1) : '0.0';
@@ -374,9 +600,20 @@ function syncAllChartsHover(e) {{
     '<div class="tt-row"><span class="tt-label">下跌</span><span class="tt-value tt-dn">' + d.down + ' <span style="font-weight:400;color:#787b86;font-size:11px">(' + dnPct + '%)</span></span></div>' +
     '<div class="tt-row"><span class="tt-label">平盘</span><span class="tt-value">' + d.flat + '</span></div>' +
     '<div class="tt-row"><span class="tt-label">总数</span><span class="tt-value">' + d.total + '</span></div>' +
+    '<div class="tt-row"><span class="tt-label">总成交额</span><span class="tt-value">' + (d.amount / 1e8).toFixed(2) + '亿</span></div>' +
+    '<div class="tt-row"><span class="tt-label">均价</span><span class="tt-value">' + priceData[dataIdx].avg_close.toFixed(2) + '</span></div>' +
     '<div class="tt-sep"></div>' +
+    '<div class="tt-row"><span class="tt-label">MOTION</span><span class="tt-value ' + (m.up_diff >= 0 ? 'tt-up' : 'tt-dn') + '">' + (m.up_diff >= 0 ? '+' : '') + m.up_diff + '</span></div>' +
     '<div class="tt-row"><span class="tt-label">31_RATIO</span><span class="tt-value ' + (r.val >= 0 ? 'tt-up' : 'tt-dn') + '">' + (r.val >= 0 ? '+' : '') + r.val.toFixed(2) + '%</span></div>' +
-    '<div class="tt-row"><span class="tt-label">311_RATIO</span><span class="tt-value ' + (r311.val >= 0 ? 'tt-up' : 'tt-dn') + '">' + (r311.val >= 0 ? '+' : '') + r311.val.toFixed(2) + '%</span></div>';
+    '<div class="tt-row"><span class="tt-label">311_RATIO</span><span class="tt-value ' + (r311.val >= 0 ? 'tt-up' : 'tt-dn') + '">' + (r311.val >= 0 ? '+' : '') + r311.val.toFixed(2) + '%</span></div>' +
+    (rTop1 ? '<div class="tt-row"><span class="tt-label">TOP_1_RATIO</span><span class="tt-value ' + (rTop1.val >= 0 ? 'tt-up' : 'tt-dn') + '">' + (rTop1.val >= 0 ? '+' : '') + rTop1.val.toFixed(2) + '%</span></div>' : '') +
+    (rTop11 ? '<div class="tt-row"><span class="tt-label">TOP_11_RATIO</span><span class="tt-value ' + (rTop11.val >= 0 ? 'tt-up' : 'tt-dn') + '">' + (rTop11.val >= 0 ? '+' : '') + rTop11.val.toFixed(2) + '%</span></div>' : '') +
+    '<div class="tt-sep"></div>' +
+    '<div class="tt-row"><span class="tt-label">封板率</span><span class="tt-value ' + (sealData[dataIdx].rate >= 60 ? 'tt-up' : sealData[dataIdx].rate >= 20 ? '' : 'tt-dn') + '">' + sealData[dataIdx].rate.toFixed(1) + '%</span></div>' +
+    '<div class="tt-sep"></div>' +
+    '<div class="tt-row"><span class="tt-label">TOP数</span><span class="tt-value">' + topData[dataIdx].count + '</span></div>' +
+    '<div class="tt-row"><span class="tt-label">TOPPED数</span><span class="tt-value">' + toppedData[dataIdx].count + '</span></div>' +
+    '<div class="tt-row"><span class="tt-label">BOTTOM数</span><span class="tt-value">' + bottomData[dataIdx].count + '</span></div>';
   tt.style.display = 'block';
   // 定位在鼠标附近，自动保持在视窗内
   let tx = e.clientX + 16;
@@ -401,7 +638,7 @@ function clearAllHovers() {{
   document.querySelectorAll('#date-axis .dl.hl').forEach(el => el.classList.remove('hl'));
 }}
 
-/* ---- 行高调整 ---- */
+/* ---- 高度参数变化时重绘 ---- */
 document.addEventListener('input', e => {{
   const input = e.target.closest('.height-input');
   if (!input) return;
@@ -441,6 +678,159 @@ function rebuildMAChart() {{
   ch.update();
 }}
 
+/* ---- 居中包络通道：居中窗口 + 自适应末端预测 ---- */
+function computeBand(data, windowSize, smoothAlpha) {{
+  const n = data.length;
+  const half = Math.floor(windowSize / 2);
+  const rawUpper = new Array(n).fill(null);
+  const rawLower = new Array(n).fill(null);
+
+  // 居中窗口极值：历史数据用居中（无滞后），右侧末端用回溯（预测）
+  for (let i = 0; i < n; i++) {{
+    if (data[i] === null || data[i] === undefined) continue;
+    const isRightTail = i + half >= n - 1;
+    const left = Math.max(0, i - half);
+    const right = isRightTail ? i : Math.min(n - 1, i + half);
+    let maxV = -Infinity, minV = Infinity;
+    for (let j = left; j <= right; j++) {{
+      if (data[j] === null || data[j] === undefined) continue;
+      if (data[j] > maxV) maxV = data[j];
+      if (data[j] < minV) minV = data[j];
+    }}
+    rawUpper[i] = maxV > -Infinity ? maxV : null;
+    rawLower[i] = minV < Infinity ? minV : null;
+  }}
+
+  // 轻量平滑（消除阶梯感）
+  const peakLine = new Array(n).fill(null);
+  const valleyLine = new Array(n).fill(null);
+  for (let i = 0; i < n; i++) {{
+    if (rawUpper[i] === null) continue;
+    if (i === 0 || peakLine[i - 1] === null) {{
+      peakLine[i] = rawUpper[i];
+      valleyLine[i] = rawLower[i];
+    }} else {{
+      peakLine[i] = smoothAlpha * rawUpper[i] + (1 - smoothAlpha) * peakLine[i - 1];
+      valleyLine[i] = smoothAlpha * rawLower[i] + (1 - smoothAlpha) * valleyLine[i - 1];
+    }}
+  }}
+
+  // 确保波峰 > 波谷
+  for (let i = 0; i < n; i++) {{
+    if (peakLine[i] !== null && valleyLine[i] !== null && peakLine[i] < valleyLine[i]) {{
+      const mid = (peakLine[i] + valleyLine[i]) / 2;
+      const halfRange = Math.abs(peakLine[i] - valleyLine[i]) / 2;
+      peakLine[i] = mid + halfRange;
+      valleyLine[i] = mid - halfRange;
+    }}
+  }}
+
+  // 当前预测值（右侧末端包络值即为预测）
+  const currentPeak = peakLine[n - 1] || 0;
+  const currentValley = valleyLine[n - 1] || 0;
+  const currentAmount = data[n - 1] || 0;
+  const rangePct = currentPeak - currentValley > 0.01
+    ? ((currentAmount - currentValley) / (currentPeak - currentValley) * 100).toFixed(1)
+    : '50.0';
+
+  return {{ peakLine, valleyLine, currentPeak, currentValley, currentAmount, rangePct }};
+}}
+
+function rebuildPredictionChart() {{
+  const ch = charts.find(c => c.canvas && c.canvas.id === 'c-amount-ma');
+  if (!ch) return;
+  const amtVals = winData.map(d => d.amount / 1e8);
+  const windowSize = parseInt(document.querySelector('.env-window').value) || 20;
+  const smoothAlpha = parseFloat(document.querySelector('.env-smooth').value) || 0.15;
+  const showRaw = document.querySelector('.env-raw-toggle').checked;
+  const peakSwatch = document.querySelector('.env-peak-swatch');
+  const valleySwatch = document.querySelector('.env-valley-swatch');
+  const peakColor = (peakSwatch && peakSwatch.dataset.color) || '#ef5350';
+  const valleyColor = (valleySwatch && valleySwatch.dataset.color) || '#00e5ff';
+
+  const {{ peakLine, valleyLine, currentPeak, currentValley, currentAmount, rangePct }} = computeBand(amtVals, windowSize, smoothAlpha);
+
+  // 成交额按通道位置着色
+  const amtColors = amtVals.map((v, i) => {{
+    if (v === null || v === undefined) return '#ffd740';
+    const p = peakLine[i], vl = valleyLine[i];
+    if (p === null || vl === null) return '#ffd740';
+    if (v < vl) return '#26a69a';
+    if (v > p) return '#ef5350';
+    return '#ffd740';
+  }});
+
+  const datasets = [];
+
+  // ① 包络区间填充（峰→谷）
+  datasets.push({{
+    label: '包络区间', data: peakLine,
+    borderColor: 'transparent', backgroundColor: 'rgba(255,215,64,0.06)',
+    fill: '+1', pointRadius: 0, pointHoverRadius: 0, borderWidth: 0,
+  }});
+
+  // ② 波谷包络线
+  datasets.push({{
+    label: '波谷包络', data: valleyLine,
+    borderColor: valleyColor, backgroundColor: 'transparent',
+    fill: false, tension: 0,
+    pointRadius: 0, pointHoverRadius: 6, pointHoverBackgroundColor: '#ffffff',
+    borderWidth: 1.5, borderDash: [4, 3],
+  }});
+
+  // ③ 波峰包络线
+  datasets.push({{
+    label: '波峰包络', data: peakLine,
+    borderColor: peakColor, backgroundColor: 'transparent',
+    fill: false, tension: 0,
+    pointRadius: 0, pointHoverRadius: 6, pointHoverBackgroundColor: '#ffffff',
+    borderWidth: 1.5, borderDash: [4, 3],
+  }});
+
+  // ④ 实际成交额
+  if (showRaw) {{
+    datasets.push({{
+      label: '成交额', data: amtVals,
+      borderColor: '#ffd740',
+      backgroundColor: 'rgba(255,215,64,0.08)',
+      fill: true, tension: 0.3,
+      pointRadius: 0, pointHoverRadius: 6, pointHoverBackgroundColor: '#ffffff',
+      borderWidth: 2,
+      segment: {{
+        borderColor: ctx => {{
+          const i = ctx.p1DataIndex;
+          return amtColors[i] || '#ffd740';
+        }}
+      }}
+    }});
+  }}
+
+  ch.data.datasets = datasets;
+  ch.update();
+
+  // 更新底部预测值信息
+  let infoEl = document.getElementById('prediction-info');
+  if (!infoEl) {{
+    infoEl = document.createElement('div');
+    infoEl.id = 'prediction-info';
+    infoEl.style.cssText = 'font-size:11px;color:#787b86;margin-top:4px;';
+    const paramGroup = document.querySelector('.param-group');
+    if (paramGroup) paramGroup.appendChild(infoEl);
+  }}
+  const pct = parseFloat(rangePct);
+  const posColor = pct > 70 ? '#ef5350' : pct < 30 ? '#26a69a' : '#ffd740';
+  const statusText = pct > 80 ? '⚠ 超买区' : pct < 20 ? '⚠ 超卖区' : '✓ 合理区间';
+  infoEl.innerHTML =
+    '<div style="display:flex;justify-content:space-between;gap:8px;">' +
+    '<span>波峰 <b style="color:' + peakColor + ';">' + currentPeak.toFixed(2) + '亿</b></span>' +
+    '<span>当前 <b style="color:' + posColor + ';">' + currentAmount.toFixed(2) + '亿</b></span>' +
+    '<span>波谷 <b style="color:' + valleyColor + ';">' + currentValley.toFixed(2) + '亿</b></span>' +
+    '</div>' +
+    '<div style="margin-top:2px;text-align:center;font-size:10px;color:' + posColor + ';">' +
+    '通道位置: ' + rangePct + '%  ' + statusText +
+    '</div>';
+}}
+
 function rebuildRatioCharts() {{
   const rc = getRatioColors();
   const upColor = hexToRgba(rc.up, 0.18);
@@ -470,6 +860,8 @@ document.addEventListener('click', e => {{
       grid.classList.remove('show');
       if (activeColorSwatch.classList.contains('ratio-swatch')) {{
         rebuildRatioCharts();
+      }} else if (activeColorSwatch.classList.contains('env-peak-swatch') || activeColorSwatch.classList.contains('env-valley-swatch')) {{
+        rebuildPredictionChart();
       }} else {{
         rebuildMAChart();
       }}
@@ -478,7 +870,7 @@ document.addEventListener('click', e => {{
     return;
   }}
   // 点击色块显示/隐藏网格
-  const sw = e.target.closest('.ma-swatch, .ratio-swatch');
+  const sw = e.target.closest('.ma-swatch, .ratio-swatch, .env-peak-swatch, .env-valley-swatch');
   if (sw) {{
     if (activeColorSwatch === sw) {{
       grid.classList.remove('show');
@@ -502,9 +894,11 @@ document.addEventListener('click', e => {{
 
 document.addEventListener('input', e => {{
   if (e.target.closest('.ma-period')) rebuildMAChart();
+  if (e.target.closest('.env-window') || e.target.closest('.env-smooth') || e.target.closest('.env-peak-swatch') || e.target.closest('.env-valley-swatch')) rebuildPredictionChart();
 }});
 document.addEventListener('change', e => {{
   if (e.target.closest('.ma-line-toggle')) rebuildMAChart();
+  if (e.target.closest('.env-raw-toggle')) rebuildPredictionChart();
 }});
 
 /* ---- 构建 D 行日期轴（1:1 垂直标签） ---- */
@@ -627,6 +1021,138 @@ function renderCharts() {{
     }}));
   }}
 
+  /* ---- 第5行（新）：MOTION up_diff 柱状图（正绿负红） ---- */
+  const ctxMotion = document.getElementById('c-motion');
+  if (ctxMotion && motionData.length > 0) {{
+    const motionVals = motionData.map(d => d.up_diff);
+    const maxAbsVal = Math.max(...motionVals.map(v => Math.abs(v)), 1);
+    charts.push(new Chart(ctxMotion, {{
+      type:'bar',
+      data:{{
+        labels: winData.map(d => d.date),
+        datasets:[{{
+          label:'MOTION',
+          data:motionVals,
+          backgroundColor:motionVals.map(v => v >= 0 ? '#26a69a88' : '#ef535088'),
+          borderColor:motionVals.map(v => v >= 0 ? '#26a69a' : '#ef5350'),
+          hoverBackgroundColor:motionVals.map(v => v >= 0 ? '#80cbc4' : '#ff8a80'),
+          hoverBorderColor:'#ffffff',
+          hoverBorderWidth:2,
+          borderWidth:1,
+          borderRadius:1,
+          barPercentage:0.92,
+          categoryPercentage:1
+        }}]
+      }},
+      options:{{
+        responsive:true, maintainAspectRatio:false,
+        interaction:{{ mode:'index', intersect:false }},
+        plugins:{{ legend:{{ display:false }}, tooltip:{{ enabled:false }} }},
+        scales:{{
+          x:{{ offset:true, ticks:{{ display:false }}, grid:{{ display:false }} }},
+          y:{{ display:true, position:'right',
+            ticks:{{ display:false }},
+            grid:{{ color:'#485c7b55', borderDash:[3,4], lineWidth:1 }},
+            border:{{ display:false }}
+          }}
+        }}
+      }}
+    }}));
+  }}
+
+  /* ---- 第6行：居中包络通道（居中窗口 + 自适应末端预测） ---- */
+  const ctxAmt = document.getElementById('c-amount-ma');
+  if (ctxAmt && winData.length > 0) {{
+    const amtVals = winData.map(d => d.amount / 1e8);
+    const windowSize = parseInt(document.querySelector('.env-window').value) || 20;
+    const smoothAlpha = parseFloat(document.querySelector('.env-smooth').value) || 0.15;
+    const showRaw = document.querySelector('.env-raw-toggle').checked;
+    const peakSwatch = document.querySelector('.env-peak-swatch');
+    const valleySwatch = document.querySelector('.env-valley-swatch');
+    const peakColor = (peakSwatch && peakSwatch.dataset.color) || '#ef5350';
+    const valleyColor = (valleySwatch && valleySwatch.dataset.color) || '#00e5ff';
+
+    const {{ peakLine, valleyLine, currentPeak, currentValley, currentAmount, rangePct }} = computeBand(amtVals, windowSize, smoothAlpha);
+
+    const amtColors = amtVals.map((v, i) => {{
+      if (v === null || v === undefined) return '#ffd740';
+      const p = peakLine[i], vl = valleyLine[i];
+      if (p === null || vl === null) return '#ffd740';
+      if (v < vl) return '#26a69a';
+      if (v > p) return '#ef5350';
+      return '#ffd740';
+    }});
+
+    const datasets = [];
+    datasets.push({{
+      label: '包络区间', data: peakLine,
+      borderColor: 'transparent', backgroundColor: 'rgba(255,215,64,0.06)',
+      fill: '+1', pointRadius: 0, pointHoverRadius: 0, borderWidth: 0,
+    }});
+    datasets.push({{
+      label: '波谷包络', data: valleyLine,
+      borderColor: valleyColor, backgroundColor: 'transparent',
+      fill: false, tension: 0,
+      pointRadius: 0, pointHoverRadius: 6, pointHoverBackgroundColor: '#ffffff',
+      borderWidth: 1.5, borderDash: [4, 3],
+    }});
+    datasets.push({{
+      label: '波峰包络', data: peakLine,
+      borderColor: peakColor, backgroundColor: 'transparent',
+      fill: false, tension: 0,
+      pointRadius: 0, pointHoverRadius: 6, pointHoverBackgroundColor: '#ffffff',
+      borderWidth: 1.5, borderDash: [4, 3],
+    }});
+    if (showRaw) {{
+      datasets.push({{
+        label: '成交额', data: amtVals,
+        borderColor: '#ffd740',
+        backgroundColor: 'rgba(255,215,64,0.08)',
+        fill: true, tension: 0.3,
+        pointRadius: 0, pointHoverRadius: 6, pointHoverBackgroundColor: '#ffffff',
+        borderWidth: 2,
+        segment: {{
+          borderColor: ctx => {{ const i = ctx.p1DataIndex; return amtColors[i] || '#ffd740'; }}
+        }}
+      }});
+    }}
+
+    charts.push(new Chart(ctxAmt, {{
+      type: 'line',
+      data: {{ labels: winData.map(d => d.date), datasets: datasets }},
+      options: {{
+        responsive: true, maintainAspectRatio: false,
+        plugins: {{ legend: {{ display: false }}, tooltip: {{ enabled: false }} }},
+        scales: {{
+          x: {{ offset: true, ticks: {{ display: false }}, grid: {{ display: false }} }},
+          y: {{ display: false }}
+        }}
+      }}
+    }}));
+  }}
+
+  /* ---- 第7行：成交额柱状图（winData.amount，单位亿） ---- */
+  const ctxAmtRaw = document.getElementById('c-amount-raw');
+  if (ctxAmtRaw && winData.length > 0) {{
+    const amtRawVals = winData.map(d => d.amount / 1e8);
+    charts.push(new Chart(ctxAmtRaw, {{
+      type:'bar',
+      data:{{
+        labels: winData.map(d => d.date),
+        datasets:[{{ label:'总成交额', data:amtRawVals, backgroundColor:'#ffd740', borderColor:'#ffab00', hoverBackgroundColor:'#fff176', hoverBorderColor:'#ffffff', hoverBorderWidth:2, borderWidth:1, borderRadius:1, barPercentage:0.92, categoryPercentage:1 }}]
+      }},
+      options:{{
+        responsive:true, maintainAspectRatio:false,
+        interaction:{{ mode:'index', intersect:false }},
+        plugins:{{ legend:{{ display:false }}, tooltip:{{ enabled:false }} }},
+        scales:{{
+          x:{{ offset:true, ticks:{{ display:false }}, grid:{{ display:false }} }},
+          y:{{ display:true, position:'right', ticks:{{ display:false, callback:v => v + '亿' }}, grid:{{ color:'#485c7b55', borderDash:[3,4], lineWidth:1 }}, border:{{ display:false }} }}
+        }}
+      }}
+    }}));
+  }}
+
 /* ---- 辅助函数：获取ratio颜色配置 ---- */
 function getRatioColors() {{
   const ls = document.querySelector('.ratio-line-swatch');
@@ -663,7 +1189,7 @@ function makeRatioChartOptions() {{
   }};
 }}
 
-  /* ---- 第5行：31_RATIO（单线 + 上下不同色阴影） ---- */
+  /* ---- 第8行：31_RATIO（单线 + 上下不同色阴影） ---- */
   const ctx4 = document.getElementById('c-ratio');
   if (ctx4 && ratioData.length > 0) {{
     const vals = ratioData.map(d => d.val);
@@ -683,7 +1209,7 @@ function makeRatioChartOptions() {{
     }}));
   }}
 
-  /* ---- 第6行：311_RATIO（单线 + 上下不同色阴影） ---- */
+  /* ---- 第9行：311_RATIO（单线 + 上下不同色阴影） ---- */
   const ctx5 = document.getElementById('c-ratio311');
   if (ctx5 && ratio311Data.length > 0) {{
     const vals = ratio311Data.map(d => d.val);
@@ -700,6 +1226,138 @@ function makeRatioChartOptions() {{
         }}]
       }},
       options: makeRatioChartOptions()
+    }}));
+  }}
+
+  /* ---- 第10行：TOP_1_RATIO（单线 + 上下不同色阴影） ---- */
+  const ctxTop1 = document.getElementById('c-ratio-top1');
+  if (ctxTop1 && ratioTop1Data.length > 0) {{
+    const vals = ratioTop1Data.map(d => d.val);
+    const rc = getRatioColors();
+    charts.push(new Chart(ctxTop1, {{
+      type:'line',
+      data:{{
+        labels: ratioTop1Data.map(d => d.date),
+        datasets:[{{
+          label:'TOP1RATIO', data:vals,
+          borderColor:rc.line,
+          fill:{{ target:{{ value:0 }}, above:hexToRgba(rc.up,0.18), below:hexToRgba(rc.dn,0.18) }},
+          tension:0.2, pointRadius:0, pointHoverRadius:5, pointHoverBackgroundColor:'#ffffff', borderWidth:1.2
+        }}]
+      }},
+      options: makeRatioChartOptions()
+    }}));
+  }}
+
+  /* ---- 第11行：TOP_11_RATIO（单线 + 上下不同色阴影） ---- */
+  const ctxTop11 = document.getElementById('c-ratio-top11');
+  if (ctxTop11 && ratioTop11Data.length > 0) {{
+    const vals = ratioTop11Data.map(d => d.val);
+    const rc = getRatioColors();
+    charts.push(new Chart(ctxTop11, {{
+      type:'line',
+      data:{{
+        labels: ratioTop11Data.map(d => d.date),
+        datasets:[{{
+          label:'TOP11RATIO', data:vals,
+          borderColor:rc.line,
+          fill:{{ target:{{ value:0 }}, above:hexToRgba(rc.up,0.18), below:hexToRgba(rc.dn,0.18) }},
+          tension:0.2, pointRadius:0, pointHoverRadius:5, pointHoverBackgroundColor:'#ffffff', borderWidth:1.2
+        }}]
+      }},
+      options: makeRatioChartOptions()
+    }}));
+  }}
+
+  /* ---- 第12行：封板率柱状图 TOP/(TOPPED+TOP)*100 ---- */
+  const ctxSeal = document.getElementById('c-seal');
+  if (ctxSeal && sealData.length > 0) {{
+    const sealVals = sealData.map(d => d.rate);
+    charts.push(new Chart(ctxSeal, {{
+      type:'bar',
+      data:{{
+        labels: winData.map(d => d.date),
+        datasets:[{{ label:'封板率%', data:sealVals, backgroundColor:sealVals.map(v => v >= 60 ? '#26a69a' : v >= 40 ? '#ffd740' : v >= 20 ? '#ff8a65' : '#ef5350'), borderColor:'#00897b', hoverBackgroundColor:'#80cbc4', hoverBorderColor:'#ffffff', hoverBorderWidth:2, borderWidth:1, borderRadius:1, barPercentage:0.92, categoryPercentage:1 }}]
+      }},
+      options:{{
+        responsive:true, maintainAspectRatio:false,
+        interaction:{{ mode:'index', intersect:false }},
+        plugins:{{ legend:{{ display:false }}, tooltip:{{ enabled:false }} }},
+        scales:{{
+          x:{{ offset:true, ticks:{{ display:false }}, grid:{{ display:false }} }},
+          y:{{ display:true, position:'right', min:0, max:100,
+            ticks:{{ display:false, stepSize:20 }},
+            grid:{{ color:'#485c7b55', borderDash:[3,4], lineWidth:1 }},
+            border:{{ display:false }}
+          }}
+        }}
+      }}
+    }}));
+  }}
+
+  /* ---- 第13行：TOPPED数量柱状图 ---- */
+  const ctxTopped = document.getElementById('c-topped');
+  if (ctxTopped && toppedData.length > 0) {{
+    const toppedVals = toppedData.map(d => d.count);
+    charts.push(new Chart(ctxTopped, {{
+      type:'bar',
+      data:{{
+        labels: winData.map(d => d.date),
+        datasets:[{{ label:'TOPPED数量', data:toppedVals, backgroundColor:'#26a69a', borderColor:'#00897b', hoverBackgroundColor:'#80cbc4', hoverBorderColor:'#ffffff', hoverBorderWidth:2, borderWidth:1, borderRadius:1, barPercentage:0.92, categoryPercentage:1 }}]
+      }},
+      options:{{
+        responsive:true, maintainAspectRatio:false,
+        interaction:{{ mode:'index', intersect:false }},
+        plugins:{{ legend:{{ display:false }}, tooltip:{{ enabled:false }} }},
+        scales:{{
+          x:{{ offset:true, ticks:{{ display:false }}, grid:{{ display:false }} }},
+          y:{{ display:true, position:'right', max:50, ticks:{{ display:false }}, grid:{{ color:'#485c7b55', borderDash:[3,4], lineWidth:1 }}, border:{{ display:false }} }}
+        }}
+      }}
+    }}));
+  }}
+
+  /* ---- 第14行：TOP数量柱状图 ---- */
+  const ctx6 = document.getElementById('c-top');
+  if (ctx6 && topData.length > 0) {{
+    const topVals = topData.map(d => d.count);
+    charts.push(new Chart(ctx6, {{
+      type:'bar',
+      data:{{
+        labels: winData.map(d => d.date),
+        datasets:[{{ label:'TOP数量', data:topVals, backgroundColor:'#7c4dff', borderColor:'#651fff', hoverBackgroundColor:'#b388ff', hoverBorderColor:'#ffffff', hoverBorderWidth:2, borderWidth:1, borderRadius:1, barPercentage:0.92, categoryPercentage:1 }}]
+      }},
+      options:{{
+        responsive:true, maintainAspectRatio:false,
+        interaction:{{ mode:'index', intersect:false }},
+        plugins:{{ legend:{{ display:false }}, tooltip:{{ enabled:false }} }},
+        scales:{{
+          x:{{ offset:true, ticks:{{ display:false }}, grid:{{ display:false }} }},
+          y:{{ display:true, position:'right', max:50, ticks:{{ display:false }}, grid:{{ color:'#485c7b55', borderDash:[3,4], lineWidth:1 }}, border:{{ display:false }} }}
+        }}
+      }}
+    }}));
+  }}
+
+  /* ---- 第15行：BOTTOM数量柱状图 ---- */
+  const ctx7 = document.getElementById('c-bottom');
+  if (ctx7 && bottomData.length > 0) {{
+    const botVals = bottomData.map(d => d.count);
+    charts.push(new Chart(ctx7, {{
+      type:'bar',
+      data:{{
+        labels: winData.map(d => d.date),
+        datasets:[{{ label:'BOTTOM数量', data:botVals, backgroundColor:'#ff9100', borderColor:'#e65100', hoverBackgroundColor:'#ffb74d', hoverBorderColor:'#ffffff', hoverBorderWidth:2, borderWidth:1, borderRadius:1, barPercentage:0.92, categoryPercentage:1 }}]
+      }},
+      options:{{
+        responsive:true, maintainAspectRatio:false,
+        interaction:{{ mode:'index', intersect:false }},
+        plugins:{{ legend:{{ display:false }}, tooltip:{{ enabled:false }} }},
+        scales:{{
+          x:{{ offset:true, ticks:{{ display:false }}, grid:{{ display:false }} }},
+          y:{{ display:true, position:'right', max:50, ticks:{{ display:false }}, grid:{{ color:'#485c7b55', borderDash:[3,4], lineWidth:1 }}, border:{{ display:false }} }}
+        }}
+      }}
     }}));
   }}
 
@@ -745,3 +1403,400 @@ init();
         f.write(html)
     webbrowser.open(output)
     print(f'[SHOW] {latest} ({len(stocks)} stocks, {len(win_data)} days) -> {output}')
+
+
+def SHOW_5M_MOTION():
+    # 5M分时段涨跌家数—表格四行：时间/上涨/下降/成交额，样式参考1D。
+    from AICode.MarcoAPI.DataAligned import READ_ALIGNED_LINES
+    import json
+
+    motion_path = os.path.join(PATH_AIDATA_MOTION(), "5M_MOTION_COUNT")
+    if not os.path.isfile(motion_path):
+        print('[SHOW_5M_MOTION] 数据文件不存在')
+        return
+
+    data = []
+    for date, line in READ_ALIGNED_LINES(motion_path):
+        if line:
+            parts = line.split('|')
+            data.append({
+                'date': date,
+                'open_up': int(parts[1]), 'open_dn': int(parts[2]),
+                'noon_up': int(parts[3]), 'noon_dn': int(parts[4]), 'noon_amt': float(parts[5]),
+                'close_up': int(parts[6]), 'close_dn': int(parts[7]), 'close_amt': float(parts[8]),
+            })
+        else:
+            data.append({
+                'date': date, 'open_up': 0, 'open_dn': 0,
+                'noon_up': 0, 'noon_dn': 0, 'noon_amt': 0.0,
+                'close_up': 0, 'close_dn': 0, 'close_amt': 0.0,
+            })
+
+    data_json = json.dumps(data, ensure_ascii=False)
+    n = len(data)
+    col_chart_w = max(3000, n * 32)
+    colors_64 = [
+        '#ff0000','#ff4500','#ff8c00','#ffd700','#ffff00','#adff2f','#00ff00','#00ff7f',
+        '#00ffff','#00bfff','#1e90ff','#0000ff','#8a2be2','#9400d3','#ff00ff','#ff1493',
+        '#dc143c','#b22222','#8b0000','#cd5c5c','#f08080','#ff6347','#ff6600','#f4a460',
+        '#b8860b','#bdb76b','#808000','#9acd32','#32cd32','#228b22','#006400','#008080',
+        '#20b2aa','#00ced1','#5f9ea0','#4682b4','#4169e1','#483d8b','#4b0082','#8b008b',
+        '#9932cc','#da70d6','#dda0dd','#ff69b4','#db7093','#ffc0cb','#a52a2a','#d2691e',
+        '#cd853f','#8fbc8f','#2e8b57','#556b2f','#808080','#c0c0c0','#ffffff','#696969',
+        '#a9a9a9','#2f4f4f','#000000','#bc8f8f','#6495ed','#e9967a','#f5a623','#00e5ff'
+    ]
+    color_opts = ''.join(f'<span style="background:{c}" data-color="{c}"></span>' for c in colors_64)
+
+    html = f'''<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><title>5M分时段涨跌家数</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+<style>
+  * {{ margin:0; padding:0; box-sizing:border-box; }}
+  html, body {{ height:100%; background:#131722; color:#d1d4dc; font-family:'Segoe UI',sans-serif; overflow:hidden; }}
+  body {{ padding:10px 20px 20px 0; }}
+  #scroll-wrap {{ overflow:auto; width:100%; height:calc(100vh - 30px); overscroll-behavior-x:none; touch-action:pan-y; }}
+  #scroll-wrap::-webkit-scrollbar {{ display:none; }}
+  #scroll-wrap {{ -ms-overflow-style:none; scrollbar-width:none; }}
+  table {{ table-layout:fixed; width:{col_chart_w + 460}px; border-collapse:collapse; }}
+  td {{ padding:8px 10px; border-bottom:1px solid #2b2b43; vertical-align:middle; background:#131722; }}
+  .col-idx {{ position:sticky; left:0; z-index:3; width:240px; text-align:center; color:#ffffff; font-size:200px; font-weight:900; line-height:1; }}
+  .col-chart {{ width:{col_chart_w}px; position:relative; }}
+  .col-param {{ position:sticky; right:0; z-index:3; width:220px; padding-left:20px; }}
+  .row-date {{ position:sticky; top:0; z-index:4; }}
+  .row-date td {{ padding:0 0 10px; background:#131722; }}
+  .row-date .data-area {{ display:flex; align-items:stretch; height:80px; padding:0 10px 0 5px; }}
+  .date-axis {{ position:relative; height:100%; }}
+  .date-axis .dl {{ position:absolute; top:0; bottom:0; writing-mode:vertical-rl; text-orientation:upright; font-size:8px; color:#d1d4dc; text-align:center; border-left:1px solid #5a5f7a; display:flex; align-items:center; justify-content:center; }}
+  .date-axis .dl.hl {{ background:#ffffff15; font-weight:bold; color:#ffffff; }}
+  .chart-box {{ position:relative; user-select:none; margin:0; cursor:crosshair; }}
+  .param-group {{ display:flex; flex-direction:column; gap:4px; }}
+  .param-row {{ display:flex; align-items:center; gap:6px; }}
+  .param-row label {{ font-size:11px; color:#787b86; min-width:48px; text-align:right; }}
+  .param-row input {{ flex:1; min-width:40px; padding:4px 6px; border:1px solid #2b2b43; background:#1e222d; color:#d1d4dc; font-size:11px; border-radius:4px; outline:none; }}
+  .param-row input:focus {{ border-color:#2962ff; }}
+  .param-row input.height-input {{ min-width:60px; }}
+  .color-picker {{ position:relative; }}
+  .color-swatch {{ width:22px; height:22px; border:1px solid #2b2b43; border-radius:3px; cursor:pointer; flex-shrink:0; }}
+  .color-grid {{ position:fixed; z-index:31; display:none; grid-template-columns:repeat(8,18px); gap:1px; background:#1e222d; padding:3px; border:1px solid #2b2b43; border-radius:4px; }}
+  .color-grid.show {{ display:grid; }}
+  .color-grid span {{ width:18px; height:18px; cursor:pointer; border-radius:2px; border:1px solid transparent; }}
+  .color-grid span:hover {{ border-color:#fff; }}
+  #cross-v {{ position:fixed; top:0; bottom:0; width:0; border-left:1px dashed #787b8666; z-index:10; pointer-events:none; display:none; }}
+  #custom-tooltip {{ position:fixed; z-index:30; background:#1e222d; border:1px solid #2b2b43; border-radius:6px; padding:8px 12px; font-size:12px; line-height:1.8; pointer-events:none; display:none; box-shadow:0 4px 12px rgba(0,0,0,0.4); }}
+  #custom-tooltip .tt-date {{ font-size:13px; font-weight:700; color:#fff; margin-bottom:4px; text-align:center; }}
+  #custom-tooltip .tt-row {{ display:flex; justify-content:space-between; gap:20px; }}
+  #custom-tooltip .tt-label {{ color:#787b86; }}
+  #custom-tooltip .tt-value {{ color:#d1d4dc; font-weight:600; text-align:right; }}
+  #custom-tooltip .tt-up {{ color:#26a69a; }}
+  #custom-tooltip .tt-dn {{ color:#ef5350; }}
+  #custom-tooltip .tt-sep {{ border-bottom:1px solid #2b2b43; margin:4px 0; }}
+</style>
+</head>
+<body>
+
+<div id="cross-v"></div>
+<div id="custom-tooltip"></div>
+<div class="color-grid" id="global-color-grid">{color_opts}</div>
+<div id="scroll-wrap">
+  <table>
+    <tbody>
+      <!-- 第1行：日期轴（冻结） -->
+      <tr class="row-date">
+        <td class="col-idx" style="font-family:'Orbitron',sans-serif;font-size:40px;line-height:80px;">5M</td>
+        <td>
+          <div class="data-area">
+            <div class="date-axis" id="date-axis"></div>
+          </div>
+        </td>
+        <td class="col-param"></td>
+      </tr>
+      <!-- 第2行：上涨—开盘/中午/下午的上涨个数 -->
+      <tr>
+        <td class="col-idx" style="padding:0;"><div style="font-size:13px;font-weight:normal;color:#d1d4dc;line-height:1.2;"><span style="font-size:10px;background:#FFA72622;color:#FFA726;border:1px solid #FFA72644;padding:1px 6px;border-radius:8px;">UP</span></div><div style="font-family:'Orbitron',sans-serif;font-size:48px;font-weight:900;line-height:1;">上涨</div></td>
+        <td style="padding:0;border-bottom:none;line-height:0;">
+          <div class="chart-box" style="height:270px;">
+            <canvas id="c-up-5m"></canvas>
+          </div>
+        </td>
+        <td class="col-param" style="border-bottom:none;">
+          <div class="param-group">
+            <div class="param-row"><label>高度</label><input class="height-input" type="number" value="270" min="60" step="10" data-target="c-up-5m"></div>
+          </div>
+        </td>
+      </tr>
+      <!-- 第3行：下降—开盘/中午/下午的下降个数（负值向下） -->
+      <tr>
+        <td class="col-idx" style="padding:0;border-top:none;"><div style="font-size:13px;font-weight:normal;color:#d1d4dc;line-height:1.2;"><span style="font-size:10px;background:#00e5ff22;color:#00e5ff;border:1px solid #00e5ff44;padding:1px 6px;border-radius:8px;">DOWN</span></div><div style="font-family:'Orbitron',sans-serif;font-size:48px;font-weight:900;line-height:1;">下降</div></td>
+        <td style="padding:0;border-top:none;line-height:0;">
+          <div class="chart-box" style="height:270px;">
+            <canvas id="c-dn-5m"></canvas>
+          </div>
+        </td>
+        <td class="col-param" style="padding:0;border-top:none;">
+          <div class="param-group">
+            <div class="param-row"><label>高度</label><input class="height-input" type="number" value="270" min="60" step="10" data-target="c-dn-5m"></div>
+          </div>
+        </td>
+      </tr>
+      <!-- 第4行：成交额—中午/下午 -->
+      <tr>
+        <td class="col-idx" style="padding:0;border-bottom:none;"><div style="font-size:13px;font-weight:normal;color:#d1d4dc;line-height:1.2;"><span style="font-size:10px;background:#ffd74022;color:#ffd740;border:1px solid #ffd74044;padding:1px 6px;border-radius:8px;">AMT</span></div><div style="font-family:'Orbitron',sans-serif;font-size:48px;font-weight:900;line-height:1;">成交额</div></td>
+        <td style="padding:0;border-bottom:none;line-height:0;">
+          <div class="chart-box" style="height:200px;">
+            <canvas id="c-amt-5m"></canvas>
+          </div>
+        </td>
+        <td class="col-param" style="border-bottom:none;">
+          <div class="param-group">
+            <div class="param-row"><label>高度</label><input class="height-input" type="number" value="200" min="60" step="10" data-target="c-amt-5m"></div>
+          </div>
+        </td>
+      </tr>
+      <tr style="height:200px;"><td class="col-idx"></td><td></td><td class="col-param"></td></tr>
+      <tr style="height:200px;"><td class="col-idx"></td><td></td><td class="col-param"></td></tr>
+    </tbody>
+  </table>
+</div>
+
+<script>
+const raw = {data_json};
+const dates = raw.map(d=>d.date);
+const upOpen = raw.map(d=>d.open_up);
+const upNoon = raw.map(d=>d.noon_up);
+const upClose = raw.map(d=>d.close_up);
+const dnOpen = raw.map(d=>-d.open_dn);
+const dnNoon = raw.map(d=>-d.noon_dn);
+const dnClose = raw.map(d=>-d.close_dn);
+const amtNoon = raw.map(d=>+(d.noon_amt/1e8).toFixed(2));
+const amtClose = raw.map(d=>+(d.close_amt/1e8).toFixed(2));
+const maxUp = Math.max(...upOpen,...upNoon,...upClose,1);
+const maxDn = Math.max(...raw.map(d=>d.open_dn),...raw.map(d=>d.noon_dn),...raw.map(d=>d.close_dn),1);
+const maxAmt = Math.max(...amtNoon,...amtClose,1);
+const wrap = document.getElementById('scroll-wrap');
+const crossV = document.getElementById('cross-v');
+const tt = document.getElementById('custom-tooltip');
+const grid = document.getElementById('global-color-grid');
+let charts = [];
+let dragging = false, sx = 0, ss = 0;
+
+document.addEventListener('mousedown', e => {{
+  if (e.button !== 1 || !e.target.closest('#scroll-wrap')) return;
+  e.preventDefault(); dragging = true; sx = e.clientX; ss = wrap.scrollLeft;
+  wrap.style.cursor = 'grabbing';
+}});
+document.addEventListener('mousemove', e => {{
+  if (dragging) {{
+    wrap.scrollLeft = ss - (e.clientX - sx);
+  }} else if (e.target.closest('#scroll-wrap')) {{
+    crossV.style.display = 'block'; crossV.style.left = e.clientX + 'px';
+    syncAllHover(e);
+  }} else {{
+    crossV.style.display = 'none'; clearAllHovers();
+  }}
+}});
+document.addEventListener('mouseup', e => {{
+  if (e.button === 1 && dragging) {{ dragging = false; wrap.style.cursor = ''; }}
+  crossV.style.display = 'none'; clearAllHovers();
+}});
+wrap.addEventListener('mouseleave', () => {{ crossV.style.display = 'none'; clearAllHovers(); }});
+document.addEventListener('auxclick', e => {{ if (e.button === 1) e.preventDefault(); }});
+
+function syncAllHover(e) {{
+  const ref = charts.find(c => c.canvas && c.canvas.id === 'c-up-5m');
+  if (!ref) return;
+  const xScale = ref.scales.x;
+  if (!xScale) return;
+  const idx = Math.round(xScale.getValueForPixel(e.clientX - ref.canvas.getBoundingClientRect().left));
+  if (idx == null || idx < 0 || idx >= dates.length) return;
+  charts.forEach(ch => {{
+    if (!ch || !ch.canvas) return;
+    const active = [];
+    for (let d = 0; d < ch.data.datasets.length; d++) {{
+      const m = ch.getDatasetMeta(d);
+      if (m && m.data && m.data[idx]) active.push({{ datasetIndex:d, index:idx }});
+    }}
+    ch.setActiveElements(active); ch.update('none');
+  }});
+  document.querySelectorAll('#date-axis .dl').forEach((el,i) => el.classList.toggle('hl', i === idx));
+  const d = raw[idx];
+  if (!d) return;
+  tt.innerHTML =
+    '<div class="tt-date">' + d.date + '</div>' +
+    '<div class="tt-sep"></div>' +
+    '<div class="tt-row"><span class="tt-label">开盘(↑)</span><span class="tt-value tt-up">' + d.open_up + '</span><span class="tt-value tt-dn" style="margin-left:10px;">' + d.open_dn + '</span></div>' +
+    '<div class="tt-row"><span class="tt-label">中午(↑)</span><span class="tt-value tt-up">' + d.noon_up + '</span><span class="tt-value tt-dn" style="margin-left:10px;">' + d.noon_dn + '</span></div>' +
+    '<div class="tt-row"><span class="tt-label">午间成交额</span><span class="tt-value">' + (d.noon_amt/1e8).toFixed(2) + '亿</span></div>' +
+    '<div class="tt-sep"></div>' +
+    '<div class="tt-row"><span class="tt-label">下午(↑)</span><span class="tt-value tt-up">' + d.close_up + '</span><span class="tt-value tt-dn" style="margin-left:10px;">' + d.close_dn + '</span></div>' +
+    '<div class="tt-row"><span class="tt-label">下午成交额</span><span class="tt-value">' + (d.close_amt/1e8).toFixed(2) + '亿</span></div>';
+  tt.style.display = 'block';
+  let tx = e.clientX + 16, ty = e.clientY + 16;
+  const tw = tt.offsetWidth, th = tt.offsetHeight;
+  if (tx + tw > window.innerWidth - 10) tx = e.clientX - tw - 16;
+  if (ty + th > window.innerHeight - 10) ty = e.clientY - th - 16;
+  if (tx < 10) tx = 10;
+  if (ty < 10) ty = 10;
+  tt.style.left = tx + 'px';
+  tt.style.top = ty + 'px';
+}}
+
+function clearAllHovers() {{
+  charts.forEach(ch => {{
+    if (!ch) return;
+    ch.setActiveElements([]);
+    if (ch.tooltip) ch.tooltip.setActiveElements([], {{ x:0, y:0 }});
+    ch.update('none');
+  }});
+  document.querySelectorAll('#date-axis .dl.hl').forEach(el => el.classList.remove('hl'));
+}}
+
+document.addEventListener('input', e => {{
+  const input = e.target.closest('.height-input');
+  if (!input) return;
+  const targetId = input.dataset.target;
+  const h = parseInt(input.value) || 120;
+  const row = input.closest('tr');
+  if (!row) return;
+  const box = row.querySelector('.chart-box');
+  const canvas = document.getElementById(targetId);
+  if (!box || !canvas) return;
+  box.style.height = h + 'px';
+  const ch = charts.find(c => c.canvas === canvas);
+  if (ch) ch.resize();
+}});
+
+let activeSwatch = null;
+document.addEventListener('click', e => {{
+  const span = e.target.closest('.color-grid span');
+  if (span && activeSwatch) {{
+    activeSwatch.style.background = span.dataset.color;
+    grid.classList.remove('show'); activeSwatch = null; return;
+  }}
+  if (span) return;
+  if (!e.target.closest('.color-picker')) {{ grid.classList.remove('show'); activeSwatch = null; }}
+}});
+
+function buildDateAxis() {{
+  const axis = document.getElementById('date-axis');
+  if (!axis || !dates.length) return;
+  dates.forEach(d => {{
+    const el = document.createElement('div');
+    el.className = 'dl';
+    el.textContent = d;
+    axis.appendChild(el);
+  }});
+}}
+
+function renderCharts() {{
+  const upDatasets = [
+    {{ label:'开盘(↑)', data:upOpen, backgroundColor:'#c62828', borderColor:'#000000', borderWidth:1, borderRadius:1, barPercentage:1.0, categoryPercentage:1.0, hoverBorderColor:'#fff', hoverBorderWidth:2 }},
+    {{ label:'中午(↑)', data:upNoon, backgroundColor:'#ef5350', borderColor:'#000000', borderWidth:1, borderRadius:1, barPercentage:1.0, categoryPercentage:1.0, hoverBorderColor:'#fff', hoverBorderWidth:2 }},
+    {{ label:'下午(↑)', data:upClose, backgroundColor:'#ef9a9a', borderColor:'#000000', borderWidth:1, borderRadius:1, barPercentage:1.0, categoryPercentage:1.0, hoverBorderColor:'#fff', hoverBorderWidth:2 }},
+  ];
+  const dnDatasets = [
+    {{ label:'开盘(↓)', data:dnOpen, backgroundColor:'#00b8d4', borderColor:'#000000', borderWidth:1, borderRadius:1, barPercentage:1.0, categoryPercentage:1.0, hoverBorderColor:'#fff', hoverBorderWidth:2 }},
+    {{ label:'中午(↓)', data:dnNoon, backgroundColor:'#00e5ff', borderColor:'#000000', borderWidth:1, borderRadius:1, barPercentage:1.0, categoryPercentage:1.0, hoverBorderColor:'#fff', hoverBorderWidth:2 }},
+    {{ label:'下午(↓)', data:dnClose, backgroundColor:'#80deea', borderColor:'#000000', borderWidth:1, borderRadius:1, barPercentage:1.0, categoryPercentage:1.0, hoverBorderColor:'#fff', hoverBorderWidth:2 }},
+  ];
+  const amtDatasets = [
+    {{ label:'午间成交额', data:amtNoon, backgroundColor:'#ffb300', borderColor:'#000000', borderWidth:1, borderRadius:1, barPercentage:1.0, categoryPercentage:1.0, hoverBorderColor:'#fff', hoverBorderWidth:2 }},
+    {{ label:'下午成交额', data:amtClose, backgroundColor:'#ffd740', borderColor:'#000000', borderWidth:1, borderRadius:1, barPercentage:1.0, categoryPercentage:1.0, hoverBorderColor:'#fff', hoverBorderWidth:2 }},
+  ];
+
+  const ctxUp = document.getElementById('c-up-5m');
+  if (ctxUp && dates.length) {{
+    charts.push(new Chart(ctxUp, {{
+      type:'bar',
+      data:{{ labels:dates, datasets:upDatasets }},
+      options:{{
+        responsive:true, maintainAspectRatio:false,
+        interaction:{{ mode:'index', intersect:false }},
+        plugins:{{ legend:{{ display:false }}, tooltip:{{ enabled:false }} }},
+        scales:{{
+          x:{{ offset:true, ticks:{{ display:false }}, grid:{{ display:false }} }},
+          y:{{ display:true, position:'right', ticks:{{ display:false }}, grid:{{ color:'#485c7b55', borderDash:[3,4], lineWidth:1 }}, border:{{ display:false }}, max:maxUp }}
+        }}
+      }}
+    }}));
+  }}
+
+  const ctxDn = document.getElementById('c-dn-5m');
+  if (ctxDn && dates.length) {{
+    charts.push(new Chart(ctxDn, {{
+      type:'bar',
+      data:{{ labels:dates, datasets:dnDatasets }},
+      options:{{
+        responsive:true, maintainAspectRatio:false,
+        interaction:{{ mode:'index', intersect:false }},
+        plugins:{{ legend:{{ display:false }}, tooltip:{{ enabled:false }} }},
+        scales:{{
+          x:{{ offset:true, ticks:{{ display:false }}, grid:{{ display:false }} }},
+          y:{{ display:true, position:'right', ticks:{{ display:false }}, grid:{{ color:'#485c7b55', borderDash:[3,4], lineWidth:1 }}, border:{{ display:false }} }}
+        }}
+      }}
+    }}));
+  }}
+
+  const ctxAmt = document.getElementById('c-amt-5m');
+  if (ctxAmt && dates.length) {{
+    charts.push(new Chart(ctxAmt, {{
+      type:'bar',
+      data:{{ labels:dates, datasets:amtDatasets }},
+      options:{{
+        responsive:true, maintainAspectRatio:false,
+        interaction:{{ mode:'index', intersect:false }},
+        plugins:{{ legend:{{ display:false }}, tooltip:{{ enabled:false }} }},
+        scales:{{
+          x:{{ offset:true, ticks:{{ display:false }}, grid:{{ display:false }} }},
+          y:{{ display:true, position:'right', ticks:{{ display:false, callback:v=>v+'亿' }}, grid:{{ color:'#485c7b55', borderDash:[3,4], lineWidth:1 }}, border:{{ display:false }}, max:maxAmt }}
+        }}
+      }}
+    }}));
+  }}
+
+  // 用 Chart.js 柱子的精确 X 坐标定位 D 行标签
+  setTimeout(() => {{
+    const ch = charts.find(c => c.canvas && c.canvas.id === 'c-up-5m');
+    if (!ch) return;
+    const meta = ch.getDatasetMeta(0);
+    if (!meta || !meta.data || !meta.data.length) return;
+    const axis = document.getElementById('date-axis');
+    if (!axis) return;
+    const labels = axis.querySelectorAll('.dl');
+    if (!labels.length) return;
+    const firstX = meta.data[0].x;
+    const lastX = meta.data[meta.data.length-1].x;
+    const gaps = [];
+    for (let i = 1; i < meta.data.length; i++) gaps.push(meta.data[i].x - meta.data[i-1].x);
+    const avgGap = gaps.length ? Math.round(gaps.reduce((a,b)=>a+b,0)/gaps.length) : 11;
+    const totalW = lastX - firstX + avgGap;
+    axis.style.width = totalW + 'px';
+    axis.style.paddingLeft = firstX + 'px';
+    labels.forEach((el, i) => {{
+      el.style.left = (meta.data[i].x - firstX) + 'px';
+      el.style.width = avgGap + 'px';
+      el.style.transform = 'translateX(-50%)';
+    }});
+  }}, 400);
+}}
+
+function init() {{
+  if (!dates.length) {{
+    document.querySelector('#scroll-wrap table tbody').innerHTML = '<tr><td colspan="3" class="empty" style="color:#485c7b;font-size:14px;padding:40px;text-align:center;">暂无数据</td></tr>';
+    return;
+  }}
+  buildDateAxis();
+  setTimeout(() => renderCharts(), 60);
+}}
+
+init();
+</script>
+</body>
+</html>'''
+
+    output = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'target_5m.html')
+    with open(output, 'w', encoding='utf-8') as f:
+        f.write(html)
+    webbrowser.open(output)
+    print(f'[SHOW_5M_MOTION] {len(data)} days -> {output}')

@@ -15,6 +15,12 @@ def PATH_AIDATA() -> str:
 def PATH_AIDATA_TRADING_DATES() -> str:
     return GET_ROOT_PATH() + "/MarcoAI/AIData/TRADING_DATES"
 
+def PATH_AIDATA_STOCK_CODES() -> str:
+    return GET_ROOT_PATH() + "/MarcoAI/AIData/STOCK_CODES"
+
+def PATH_AIDATA_STOCK_CODES_ALL() -> str:
+    return GET_ROOT_PATH() + "/MarcoAI/AIData/STOCK_CODES_ALL"
+
 def PATH_AIDATA_1D() -> str:
     return GET_ROOT_PATH() + "/MarcoAI/AIData/1D"
 
@@ -24,8 +30,14 @@ def PATH_AIDATA_5M() -> str:
 def PATH_AIDATA_TOP() -> str:
     return GET_ROOT_PATH() + "/MarcoAI/AIData/TOP"
 
+def PATH_AIDATA_TOPPED() -> str:
+    return GET_ROOT_PATH() + "/MarcoAI/AIData/TOPPED"
+
 def PATH_AIDATA_BOTTOM() -> str:
     return GET_ROOT_PATH() + "/MarcoAI/AIData/BOTTOM"
+
+def PATH_AIDATA_BOTTOMED() -> str:
+    return GET_ROOT_PATH() + "/MarcoAI/AIData/BOTTOMED"
 
 def PATH_AIDATA_TARGET_31() -> str:
     return GET_ROOT_PATH() + "/MarcoAI/AIData/TARGET/31"
@@ -33,11 +45,35 @@ def PATH_AIDATA_TARGET_31() -> str:
 def PATH_AIDATA_TARGET_31_RATIO() -> str:
     return GET_ROOT_PATH() + "/MarcoAI/AIData/TARGET/31_RATIO"
 
+def PATH_AIDATA_TARGET_TOP_31() -> str:
+    return GET_ROOT_PATH() + "/MarcoAI/AIData/TARGET/TOP_31"
+
+def PATH_AIDATA_TARGET_TOP_31_RATIO() -> str:
+    return GET_ROOT_PATH() + "/MarcoAI/AIData/TARGET/TOP_31_RATIO"
+
 def PATH_AIDATA_TARGET_311() -> str:
     return GET_ROOT_PATH() + "/MarcoAI/AIData/TARGET/311"
 
 def PATH_AIDATA_TARGET_311_RATIO() -> str:
     return GET_ROOT_PATH() + "/MarcoAI/AIData/TARGET/311_RATIO"
+
+def PATH_AIDATA_TARGET_TOP_311() -> str:
+    return GET_ROOT_PATH() + "/MarcoAI/AIData/TARGET/TOP_311"
+
+def PATH_AIDATA_TARGET_TOP_311_RATIO() -> str:
+    return GET_ROOT_PATH() + "/MarcoAI/AIData/TARGET/TOP_311_RATIO"
+
+def PATH_AIDATA_TARGET_TOP_1() -> str:
+    return GET_ROOT_PATH() + "/MarcoAI/AIData/TARGET/TOP_1"
+
+def PATH_AIDATA_TARGET_TOP_1_RATIO() -> str:
+    return GET_ROOT_PATH() + "/MarcoAI/AIData/TARGET/TOP_1_RATIO"
+
+def PATH_AIDATA_TARGET_TOP_11() -> str:
+    return GET_ROOT_PATH() + "/MarcoAI/AIData/TARGET/TOP_11"
+
+def PATH_AIDATA_TARGET_TOP_11_RATIO() -> str:
+    return GET_ROOT_PATH() + "/MarcoAI/AIData/TARGET/TOP_11_RATIO"
 
 def PATH_AIDATA_1D_MOTION_PRICE() -> str:
     return GET_ROOT_PATH() + "/MarcoAI/AIData/1D_MOTION_PRICE"
@@ -47,6 +83,9 @@ def PATH_AIDATA_1D_MOTION_PRICE_VOLUME() -> str:
 
 def PATH_AIDATA_1D_WIN_COUNT() -> str:
     return GET_ROOT_PATH() + "/MarcoAI/AIData/1D_MOTION_WIN_COUNT"
+
+def PATH_AIDATA_1D_MOTION_COUNT() -> str:
+    return GET_ROOT_PATH() + "/MarcoAI/AIData/1D_MOTION_COUNT"
 
 def PATH_AIDATA_5M_MOTION_PRICE() -> str:
     return GET_ROOT_PATH() + "/MarcoAI/AIData/5M_MOTION_PRICE"
@@ -60,8 +99,17 @@ def PATH_AIDATA_5M_WIN_COUNT() -> str:
 def PATH_AIDATA_1D_SIGNALS() -> str:
     return GET_ROOT_PATH() + "/MarcoAI/AIData/1D_MOTION_SIGNALS"
 
+def PATH_AIDATA_1D_PANIC_INDEX() -> str:
+    return GET_ROOT_PATH() + "/MarcoAI/AIData/1D_PANIC_INDEX"
+
+def PATH_AIDATA_1D_PRICE() -> str:
+    return GET_ROOT_PATH() + "/MarcoAI/AIData/1D_PRICE"
+
 def PATH_AIDATA_5M_SIGNALS() -> str:
     return GET_ROOT_PATH() + "/MarcoAI/AIData/5M_MOTION_SIGNALS"
+
+def PATH_AIDATA_MOTION() -> str:
+    return GET_ROOT_PATH() + "/MarcoAI/AIData/MOTION"
 
 def PATH_TDX() -> str:
     return "D:/new_tdx_mock/PYPlugins/user"

@@ -14,6 +14,6 @@ namespace MyDream
     public enum EStrategy
     {
         ThreePlusOne,
-        Testing,
+        History,
     }
 }

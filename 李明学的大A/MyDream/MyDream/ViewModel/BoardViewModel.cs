@@ -109,12 +109,18 @@ namespace MyDream
                 var fileInfo = new FileInfo(filePath);
                 File.Delete(filePath);
             }
+
+            var history = APath.GetHistory();
+            foreach (var filePath in Directory.EnumerateFiles(history))
+            {
+                var fileInfo = new FileInfo(filePath);
+                File.Delete(filePath);
+            }
         }
 
         [RelayCommand]
         private void UpdateTPOClick()
         {
-            Strategy.Instance.StrategyType = EStrategy.ThreePlusOne;
             UpdateStrategy();
             UpdateStrategyDetail();
             UpdateBurn();
@@ -124,7 +130,7 @@ namespace MyDream
         [RelayCommand]
         private void ClearTestingClick()
         {
-            var directory = APath.GetTesting();
+            var directory = APath.GetHistory();
             foreach (var filePath in Directory.EnumerateFiles(directory))
             {
                 var fileInfo = new FileInfo(filePath);
@@ -135,7 +141,6 @@ namespace MyDream
         [RelayCommand]
         private void UpdateTestingClick()
         {
-            Strategy.Instance.StrategyType = EStrategy.Testing;
             UpdateStrategy();
         }
 

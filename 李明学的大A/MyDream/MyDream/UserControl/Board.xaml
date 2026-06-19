@@ -54,10 +54,7 @@
 						<Button Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="2" Content="5M UPDATE" Command="{Binding UPDATE5MClickCommand}" FontWeight="Bold" Height="50" Margin="10"/>
 						<Button Grid.Row="5" Grid.Column="0" Grid.ColumnSpan="2" Content="TARGET CLEAN" Command="{Binding ClearTPOClickCommand}" FontWeight="Bold" Height="50" Margin="10"/>
 						<Button Grid.Row="6" Grid.Column="0" Grid.ColumnSpan="2" Content="TARGET UPDATE" Command="{Binding UpdateTPOClickCommand}" FontWeight="Bold" Height="50" Margin="10"/>
-						<Button Grid.Row="7" Grid.Column="0" Grid.ColumnSpan="2" Content="TEST CLEAN" Command="{Binding ClearTestingClickCommand}" FontWeight="Bold" Height="50" Margin="10"/>
-						<Button Grid.Row="8" Grid.Column="0" Grid.ColumnSpan="2" Content="TEST UPDATE" Command="{Binding UpdateTestingClickCommand}" FontWeight="Bold" Height="50" Margin="10"/>
 						<Button Grid.Row="9" Grid.Column="0" Grid.ColumnSpan="2" Content="THS UPDATE" Command="{Binding StrategyListSyncClickCommand}" FontWeight="Bold" Height="50" Margin="10"/>
-						<Button Grid.Row="10" Grid.Column="0" Grid.ColumnSpan="2" Content="RUNTIME" Command="{Binding RuntimeClickCommand}" FontWeight="Bold" Height="50" Margin="10"/>
 						<Button Grid.Row="11" Grid.Column="0" Grid.ColumnSpan="2" Content="GIT UPDATE" Command="{Binding PushCodeClickCommand}" FontWeight="Bold" Height="50" Margin="10"/>
 						<TextBox Grid.Row="12" Grid.Column="0" Grid.ColumnSpan="2" Text="{Binding Output}" TextWrapping="Wrap" Background="Transparent" Foreground="White" Margin="5" FontSize="24"/>
 					</Grid>

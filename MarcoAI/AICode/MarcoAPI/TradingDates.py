@@ -13,15 +13,20 @@ from AICode.MarcoAPI.Path import *
 sys.path.append(PATH_TDX())
 from tqcenter import tq
 
+_TRADING_DATES_CACHE: dict[str, list[str]] = {}
+
 def TRADING_DATES():
-    with open(PATH_AIDATA_TRADING_DATES(), "r") as file:
-        return file.read().splitlines()
+    if "data" not in _TRADING_DATES_CACHE:
+        with open(PATH_AIDATA_TRADING_DATES(), "r") as file:
+            _TRADING_DATES_CACHE["data"] = file.read().splitlines()
+    return _TRADING_DATES_CACHE["data"]
 
 def UPDATE_TRADING_DATES():
     tq.initialize(__file__)
     trading_dates = tq.get_trading_dates(market = 'SH', start_time = START_DATE, end_time = '', count = -1)
     with open(PATH_AIDATA_TRADING_DATES(), "w") as file:
         file.write("\n".join(trading_dates))
+    _TRADING_DATES_CACHE["data"] = trading_dates
     return trading_dates
 
 def TRADING_DATE_PREVIOUS(date, index):

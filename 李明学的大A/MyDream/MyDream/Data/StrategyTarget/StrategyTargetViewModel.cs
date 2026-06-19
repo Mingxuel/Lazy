@@ -161,7 +161,7 @@ namespace MyDream
         [RelayCommand]
         private void StrategyListSyncClick()
         {
-            string tpo3 = string.Empty;
+/*            string tpo3 = string.Empty;
             foreach (var data in StrategyTarget3Data)
             {
                 string stock_code = data!.StockCode!.Replace(".SH", "").Replace(".SZ", "");
@@ -184,23 +184,24 @@ namespace MyDream
                 tpo311 += FormatTHSLine(stock_code);
             }
             if (!string.IsNullOrEmpty(tpo311) && tpo311.Last() == '\n') tpo311 = tpo311.Remove(tpo311.Count() - 1);
-
+*/
             string history = string.Empty;
             string? select_date = StrategyTradingDatesIndex != -1 ? StrategyTradingDates[StrategyTradingDatesIndex] : null;
             List<StrategyItem> datas = new List<StrategyItem>();
-            foreach(int i in Enumerable.Range(1, 3))
+            foreach(int i in Enumerable.Range(0, 6))
             {
                 string? date = TradingDates.PreDate(select_date!, i);
-                datas.AddRange(Strategy.Instance.Data[date!]);
+                datas.AddRange(Strategy.Instance.DataHistory[date!]);
             }
             foreach (var item in datas)
             {
                 string stock_code = item.StockCode!.Replace(".SH", "").Replace(".SZ", "");
                 history += FormatTHSLine(stock_code);
             }
+            if (!string.IsNullOrEmpty(history) && history.Last() == '\n') history = history.Remove(history.Count() - 1);
 
             string file_content = File.ReadAllText(APath.GetTHSStrategyFileOrigin());
-            file_content = file_content.Replace("===TPO3===", tpo3).Replace("===TPO31===", tpo31).Replace("===TPO311===", tpo311).Replace("===DREAM===", history);
+            file_content = file_content.Replace("===CODES===", history);
             File.WriteAllText(APath.GetTHSStrategyFileTarget(), file_content);
         }
 
