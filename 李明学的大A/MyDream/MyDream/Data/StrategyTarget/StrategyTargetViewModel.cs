@@ -188,7 +188,7 @@ namespace MyDream
             string history = string.Empty;
             string? select_date = StrategyTradingDatesIndex != -1 ? StrategyTradingDates[StrategyTradingDatesIndex] : null;
             List<StrategyItem> datas = new List<StrategyItem>();
-            foreach(int i in Enumerable.Range(0, 6))
+            foreach(int i in Enumerable.Range(0, 5))
             {
                 string? date = TradingDates.PreDate(select_date!, i);
                 datas.AddRange(Strategy.Instance.DataHistory[date!]);
