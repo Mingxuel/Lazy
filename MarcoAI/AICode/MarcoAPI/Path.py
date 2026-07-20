@@ -63,6 +63,12 @@ def PATH_AIDATA_TARGET_TOP_311() -> str:
 def PATH_AIDATA_TARGET_TOP_311_RATIO() -> str:
     return GET_ROOT_PATH() + "/MarcoAI/AIData/TARGET/TOP_311_RATIO"
 
+def PATH_AIDATA_TARGET_HISTORY() -> str:
+    return GET_ROOT_PATH() + "/MarcoAI/AIData/TARGET/HISTORY"
+
+def PATH_AIDATA_TARGET_HISTORY_RATIO() -> str:
+    return GET_ROOT_PATH() + "/MarcoAI/AIData/TARGET/HISTORY_RATIO"
+
 def PATH_AIDATA_TARGET_TOP_1() -> str:
     return GET_ROOT_PATH() + "/MarcoAI/AIData/TARGET/TOP_1"
 

@@ -6,7 +6,7 @@ import webbrowser
 _root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if _root not in sys.path:
     sys.path.insert(0, os.path.dirname(_root))
-from AICode.MarcoAPI.Path import PATH_AIDATA_TARGET_31, PATH_AIDATA_1D_WIN_COUNT, PATH_AIDATA_TARGET_31_RATIO, PATH_AIDATA_TARGET_311_RATIO, PATH_AIDATA_TARGET_TOP_1_RATIO, PATH_AIDATA_TARGET_TOP_11_RATIO, PATH_AIDATA_TOP, PATH_AIDATA_TOPPED, PATH_AIDATA_BOTTOM, PATH_AIDATA_1D_MOTION_COUNT, PATH_AIDATA_MOTION, PATH_AIDATA_1D_PRICE
+from AICode.MarcoAPI.Path import PATH_AIDATA_TARGET_31, PATH_AIDATA_1D_WIN_COUNT, PATH_AIDATA_TARGET_31_RATIO, PATH_AIDATA_TARGET_311_RATIO, PATH_AIDATA_TARGET_HISTORY_RATIO, PATH_AIDATA_TARGET_TOP_1_RATIO, PATH_AIDATA_TARGET_TOP_11_RATIO, PATH_AIDATA_TOP, PATH_AIDATA_TOPPED, PATH_AIDATA_BOTTOM, PATH_AIDATA_1D_MOTION_COUNT, PATH_AIDATA_MOTION, PATH_AIDATA_1D_PRICE
 from AICode.MarcoAPI.DataAligned import READ_ALIGNED_LINES
 
 
@@ -81,7 +81,7 @@ def SHOW_TARGET_1D():
         else:
             ratio_data.append({'date': date, 'val': 0.0})
 
-    # 311_RATIO 数据（对齐读取，第8行）
+    # 311_RATIO 数据（对齐读取，第9行）
     ratio311_data = []
     ratio311_path = PATH_AIDATA_TARGET_311_RATIO()
     for date, line in READ_ALIGNED_LINES(ratio311_path):
@@ -91,25 +91,17 @@ def SHOW_TARGET_1D():
         else:
             ratio311_data.append({'date': date, 'val': 0.0})
 
-    # TOP_1_RATIO 数据（对齐读取）
-    ratio_top1_data = []
-    ratio_top1_path = PATH_AIDATA_TARGET_TOP_1_RATIO()
-    for date, line in READ_ALIGNED_LINES(ratio_top1_path):
+    # HISTORY_RATIO 数据（对齐读取，位于 311_RATIO 之后）
+    history_data = []
+    history_path = PATH_AIDATA_TARGET_HISTORY_RATIO()
+    for date, line in READ_ALIGNED_LINES(history_path):
         if line:
             parts = line.split('|')
-            ratio_top1_data.append({'date': date, 'val': float(parts[1])})
+            history_data.append({'date': date, 'val': float(parts[1])})
         else:
-            ratio_top1_data.append({'date': date, 'val': 0.0})
+            history_data.append({'date': date, 'val': 0.0})
 
-    # TOP_11_RATIO 数据（对齐读取）
-    ratio_top11_data = []
-    ratio_top11_path = PATH_AIDATA_TARGET_TOP_11_RATIO()
-    for date, line in READ_ALIGNED_LINES(ratio_top11_path):
-        if line:
-            parts = line.split('|')
-            ratio_top11_data.append({'date': date, 'val': float(parts[1])})
-        else:
-            ratio_top11_data.append({'date': date, 'val': 0.0})
+
 
     # MOTION_COUNT 数据（对齐读取，第7行）
     motion_data = []
@@ -196,8 +188,7 @@ def SHOW_TARGET_1D():
     win_json = json.dumps(win_data, ensure_ascii=False)
     ratio_json = json.dumps(ratio_data, ensure_ascii=False)
     ratio311_json = json.dumps(ratio311_data, ensure_ascii=False)
-    ratio_top1_json = json.dumps(ratio_top1_data, ensure_ascii=False)
-    ratio_top11_json = json.dumps(ratio_top11_data, ensure_ascii=False)
+    history_json = json.dumps(history_data, ensure_ascii=False)
     top_json = json.dumps(top_data, ensure_ascii=False)
     bottom_json = json.dumps(bottom_data, ensure_ascii=False)
     topped_json = json.dumps(topped_data, ensure_ascii=False)
@@ -334,20 +325,6 @@ def SHOW_TARGET_1D():
         </td>
         <td class="col-param" style="padding:0;border-top:none;"></td>
       </tr>
-      <!-- 第5行：MOTION up_diff 柱状图 -->
-      <tr>
-        <td class="col-idx" style="padding:0;"><div style="font-size:13px;font-weight:normal;color:#d1d4dc;line-height:1.2;"><span style="font-size:10px;background:#e040fb22;color:#e040fb;border:1px solid #e040fb44;padding:1px 6px;border-radius:8px;">MOTION</span></div><div style="font-family:'Orbitron',sans-serif;font-size:44px;font-weight:900;line-height:1;">MOTION</div></td>
-        <td style="padding:0 5px 0 0;">
-          <div class="chart-box" style="height:180px;">
-            <canvas id="c-motion"></canvas>
-          </div>
-        </td>
-        <td class="col-param">
-          <div class="param-group">
-            <div class="param-row"><label>高度</label><input class="height-input" type="number" value="180" min="60" step="10" data-target="c-motion"></div>
-          </div>
-        </td>
-      </tr>
       <!-- 第6行：居中包络通道（居中窗口 + 自适应末端预测） -->
       <tr>
         <td class="col-idx" style="padding:0;"><div style="font-size:13px;font-weight:normal;color:#d1d4dc;line-height:1.2;"><span style="font-size:10px;background:#ffd74022;color:#ffd740;border:1px solid #ffd74044;padding:1px 6px;border-radius:8px;">ENV</span></div><div style="font-family:'Orbitron',sans-serif;font-size:36px;font-weight:900;line-height:1;">包络<br>通道</div></td>
@@ -412,12 +389,12 @@ def SHOW_TARGET_1D():
           </div>
         </td>
       </tr>
-      <!-- 第10行：TOP_1_RATIO -->
+      <!-- 第10行：HISTORY_RATIO -->
       <tr>
-        <td class="col-idx"><div style="font-size:13px;font-weight:normal;color:#d1d4dc;line-height:1.2;"><span style="font-size:10px;background:#ff8c0022;color:#ff8c00;border:1px solid #ff8c0044;padding:1px 6px;border-radius:8px;">TOP1</span></div><div style="font-family:'Orbitron',sans-serif;font-size:48px;font-weight:900;line-height:1.1;">TOP1<br>RATIO</div></td>
+        <td class="col-idx"><div style="font-size:13px;font-weight:normal;color:#d1d4dc;line-height:1.2;"><span style="font-size:10px;background:#e040fb22;color:#e040fb;border:1px solid #e040fb44;padding:1px 6px;border-radius:8px;">HISTORY</span></div><div style="font-family:'Orbitron',sans-serif;font-size:36px;font-weight:900;line-height:1.1;">HISTORY<br>RATIO</div></td>
         <td style="padding:10px 0;">
           <div class="chart-box" style="height:180px;">
-            <canvas id="c-ratio-top1"></canvas>
+            <canvas id="c-history"></canvas>
           </div>
         </td>
         <td class="col-param">
@@ -425,24 +402,7 @@ def SHOW_TARGET_1D():
             <div class="param-row"><label>线颜色</label><div class="color-picker"><div class="color-swatch ratio-swatch ratio-line-swatch" style="background:#26a69a"></div></div></div>
             <div class="param-row"><label>上升色</label><div class="color-picker"><div class="color-swatch ratio-swatch ratio-up-swatch" style="background:#ef5350"></div></div></div>
             <div class="param-row"><label>下降色</label><div class="color-picker"><div class="color-swatch ratio-swatch ratio-dn-swatch" style="background:#00e5ff"></div></div></div>
-            <div class="param-row"><label>高度</label><input class="height-input" type="number" value="180" min="60" step="10" data-target="c-ratio-top1"></div>
-          </div>
-        </td>
-      </tr>
-      <!-- 第11行：TOP_11_RATIO -->
-      <tr>
-        <td class="col-idx"><div style="font-size:13px;font-weight:normal;color:#d1d4dc;line-height:1.2;"><span style="font-size:10px;background:#7c4dff22;color:#7c4dff;border:1px solid #7c4dff44;padding:1px 6px;border-radius:8px;">TOP11</span></div><div style="font-family:'Orbitron',sans-serif;font-size:48px;font-weight:900;line-height:1.1;">TOP11<br>RATIO</div></td>
-        <td style="padding:10px 0;">
-          <div class="chart-box" style="height:180px;">
-            <canvas id="c-ratio-top11"></canvas>
-          </div>
-        </td>
-        <td class="col-param">
-          <div class="param-group">
-            <div class="param-row"><label>线颜色</label><div class="color-picker"><div class="color-swatch ratio-swatch ratio-line-swatch" style="background:#26a69a"></div></div></div>
-            <div class="param-row"><label>上升色</label><div class="color-picker"><div class="color-swatch ratio-swatch ratio-up-swatch" style="background:#ef5350"></div></div></div>
-            <div class="param-row"><label>下降色</label><div class="color-picker"><div class="color-swatch ratio-swatch ratio-dn-swatch" style="background:#00e5ff"></div></div></div>
-            <div class="param-row"><label>高度</label><input class="height-input" type="number" value="180" min="60" step="10" data-target="c-ratio-top11"></div>
+            <div class="param-row"><label>高度</label><input class="height-input" type="number" value="180" min="60" step="10" data-target="c-history"></div>
           </div>
         </td>
       </tr>
@@ -501,8 +461,7 @@ const stocks = {data_json};
 const winData = {win_json};
 const ratioData = {ratio_json};
 const ratio311Data = {ratio311_json};
-const ratioTop1Data = {ratio_top1_json};
-const ratioTop11Data = {ratio_top11_json};
+const historyData = {history_json};
 const topData = {top_json};
 const bottomData = {bottom_json};
 const toppedData = {topped_json};
@@ -587,8 +546,6 @@ function syncAllChartsHover(e) {{
   const d = winData[dataIdx];
   const r = ratioData[dataIdx];
   const r311 = ratio311Data[dataIdx];
-  const rTop1 = dataIdx < ratioTop1Data.length ? ratioTop1Data[dataIdx] : null;
-  const rTop11 = dataIdx < ratioTop11Data.length ? ratioTop11Data[dataIdx] : null;
   const m = motionData[dataIdx];
   const tt = document.getElementById('custom-tooltip');
   const upPct = d.total > 0 ? (d.up / d.total * 100).toFixed(1) : '0.0';
@@ -603,11 +560,9 @@ function syncAllChartsHover(e) {{
     '<div class="tt-row"><span class="tt-label">总成交额</span><span class="tt-value">' + (d.amount / 1e8).toFixed(2) + '亿</span></div>' +
     '<div class="tt-row"><span class="tt-label">均价</span><span class="tt-value">' + priceData[dataIdx].avg_close.toFixed(2) + '</span></div>' +
     '<div class="tt-sep"></div>' +
-    '<div class="tt-row"><span class="tt-label">MOTION</span><span class="tt-value ' + (m.up_diff >= 0 ? 'tt-up' : 'tt-dn') + '">' + (m.up_diff >= 0 ? '+' : '') + m.up_diff + '</span></div>' +
     '<div class="tt-row"><span class="tt-label">31_RATIO</span><span class="tt-value ' + (r.val >= 0 ? 'tt-up' : 'tt-dn') + '">' + (r.val >= 0 ? '+' : '') + r.val.toFixed(2) + '%</span></div>' +
     '<div class="tt-row"><span class="tt-label">311_RATIO</span><span class="tt-value ' + (r311.val >= 0 ? 'tt-up' : 'tt-dn') + '">' + (r311.val >= 0 ? '+' : '') + r311.val.toFixed(2) + '%</span></div>' +
-    (rTop1 ? '<div class="tt-row"><span class="tt-label">TOP_1_RATIO</span><span class="tt-value ' + (rTop1.val >= 0 ? 'tt-up' : 'tt-dn') + '">' + (rTop1.val >= 0 ? '+' : '') + rTop1.val.toFixed(2) + '%</span></div>' : '') +
-    (rTop11 ? '<div class="tt-row"><span class="tt-label">TOP_11_RATIO</span><span class="tt-value ' + (rTop11.val >= 0 ? 'tt-up' : 'tt-dn') + '">' + (rTop11.val >= 0 ? '+' : '') + rTop11.val.toFixed(2) + '%</span></div>' : '') +
+    '<div class="tt-row"><span class="tt-label">HISTORY</span><span class="tt-value ' + (historyData[dataIdx].val >= 0 ? 'tt-up' : 'tt-dn') + '">' + (historyData[dataIdx].val >= 0 ? '+' : '') + historyData[dataIdx].val.toFixed(2) + '%</span></div>' +
     '<div class="tt-sep"></div>' +
     '<div class="tt-row"><span class="tt-label">封板率</span><span class="tt-value ' + (sealData[dataIdx].rate >= 60 ? 'tt-up' : sealData[dataIdx].rate >= 20 ? '' : 'tt-dn') + '">' + sealData[dataIdx].rate.toFixed(1) + '%</span></div>' +
     '<div class="tt-sep"></div>' +
@@ -1021,45 +976,6 @@ function renderCharts() {{
     }}));
   }}
 
-  /* ---- 第5行（新）：MOTION up_diff 柱状图（正绿负红） ---- */
-  const ctxMotion = document.getElementById('c-motion');
-  if (ctxMotion && motionData.length > 0) {{
-    const motionVals = motionData.map(d => d.up_diff);
-    const maxAbsVal = Math.max(...motionVals.map(v => Math.abs(v)), 1);
-    charts.push(new Chart(ctxMotion, {{
-      type:'bar',
-      data:{{
-        labels: winData.map(d => d.date),
-        datasets:[{{
-          label:'MOTION',
-          data:motionVals,
-          backgroundColor:motionVals.map(v => v >= 0 ? '#26a69a88' : '#ef535088'),
-          borderColor:motionVals.map(v => v >= 0 ? '#26a69a' : '#ef5350'),
-          hoverBackgroundColor:motionVals.map(v => v >= 0 ? '#80cbc4' : '#ff8a80'),
-          hoverBorderColor:'#ffffff',
-          hoverBorderWidth:2,
-          borderWidth:1,
-          borderRadius:1,
-          barPercentage:0.92,
-          categoryPercentage:1
-        }}]
-      }},
-      options:{{
-        responsive:true, maintainAspectRatio:false,
-        interaction:{{ mode:'index', intersect:false }},
-        plugins:{{ legend:{{ display:false }}, tooltip:{{ enabled:false }} }},
-        scales:{{
-          x:{{ offset:true, ticks:{{ display:false }}, grid:{{ display:false }} }},
-          y:{{ display:true, position:'right',
-            ticks:{{ display:false }},
-            grid:{{ color:'#485c7b55', borderDash:[3,4], lineWidth:1 }},
-            border:{{ display:false }}
-          }}
-        }}
-      }}
-    }}));
-  }}
-
   /* ---- 第6行：居中包络通道（居中窗口 + 自适应末端预测） ---- */
   const ctxAmt = document.getElementById('c-amount-ma');
   if (ctxAmt && winData.length > 0) {{
@@ -1229,17 +1145,18 @@ function makeRatioChartOptions() {{
     }}));
   }}
 
-  /* ---- 第10行：TOP_1_RATIO（单线 + 上下不同色阴影） ---- */
-  const ctxTop1 = document.getElementById('c-ratio-top1');
-  if (ctxTop1 && ratioTop1Data.length > 0) {{
-    const vals = ratioTop1Data.map(d => d.val);
+
+  /* ---- 第10行：HISTORY_RATIO（单线 + 上下不同色阴影） ---- */
+  const ctxHistory = document.getElementById('c-history');
+  if (ctxHistory && historyData.length > 0) {{
+    const vals = historyData.map(d => d.val);
     const rc = getRatioColors();
-    charts.push(new Chart(ctxTop1, {{
+    charts.push(new Chart(ctxHistory, {{
       type:'line',
       data:{{
-        labels: ratioTop1Data.map(d => d.date),
+        labels: historyData.map(d => d.date),
         datasets:[{{
-          label:'TOP1RATIO', data:vals,
+          label:'HISTORY', data:vals,
           borderColor:rc.line,
           fill:{{ target:{{ value:0 }}, above:hexToRgba(rc.up,0.18), below:hexToRgba(rc.dn,0.18) }},
           tension:0.2, pointRadius:0, pointHoverRadius:5, pointHoverBackgroundColor:'#ffffff', borderWidth:1.2
@@ -1249,25 +1166,7 @@ function makeRatioChartOptions() {{
     }}));
   }}
 
-  /* ---- 第11行：TOP_11_RATIO（单线 + 上下不同色阴影） ---- */
-  const ctxTop11 = document.getElementById('c-ratio-top11');
-  if (ctxTop11 && ratioTop11Data.length > 0) {{
-    const vals = ratioTop11Data.map(d => d.val);
-    const rc = getRatioColors();
-    charts.push(new Chart(ctxTop11, {{
-      type:'line',
-      data:{{
-        labels: ratioTop11Data.map(d => d.date),
-        datasets:[{{
-          label:'TOP11RATIO', data:vals,
-          borderColor:rc.line,
-          fill:{{ target:{{ value:0 }}, above:hexToRgba(rc.up,0.18), below:hexToRgba(rc.dn,0.18) }},
-          tension:0.2, pointRadius:0, pointHoverRadius:5, pointHoverBackgroundColor:'#ffffff', borderWidth:1.2
-        }}]
-      }},
-      options: makeRatioChartOptions()
-    }}));
-  }}
+
 
   /* ---- 第12行：封板率柱状图 TOP/(TOPPED+TOP)*100 ---- */
   const ctxSeal = document.getElementById('c-seal');

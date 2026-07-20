@@ -1,8 +1,8 @@
-<hevo version="4901" sort_list="27,26,28,">
+<hevo version="5007" sort_list="23,27,26,28,">
   <Block name="CODES" id="38" IsLock="false" IsNameChanged="false" IsSecuritiesChanged="true">
 ===CODES===
   </Block>
-  <Block name="ENV" id="39" IsLock="false" IsNameChanged="false" IsSecuritiesChanged="true">
+  <Block name="ETFs" id="39" IsLock="false" IsNameChanged="false" IsSecuritiesChanged="true">
     <security market="URFI" code="883957" />
     <security market="USHI" code="1A0001" />
     <security market="USZI" code="399001" />
@@ -12,7 +12,59 @@
     <security market="USZJ" code="159991" />
     <security market="USHJ" code="510500" />
     <security market="USHJ" code="588000" />
+    <security market="USZJ" code="159901" />
+    <security market="USHJ" code="510310" />
+    <security market="USHJ" code="512200" />
+    <security market="USZJ" code="159201" />
+    <security market="USHJ" code="563300" />
+    <security market="USHJ" code="512100" />
+    <security market="USHJ" code="513050" />
+    <security market="USHJ" code="516510" />
+    <security market="USHJ" code="512400" />
+    <security market="USZJ" code="159980" />
+    <security market="USZJ" code="159869" />
+    <security market="USZJ" code="159865" />
+    <security market="USZJ" code="159732" />
+    <security market="USZJ" code="159928" />
+    <security market="USHJ" code="562800" />
+    <security market="USHJ" code="516150" />
+    <security market="USZJ" code="159206" />
+    <security market="USHJ" code="515880" />
+    <security market="USHJ" code="510050" />
+    <security market="USZJ" code="159852" />
+    <security market="USHJ" code="513520" />
+    <security market="USHJ" code="512000" />
+    <security market="USZJ" code="159981" />
+    <security market="USZJ" code="159509" />
+    <security market="USZJ" code="159941" />
+    <security market="USHJ" code="515220" />
+    <security market="USZJ" code="159766" />
+    <security market="USHJ" code="588170" />
+    <security market="USHJ" code="512710" />
+    <security market="USHJ" code="512690" />
+    <security market="USZJ" code="159530" />
+    <security market="USHJ" code="518880" />
+    <security market="USZJ" code="159870" />
+    <security market="USHJ" code="510300" />
   </Block>
-  <Block name="HISTORY" id="40" IsNameChanged="false" IsSecuritiesChanged="true">
+  <Block name="HISTORY" id="40" IsNameChanged="false" IsSecuritiesChanged="false" IsLock="true">
+    <security market="USZA" code="000021" />
+    <security market="USHA" code="600707" />
+    <security market="USHA" code="603929" />
+    <security market="USZA" code="000811" />
+    <security market="USZA" code="002812" />
+    <security market="USHA" code="603993" />
+    <security market="USHA" code="600176" />
+    <security market="USZA" code="002156" />
+    <security market="USZA" code="002837" />
+  </Block>
+  <Block name="ENV" id="35" IsNameChanged="false" IsSecuritiesChanged="true">
+    <security market="UFII" code="KS11" />
+    <security market="USHI" code="1A0001" />
+    <security market="USZI" code="399006" />
+    <security market="USHI" code="1B0680" />
+    <security market="URFI" code="881283" />
+    <security market="URFI" code="881157" />
+    <security market="URFI" code="881155" />
   </Block>
 </hevo>
