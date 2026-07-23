@@ -184,11 +184,30 @@ def SHOW_TARGET_1D():
     ]
     color_opts_8x8 = ''.join(f'<span style="background:{c}" data-color="{c}"></span>' for c in colors_64)
 
+    # 基于 31_RATIO 构建真实价格 K线（起始价格100，open=close=high=low，无影线）
+    def build_ohlc(ratio_list):
+        ohlc = []
+        price = 100.0
+        for i, d in enumerate(ratio_list):
+            val = d['val']
+            if i > 0:
+                price = ohlc[i - 1]['close']
+            close = round(price * (1 + val / 100), 4)
+            ohlc.append({'date': f"{d['date'][:4]}-{d['date'][4:6]}-{d['date'][6:8]}", 'open': close, 'high': close, 'low': close, 'close': close})
+        return ohlc
+
+    ohlc_data = build_ohlc(ratio_data)
+    ohlc311_data = build_ohlc(ratio311_data)
+    ohlc_history_data = build_ohlc(history_data)
+
     data_json = json.dumps(stocks, ensure_ascii=False)
     win_json = json.dumps(win_data, ensure_ascii=False)
     ratio_json = json.dumps(ratio_data, ensure_ascii=False)
     ratio311_json = json.dumps(ratio311_data, ensure_ascii=False)
     history_json = json.dumps(history_data, ensure_ascii=False)
+    ohlc_json = json.dumps(ohlc_data, ensure_ascii=False)
+    ohlc311_json = json.dumps(ohlc311_data, ensure_ascii=False)
+    ohlc_history_json = json.dumps(ohlc_history_data, ensure_ascii=False)
     top_json = json.dumps(top_data, ensure_ascii=False)
     bottom_json = json.dumps(bottom_data, ensure_ascii=False)
     topped_json = json.dumps(topped_data, ensure_ascii=False)
@@ -201,6 +220,7 @@ def SHOW_TARGET_1D():
 <head><meta charset="utf-8"><title>Target 1D</title>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@900&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+<script src="https://unpkg.com/lightweight-charts@4.1.3/dist/lightweight-charts.standalone.production.js"></script>
 <style>
   * {{ margin:0; padding:0; box-sizing:border-box; }}
   html, body {{ height:100%; background:#131722; color:#d1d4dc; font-family:'Segoe UI',sans-serif; }}
@@ -372,6 +392,23 @@ def SHOW_TARGET_1D():
           </div>
         </td>
       </tr>
+      <!-- 第8.5行：31 RATIO K线（lightweight-charts），包含均线 -->
+      <tr>
+        <td class="col-idx"><div style="font-size:13px;font-weight:normal;color:#d1d4dc;line-height:1.2;"><span style="font-size:10px;background:#ff8c0022;color:#ff8c00;border:1px solid #ff8c0044;padding:1px 6px;border-radius:8px;">D-DAY</span></div><div style="font-family:'Orbitron',sans-serif;font-size:40px;font-weight:900;line-height:1.1;">31<br>KLINE</div></td>
+        <td style="padding:10px 0;">
+          <div class="chart-box" style="height:500px;position:relative;">
+            <div id="c-ohlc" style="width:100%;height:100%;"></div>
+          </div>
+        </td>
+        <td class="col-param">
+          <div class="param-group">
+            <div class="param-row"><label>MA1</label><input class="ohlc-ma-period" type="number" value="5" min="0" data-ma="0" data-ohlc="31"><div class="color-picker"><div class="color-swatch ohlc-ma-swatch" data-ma="0" style="background:#f5a623"></div></div></div>
+            <div class="param-row"><label>MA2</label><input class="ohlc-ma-period" type="number" value="10" min="0" data-ma="1" data-ohlc="31"><div class="color-picker"><div class="color-swatch ohlc-ma-swatch" data-ma="1" style="background:#1e90ff"></div></div></div>
+            <div class="param-row"><label>MA3</label><input class="ohlc-ma-period" type="number" value="0" min="0" data-ma="2" data-ohlc="31"><div class="color-picker"><div class="color-swatch ohlc-ma-swatch" data-ma="2" style="background:#808080"></div></div></div>
+            <div class="param-row"><label>高度</label><input class="height-input" type="number" value="500" min="60" step="10" data-target="c-ohlc"></div>
+          </div>
+        </td>
+      </tr>
       <!-- 第9行：311_RATIO -->
       <tr>
         <td class="col-idx"><div style="font-size:13px;font-weight:normal;color:#d1d4dc;line-height:1.2;"><span style="font-size:10px;background:#7c4dff22;color:#7c4dff;border:1px solid #7c4dff44;padding:1px 6px;border-radius:8px;">D-DAY + 1</span></div><div style="font-family:'Orbitron',sans-serif;font-size:48px;font-weight:900;line-height:1.1;">311<br>RATIO</div></td>
@@ -389,6 +426,23 @@ def SHOW_TARGET_1D():
           </div>
         </td>
       </tr>
+      <!-- 第9.5行：311 RATIO K线（lightweight-charts），包含均线 -->
+      <tr>
+        <td class="col-idx"><div style="font-size:13px;font-weight:normal;color:#d1d4dc;line-height:1.2;"><span style="font-size:10px;background:#7c4dff22;color:#7c4dff;border:1px solid #7c4dff44;padding:1px 6px;border-radius:8px;">D-DAY + 1</span></div><div style="font-family:'Orbitron',sans-serif;font-size:40px;font-weight:900;line-height:1.1;">311<br>KLINE</div></td>
+        <td style="padding:10px 0;">
+          <div class="chart-box" style="height:500px;position:relative;">
+            <div id="c-ohlc311" style="width:100%;height:100%;"></div>
+          </div>
+        </td>
+        <td class="col-param">
+          <div class="param-group">
+            <div class="param-row"><label>MA1</label><input class="ohlc-ma-period" type="number" value="5" min="0" data-ma="0" data-ohlc="311"><div class="color-picker"><div class="color-swatch ohlc-ma-swatch" data-ma="0" style="background:#f5a623"></div></div></div>
+            <div class="param-row"><label>MA2</label><input class="ohlc-ma-period" type="number" value="10" min="0" data-ma="1" data-ohlc="311"><div class="color-picker"><div class="color-swatch ohlc-ma-swatch" data-ma="1" style="background:#1e90ff"></div></div></div>
+            <div class="param-row"><label>MA3</label><input class="ohlc-ma-period" type="number" value="0" min="0" data-ma="2" data-ohlc="311"><div class="color-picker"><div class="color-swatch ohlc-ma-swatch" data-ma="2" style="background:#808080"></div></div></div>
+            <div class="param-row"><label>高度</label><input class="height-input" type="number" value="500" min="60" step="10" data-target="c-ohlc311"></div>
+          </div>
+        </td>
+      </tr>
       <!-- 第10行：HISTORY_RATIO -->
       <tr>
         <td class="col-idx"><div style="font-size:13px;font-weight:normal;color:#d1d4dc;line-height:1.2;"><span style="font-size:10px;background:#e040fb22;color:#e040fb;border:1px solid #e040fb44;padding:1px 6px;border-radius:8px;">HISTORY</span></div><div style="font-family:'Orbitron',sans-serif;font-size:36px;font-weight:900;line-height:1.1;">HISTORY<br>RATIO</div></td>
@@ -403,6 +457,23 @@ def SHOW_TARGET_1D():
             <div class="param-row"><label>上升色</label><div class="color-picker"><div class="color-swatch ratio-swatch ratio-up-swatch" style="background:#ef5350"></div></div></div>
             <div class="param-row"><label>下降色</label><div class="color-picker"><div class="color-swatch ratio-swatch ratio-dn-swatch" style="background:#00e5ff"></div></div></div>
             <div class="param-row"><label>高度</label><input class="height-input" type="number" value="180" min="60" step="10" data-target="c-history"></div>
+          </div>
+        </td>
+      </tr>
+      <!-- 第10.5行：HISTORY RATIO K线（lightweight-charts），包含均线 -->
+      <tr>
+        <td class="col-idx"><div style="font-size:13px;font-weight:normal;color:#d1d4dc;line-height:1.2;"><span style="font-size:10px;background:#e040fb22;color:#e040fb;border:1px solid #e040fb44;padding:1px 6px;border-radius:8px;">HISTORY</span></div><div style="font-family:'Orbitron',sans-serif;font-size:36px;font-weight:900;line-height:1.1;">HISTORY<br>KLINE</div></td>
+        <td style="padding:10px 0;">
+          <div class="chart-box" style="height:500px;position:relative;">
+            <div id="c-ohlc-history" style="width:100%;height:100%;"></div>
+          </div>
+        </td>
+        <td class="col-param">
+          <div class="param-group">
+            <div class="param-row"><label>MA1</label><input class="ohlc-ma-period" type="number" value="5" min="0" data-ma="0" data-ohlc="history"><div class="color-picker"><div class="color-swatch ohlc-ma-swatch" data-ma="0" style="background:#f5a623"></div></div></div>
+            <div class="param-row"><label>MA2</label><input class="ohlc-ma-period" type="number" value="10" min="0" data-ma="1" data-ohlc="history"><div class="color-picker"><div class="color-swatch ohlc-ma-swatch" data-ma="1" style="background:#1e90ff"></div></div></div>
+            <div class="param-row"><label>MA3</label><input class="ohlc-ma-period" type="number" value="0" min="0" data-ma="2" data-ohlc="history"><div class="color-picker"><div class="color-swatch ohlc-ma-swatch" data-ma="2" style="background:#808080"></div></div></div>
+            <div class="param-row"><label>高度</label><input class="height-input" type="number" value="500" min="60" step="10" data-target="c-ohlc-history"></div>
           </div>
         </td>
       </tr>
@@ -462,6 +533,9 @@ const winData = {win_json};
 const ratioData = {ratio_json};
 const ratio311Data = {ratio311_json};
 const historyData = {history_json};
+const ohlcData = {ohlc_json};
+const ohlc311Data = {ohlc311_json};
+const ohlcHistoryData = {ohlc_history_json};
 const topData = {top_json};
 const bottomData = {bottom_json};
 const toppedData = {topped_json};
@@ -527,6 +601,15 @@ function syncAllChartsHover(e) {{
 
   charts.forEach(ch => {{
     if (!ch || !ch.canvas) return;
+    if (ch.isLW) {{
+      // lightweight-charts: 使用时间坐标设置 crosshair
+      const ohlc = ch.ohlcData[dataIdx];
+      if (ohlc) {{
+        const time = ohlc.date.replace(/-/g, '/');
+        ch.chart.setCrosshairPosition(dataIdx, time, ch.series);
+      }}
+      return;
+    }}
     const activeElements = [];
     for (let d = 0; d < ch.data.datasets.length; d++) {{
       const m = ch.getDatasetMeta(d);
@@ -561,6 +644,12 @@ function syncAllChartsHover(e) {{
     '<div class="tt-row"><span class="tt-label">均价</span><span class="tt-value">' + priceData[dataIdx].avg_close.toFixed(2) + '</span></div>' +
     '<div class="tt-sep"></div>' +
     '<div class="tt-row"><span class="tt-label">31_RATIO</span><span class="tt-value ' + (r.val >= 0 ? 'tt-up' : 'tt-dn') + '">' + (r.val >= 0 ? '+' : '') + r.val.toFixed(2) + '%</span></div>' +
+    '<div class="tt-sep"></div>' +
+    '<div class="tt-row"><span class="tt-label">K O</span><span class="tt-value">' + ohlcData[dataIdx].open.toFixed(2) + '</span></div>' +
+    '<div class="tt-row"><span class="tt-label">K H</span><span class="tt-value ' + (ohlcData[dataIdx].high >= 0 ? 'tt-up' : 'tt-dn') + '">' + ohlcData[dataIdx].high.toFixed(2) + '</span></div>' +
+    '<div class="tt-row"><span class="tt-label">K L</span><span class="tt-value ' + (ohlcData[dataIdx].low >= 0 ? 'tt-up' : 'tt-dn') + '">' + ohlcData[dataIdx].low.toFixed(2) + '</span></div>' +
+    '<div class="tt-row"><span class="tt-label">K C</span><span class="tt-value ' + (ohlcData[dataIdx].close >= 0 ? 'tt-up' : 'tt-dn') + '">' + ohlcData[dataIdx].close.toFixed(2) + '</span></div>' +
+    '<div class="tt-sep"></div>' +
     '<div class="tt-row"><span class="tt-label">311_RATIO</span><span class="tt-value ' + (r311.val >= 0 ? 'tt-up' : 'tt-dn') + '">' + (r311.val >= 0 ? '+' : '') + r311.val.toFixed(2) + '%</span></div>' +
     '<div class="tt-row"><span class="tt-label">HISTORY</span><span class="tt-value ' + (historyData[dataIdx].val >= 0 ? 'tt-up' : 'tt-dn') + '">' + (historyData[dataIdx].val >= 0 ? '+' : '') + historyData[dataIdx].val.toFixed(2) + '%</span></div>' +
     '<div class="tt-sep"></div>' +
@@ -586,6 +675,10 @@ function syncAllChartsHover(e) {{
 function clearAllHovers() {{
   charts.forEach(ch => {{
     if (!ch) return;
+    if (ch.isLW) {{
+      ch.chart.setCrosshairPosition(null, null, ch.series);
+      return;
+    }}
     ch.setActiveElements([]);
     if (ch.tooltip) ch.tooltip.setActiveElements([], {{ x:0, y:0 }});
     ch.update('none');
@@ -606,7 +699,9 @@ document.addEventListener('input', e => {{
   if (!box || !canvas) return;
   box.style.height = h + 'px';
   const ch = charts.find(c => c.canvas === canvas);
-  if (ch) ch.resize();
+  if (ch) {{
+    if (ch.resize) ch.resize();
+  }}
 }});
 
 /* ---- MA 配置变化时重绘 ---- */
@@ -815,6 +910,10 @@ document.addEventListener('click', e => {{
       grid.classList.remove('show');
       if (activeColorSwatch.classList.contains('ratio-swatch')) {{
         rebuildRatioCharts();
+      }} else if (activeColorSwatch.classList.contains('ohlc-ma-swatch')) {{
+        // 触发 K线 MA 重建
+        const evt = new Event('change');
+        document.querySelector('.ohlc-ma-period')?.dispatchEvent(evt);
       }} else if (activeColorSwatch.classList.contains('env-peak-swatch') || activeColorSwatch.classList.contains('env-valley-swatch')) {{
         rebuildPredictionChart();
       }} else {{
@@ -825,7 +924,7 @@ document.addEventListener('click', e => {{
     return;
   }}
   // 点击色块显示/隐藏网格
-  const sw = e.target.closest('.ma-swatch, .ratio-swatch, .env-peak-swatch, .env-valley-swatch');
+  const sw = e.target.closest('.ma-swatch, .ratio-swatch, .ohlc-ma-swatch, .env-peak-swatch, .env-valley-swatch');
   if (sw) {{
     if (activeColorSwatch === sw) {{
       grid.classList.remove('show');
@@ -1124,6 +1223,112 @@ function makeRatioChartOptions() {{
       options: makeRatioChartOptions()
     }}));
   }}
+
+
+  /* ---- 第8.5行：31_RATIO K线（lightweight-charts） + 均线 ---- */
+  function renderOHLC_Kline(containerId, ohlcData, dataAttr) {{
+    try {{
+    const container = document.getElementById(containerId);
+    if (!container || ohlcData.length === 0) return;
+    const ohlcChart = LightweightCharts.createChart(container, {{
+      width: container.parentElement.clientWidth || chartWidth,
+      height: container.parentElement.clientHeight || 500,
+      layout: {{ background: {{ type: 'solid', color: 'transparent' }}, textColor: '#787b86' }},
+      grid: {{ vertLines: {{ color: '#2b2b43' }}, horzLines: {{ color: '#2b2b43' }} }},
+      crosshair: {{ mode: LightweightCharts.CrosshairMode.Normal }},
+      rightPriceScale: {{ borderColor: '#2b2b43' }},
+      timeScale: {{ borderColor: '#2b2b43', visible: false }},
+      handleScroll: false,
+      handleScale: false,
+    }});
+    const candleSeries = ohlcChart.addCandlestickSeries({{
+      upColor: '#ef5350', downColor: '#00e5ff', borderUpColor: '#ef5350', borderDownColor: '#00e5ff',
+      wickUpColor: '#ef5350', wickDownColor: '#00e5ff',
+    }});
+    const ohlcFormatted = ohlcData.map(d => ({{
+      time: d.date,
+      open: d.open,
+      high: d.high,
+      low: d.low,
+      close: d.close,
+    }}));
+    candleSeries.setData(ohlcFormatted);
+    ohlcChart.timeScale().fitContent();
+
+    // 计算并添加 MA 均线
+    const closeVals = ohlcData.map(d => d.close);
+    const maSeries = [];
+    function rebuildMA() {{
+      maSeries.forEach(s => ohlcChart.removeSeries(s));
+      maSeries.length = 0;
+      for (let maIdx = 0; maIdx < 3; maIdx++) {{
+        const periodInput = document.querySelector('.ohlc-ma-period[data-ma="' + maIdx + '"][data-ohlc="' + dataAttr + '"]');
+        const swatch = document.querySelector('.ohlc-ma-swatch[data-ma="' + maIdx + '"]');
+        if (!periodInput || !swatch) continue;
+        const period = parseInt(periodInput.value) || 0;
+        const color = swatch.dataset.color || swatch.style.background;
+        if (period <= 0) continue;
+        const maData = closeVals.map((v, i) =>
+          i < period - 1 ? null : +(closeVals.slice(i - period + 1, i + 1).reduce((a, b) => a + b, 0) / period).toFixed(4)
+        );
+        const lineData = [];
+        for (let i = 0; i < maData.length; i++) {{
+          if (maData[i] !== null) {{
+            lineData.push({{ time: ohlcData[i].date, value: maData[i] }});
+          }}
+        }}
+        if (lineData.length > 0) {{
+          const s = ohlcChart.addLineSeries({{
+            color: color,
+            lineWidth: 1,
+            lastValueVisible: false,
+            priceLineVisible: false,
+          }});
+          s.setData(lineData);
+          maSeries.push(s);
+        }}
+      }}
+    }}
+    rebuildMA();
+
+    // 将 lightweight-charts 实例包装后加入 charts 数组
+    charts.push({{
+      canvas: container,
+      isLW: true,
+      chart: ohlcChart,
+      series: candleSeries,
+      ohlcData: ohlcData,
+      setActiveElements: function(active) {{}},
+      update: function() {{}},
+      resize: function() {{
+        const w = container.parentElement.clientWidth || chartWidth;
+        const h = container.parentElement.clientHeight || 500;
+        ohlcChart.applyOptions({{ width: w, height: h }});
+      }},
+    }});
+
+    // 窗口大小变化时自动 resize
+    const ro = new ResizeObserver(() => {{
+      const w = container.parentElement.clientWidth || chartWidth;
+      const h = container.parentElement.clientHeight || 500;
+      ohlcChart.applyOptions({{ width: w, height: h }});
+    }});
+    ro.observe(container.parentElement);
+
+    // MA 参数变化时重绘（只响应自己 data-ohlc 的 input）
+    document.querySelectorAll('.ohlc-ma-period[data-ohlc="' + dataAttr + '"]').forEach(input => {{
+      input.addEventListener('change', rebuildMA);
+      input.addEventListener('input', rebuildMA);
+    }});
+    }} catch(e) {{
+      console.error(containerId + ' K线图表加载失败:', e);
+    }}
+  }}
+
+  renderOHLC_Kline('c-ohlc', ohlcData, '31');
+  renderOHLC_Kline('c-ohlc311', ohlc311Data, '311');
+  renderOHLC_Kline('c-ohlc-history', ohlcHistoryData, 'history');
+
 
   /* ---- 第9行：311_RATIO（单线 + 上下不同色阴影） ---- */
   const ctx5 = document.getElementById('c-ratio311');
