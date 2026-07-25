@@ -129,3 +129,12 @@ def PATH_STOCK_CODES() -> str:
 def PATH_TRADING_DATES() -> str:
     return PATH_AIDATA() + "/TradingDates.config"
 
+def PATH_THS_ROOT() -> str:
+    return GET_ROOT_PATH() + "/李明学的大A/Data/THS"
+
+def PATH_THS_HISTORY_XLSX() -> str:
+    return PATH_THS_ROOT() + "/History.xlsx"
+
+def PATH_THS_HISTORY() -> str:
+    return PATH_THS_ROOT() + "/History"
+

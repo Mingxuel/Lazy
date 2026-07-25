@@ -6,8 +6,8 @@ import webbrowser
 _root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if _root not in sys.path:
     sys.path.insert(0, os.path.dirname(_root))
-from AICode.MarcoAPI.Path import PATH_AIDATA_TARGET_31, PATH_AIDATA_1D_WIN_COUNT, PATH_AIDATA_TARGET_31_RATIO, PATH_AIDATA_TARGET_311_RATIO, PATH_AIDATA_TARGET_HISTORY_RATIO, PATH_AIDATA_TARGET_TOP_1_RATIO, PATH_AIDATA_TARGET_TOP_11_RATIO, PATH_AIDATA_TOP, PATH_AIDATA_TOPPED, PATH_AIDATA_BOTTOM, PATH_AIDATA_1D_MOTION_COUNT, PATH_AIDATA_MOTION, PATH_AIDATA_1D_PRICE
-from AICode.MarcoAPI.DataAligned import READ_ALIGNED_LINES
+from AICode.MarcoAPI.Path import PATH_AIDATA_TARGET_31, PATH_AIDATA_1D_WIN_COUNT, PATH_AIDATA_TARGET_31_RATIO, PATH_AIDATA_TARGET_311_RATIO, PATH_AIDATA_TARGET_HISTORY_RATIO, PATH_AIDATA_TARGET_TOP_1_RATIO, PATH_AIDATA_TARGET_TOP_11_RATIO, PATH_AIDATA_TOP, PATH_AIDATA_TOPPED, PATH_AIDATA_BOTTOM, PATH_AIDATA_1D_MOTION_COUNT, PATH_AIDATA_MOTION, PATH_AIDATA_1D_PRICE, PATH_THS_HISTORY
+from AICode.MarcoAPI.DataAligned import READ_ALIGNED_LINES, ALIGNED_DATES
 
 
 def SHOW_TARGET_1D():
@@ -184,7 +184,7 @@ def SHOW_TARGET_1D():
     ]
     color_opts_8x8 = ''.join(f'<span style="background:{c}" data-color="{c}"></span>' for c in colors_64)
 
-    # 基于 31_RATIO 构建真实价格 K线（起始价格100，open=close=high=low，无影线）
+    # 基于 31_RATIO 构建真实价格 K线（起始价格100，open=昨日close，close=今日close，无影线）
     def build_ohlc(ratio_list):
         ohlc = []
         price = 100.0
@@ -192,13 +192,126 @@ def SHOW_TARGET_1D():
             val = d['val']
             if i > 0:
                 price = ohlc[i - 1]['close']
+            open_price = price
             close = round(price * (1 + val / 100), 4)
-            ohlc.append({'date': f"{d['date'][:4]}-{d['date'][4:6]}-{d['date'][6:8]}", 'open': close, 'high': close, 'low': close, 'close': close})
+            ohlc.append({'date': f"{d['date'][:4]}-{d['date'][4:6]}-{d['date'][6:8]}", 'open': open_price, 'high': close, 'low': close, 'close': close})
         return ohlc
 
     ohlc_data = build_ohlc(ratio_data)
     ohlc311_data = build_ohlc(ratio311_data)
     ohlc_history_data = build_ohlc(history_data)
+
+    # ── 读取 THS 账户 History 数据 ──
+    account_history = []
+    ths_path = PATH_THS_HISTORY()
+    aligned_dates = ALIGNED_DATES()
+    if os.path.isfile(ths_path):
+        with open(ths_path, 'r') as f:
+            ths_lines = {l.split('|')[0]: l.strip() for l in f if l.strip()}
+    else:
+        ths_lines = {}
+    for date in aligned_dates:
+        line = ths_lines.get(date, '')
+        if line:
+            parts = line.split('|')
+            # 日期|市值|当日盈亏|当日收益率|累计盈亏|累计收益率
+            market_val = float(parts[1]) if len(parts) > 1 else 0.0
+            daily_pnl = float(parts[2].replace('+', '')) if len(parts) > 2 else 0.0
+            daily_pct_str = parts[3].replace('%', '').replace('+', '') if len(parts) > 3 else '0'
+            daily_pct = float(daily_pct_str) if daily_pct_str else 0.0
+            cumulative_pnl = float(parts[4].replace('+', '')) if len(parts) > 4 else 0.0
+            cumulative_pct_str = parts[5].replace('%', '').replace('+', '') if len(parts) > 5 else '0'
+            cumulative_pct = float(cumulative_pct_str) if cumulative_pct_str else 0.0
+        else:
+            market_val = 0.0; daily_pnl = 0.0; daily_pct = 0.0
+            cumulative_pnl = 0.0; cumulative_pct = 0.0
+        account_history.append({
+            'date': date,
+            'market_val': market_val,
+            'daily_pnl': daily_pnl,
+            'daily_pct': daily_pct,
+            'cumulative_pnl': cumulative_pnl,
+            'cumulative_pct': cumulative_pct,
+        })
+
+    # ── 策略模拟：成交额MA5>MA10 且 History MA5>MA10 时才交易 ──
+    # 用 win_data.amount 作为成交额，计算其 MA5/MA10
+    # 用 account_history.daily_pct 计算其 MA5/MA10
+    amt_vals = [d['amount'] / 1e8 for d in win_data]  # 成交额（亿）
+    hist_pct_vals = [d['daily_pct'] for d in account_history]
+
+    def calc_ma(data, period):
+        return [sum(data[max(0, i - period + 1):i + 1]) / min(period, i + 1) if i >= 0 else 0 for i in range(len(data))]
+
+    amt_ma5 = calc_ma(amt_vals, 5)
+    amt_ma10 = calc_ma(amt_vals, 10)
+    hist_ma5 = calc_ma(hist_pct_vals, 5)
+    hist_ma10 = calc_ma(hist_pct_vals, 10)
+
+    # 策略：当 amt_ma5 > amt_ma10 且 hist_ma5 > hist_ma10 时交易，持有策略标的
+    # 策略标的是 account_history 的 daily_pct（即按账户当日收益率模拟持仓）
+    strategy_nav = 100.0  # 起始净值100
+    strategy_data = []
+    in_position = False
+    for i in range(len(aligned_dates)):
+        signal = 1 if (amt_ma5[i] > amt_ma10[i] and hist_ma5[i] > hist_ma10[i]) else 0
+        if signal == 1:
+            if not in_position:
+                in_position = True
+            # 持有：按 account daily_pct 涨跌
+            pct = hist_pct_vals[i]
+            strategy_nav = round(strategy_nav * (1 + pct / 100), 4)
+        else:
+            if in_position:
+                in_position = False
+            # 空仓：净值不变
+        date_fmt = f"{aligned_dates[i][:4]}-{aligned_dates[i][4:6]}-{aligned_dates[i][6:8]}"
+        strategy_data.append({
+            'date': date_fmt,
+            'nav': strategy_nav,
+            'signal': signal,
+        })
+
+    # 构建策略 K线（用策略每日收益率，起始价100，与 build_ohlc 一致）
+    strategy_ohlc = []
+    price = 100.0
+    for i, d in enumerate(strategy_data):
+        if i == 0:
+            pct = 0.0
+        else:
+            prev_nav = strategy_data[i - 1]['nav']
+            if prev_nav != 0:
+                pct = (d['nav'] - prev_nav) / abs(prev_nav) * 100
+            else:
+                pct = 0.0
+        if i > 0:
+            price = strategy_ohlc[i - 1]['close']
+        open_price = price
+        close = round(price * (1 + pct / 100), 4)
+        strategy_ohlc.append({
+            'date': d['date'],
+            'open': open_price,
+            'high': close,
+            'low': close,
+            'close': close,
+        })
+
+    # 构建账户 History K线（用 daily_pct 涨跌幅，起始价100，与 build_ohlc 一致）
+    account_ohlc = []
+    price = 100.0
+    for i, d in enumerate(account_history):
+        val = d['daily_pct']
+        if i > 0:
+            price = account_ohlc[i - 1]['close']
+        open_price = price
+        close = round(price * (1 + val / 100), 4)
+        account_ohlc.append({
+            'date': f"{d['date'][:4]}-{d['date'][4:6]}-{d['date'][6:8]}",
+            'open': open_price,
+            'high': close,
+            'low': close,
+            'close': close,
+        })
 
     data_json = json.dumps(stocks, ensure_ascii=False)
     win_json = json.dumps(win_data, ensure_ascii=False)
@@ -208,6 +321,9 @@ def SHOW_TARGET_1D():
     ohlc_json = json.dumps(ohlc_data, ensure_ascii=False)
     ohlc311_json = json.dumps(ohlc311_data, ensure_ascii=False)
     ohlc_history_json = json.dumps(ohlc_history_data, ensure_ascii=False)
+    account_ohlc_json = json.dumps(account_ohlc, ensure_ascii=False)
+    strategy_ohlc_json = json.dumps(strategy_ohlc, ensure_ascii=False)
+    strategy_signal_json = json.dumps(strategy_data, ensure_ascii=False)
     top_json = json.dumps(top_data, ensure_ascii=False)
     bottom_json = json.dumps(bottom_data, ensure_ascii=False)
     topped_json = json.dumps(topped_data, ensure_ascii=False)
@@ -477,6 +593,57 @@ def SHOW_TARGET_1D():
           </div>
         </td>
       </tr>
+      <!-- 第11行：成交额均线 -->
+      <tr>
+        <td class="col-idx" style="padding:0;"><div style="font-size:13px;font-weight:normal;color:#d1d4dc;line-height:1.2;"><span style="font-size:10px;background:#ffd74022;color:#ffd740;border:1px solid #ffd74044;padding:1px 6px;border-radius:8px;">AMOUNT MA</span></div><div style="font-family:'Orbitron',sans-serif;font-size:36px;font-weight:900;line-height:1;">成交额<br>均线</div></td>
+        <td style="padding:10px 0;">
+          <div class="chart-box" style="height:180px;">
+            <canvas id="c-amount-ma-line"></canvas>
+          </div>
+        </td>
+        <td class="col-param">
+          <div class="param-group">
+            <div class="param-row"><label>MA1</label><input class="amt-ma-period" type="number" value="5" min="0" data-ma="0"><div class="color-picker"><div class="color-swatch amt-ma-swatch" data-ma="0" style="background:#f5a623"></div></div></div>
+            <div class="param-row"><label>MA2</label><input class="amt-ma-period" type="number" value="10" min="0" data-ma="1"><div class="color-picker"><div class="color-swatch amt-ma-swatch" data-ma="1" style="background:#1e90ff"></div></div></div>
+            <div class="param-row"><label>MA3</label><input class="amt-ma-period" type="number" value="0" min="0" data-ma="2"><div class="color-picker"><div class="color-swatch amt-ma-swatch" data-ma="2" style="background:#808080"></div></div></div>
+            <div class="param-row"><label>高度</label><input class="height-input" type="number" value="180" min="60" step="10" data-target="c-amount-ma-line"></div>
+          </div>
+        </td>
+      </tr>
+      <!-- 第11.5行：账户盈亏 KLINE（lightweight-charts + 均线） -->
+      <tr>
+        <td class="col-idx"><div style="font-size:13px;font-weight:normal;color:#d1d4dc;line-height:1.2;"><span style="font-size:10px;background:#ffd74022;color:#ffd740;border:1px solid #ffd74044;padding:1px 6px;border-radius:8px;">ACCOUNT</span></div><div style="font-family:'Orbitron',sans-serif;font-size:36px;font-weight:900;line-height:1.1;">账户<br>KLINE</div></td>
+        <td style="padding:10px 0;">
+          <div class="chart-box" style="height:500px;position:relative;">
+            <div id="c-ohlc-account" style="width:100%;height:100%;"></div>
+          </div>
+        </td>
+        <td class="col-param">
+          <div class="param-group">
+            <div class="param-row"><label>MA1</label><input class="ohlc-ma-period" type="number" value="5" min="0" data-ma="0" data-ohlc="account"><div class="color-picker"><div class="color-swatch ohlc-ma-swatch" data-ma="0" style="background:#f5a623"></div></div></div>
+            <div class="param-row"><label>MA2</label><input class="ohlc-ma-period" type="number" value="10" min="0" data-ma="1" data-ohlc="account"><div class="color-picker"><div class="color-swatch ohlc-ma-swatch" data-ma="1" style="background:#1e90ff"></div></div></div>
+            <div class="param-row"><label>MA3</label><input class="ohlc-ma-period" type="number" value="0" min="0" data-ma="2" data-ohlc="account"><div class="color-picker"><div class="color-swatch ohlc-ma-swatch" data-ma="2" style="background:#808080"></div></div></div>
+            <div class="param-row"><label>高度</label><input class="height-input" type="number" value="500" min="60" step="10" data-target="c-ohlc-account"></div>
+          </div>
+        </td>
+      </tr>
+      <!-- 第11.6行：策略盈亏 KLINE（lightweight-charts + 均线） -->
+      <tr>
+        <td class="col-idx"><div style="font-size:13px;font-weight:normal;color:#d1d4dc;line-height:1.2;"><span style="font-size:10px;background:#ffd74022;color:#ffd740;border:1px solid #ffd74044;padding:1px 6px;border-radius:8px;">STRATEGY</span></div><div style="font-family:'Orbitron',sans-serif;font-size:36px;font-weight:900;line-height:1.1;">策略<br>KLINE</div></td>
+        <td style="padding:10px 0;">
+          <div class="chart-box" style="height:500px;position:relative;">
+            <div id="c-ohlc-strategy" style="width:100%;height:100%;"></div>
+          </div>
+        </td>
+        <td class="col-param">
+          <div class="param-group">
+            <div class="param-row"><label>MA1</label><input class="ohlc-ma-period" type="number" value="5" min="0" data-ma="0" data-ohlc="strategy"><div class="color-picker"><div class="color-swatch ohlc-ma-swatch" data-ma="0" style="background:#f5a623"></div></div></div>
+            <div class="param-row"><label>MA2</label><input class="ohlc-ma-period" type="number" value="10" min="0" data-ma="1" data-ohlc="strategy"><div class="color-picker"><div class="color-swatch ohlc-ma-swatch" data-ma="1" style="background:#1e90ff"></div></div></div>
+            <div class="param-row"><label>MA3</label><input class="ohlc-ma-period" type="number" value="0" min="0" data-ma="2" data-ohlc="strategy"><div class="color-picker"><div class="color-swatch ohlc-ma-swatch" data-ma="2" style="background:#808080"></div></div></div>
+            <div class="param-row"><label>高度</label><input class="height-input" type="number" value="500" min="60" step="10" data-target="c-ohlc-strategy"></div>
+          </div>
+        </td>
+      </tr>
       <!-- 第12行：封板率 TOP/(TOPPED+TOP)*100 -->
       <tr>
         <td class="col-idx" style="padding:0;"><div style="font-size:13px;font-weight:normal;color:#d1d4dc;line-height:1.2;"><span style="font-size:10px;background:#ffd74022;color:#ffd740;border:1px solid #ffd74044;padding:1px 6px;border-radius:8px;">SEAL</span></div><div style="font-family:'Orbitron',sans-serif;font-size:40px;font-weight:900;line-height:1;">封板率</div></td>
@@ -536,6 +703,9 @@ const historyData = {history_json};
 const ohlcData = {ohlc_json};
 const ohlc311Data = {ohlc311_json};
 const ohlcHistoryData = {ohlc_history_json};
+const accountOhlcData = {account_ohlc_json};
+const strategyOhlcData = {strategy_ohlc_json};
+const strategySignalData = {strategy_signal_json};
 const topData = {top_json};
 const bottomData = {bottom_json};
 const toppedData = {topped_json};
@@ -602,11 +772,10 @@ function syncAllChartsHover(e) {{
   charts.forEach(ch => {{
     if (!ch || !ch.canvas) return;
     if (ch.isLW) {{
-      // lightweight-charts: 使用时间坐标设置 crosshair
+      // lightweight-charts: 使用时间和价格设置 crosshair
       const ohlc = ch.ohlcData[dataIdx];
       if (ohlc) {{
-        const time = ohlc.date.replace(/-/g, '/');
-        ch.chart.setCrosshairPosition(dataIdx, time, ch.series);
+        ch.chart.setCrosshairPosition(ohlc.close, ohlc.date, ch.series);
       }}
       return;
     }}
@@ -652,6 +821,11 @@ function syncAllChartsHover(e) {{
     '<div class="tt-sep"></div>' +
     '<div class="tt-row"><span class="tt-label">311_RATIO</span><span class="tt-value ' + (r311.val >= 0 ? 'tt-up' : 'tt-dn') + '">' + (r311.val >= 0 ? '+' : '') + r311.val.toFixed(2) + '%</span></div>' +
     '<div class="tt-row"><span class="tt-label">HISTORY</span><span class="tt-value ' + (historyData[dataIdx].val >= 0 ? 'tt-up' : 'tt-dn') + '">' + (historyData[dataIdx].val >= 0 ? '+' : '') + historyData[dataIdx].val.toFixed(2) + '%</span></div>' +
+    '<div class="tt-sep"></div>' +
+    '<div class="tt-row"><span class="tt-label">账户K O</span><span class="tt-value">' + accountOhlcData[dataIdx].open.toFixed(2) + '</span></div>' +
+    '<div class="tt-row"><span class="tt-label">账户K C</span><span class="tt-value ' + (accountOhlcData[dataIdx].close >= 0 ? 'tt-up' : 'tt-dn') + '">' + accountOhlcData[dataIdx].close.toFixed(2) + '</span></div>' +
+    '<div class="tt-row"><span class="tt-label">策略K O</span><span class="tt-value">' + strategyOhlcData[dataIdx].open.toFixed(2) + '</span></div>' +
+    '<div class="tt-row"><span class="tt-label">策略K C</span><span class="tt-value ' + (strategyOhlcData[dataIdx].close >= 0 ? 'tt-up' : 'tt-dn') + '">' + strategyOhlcData[dataIdx].close.toFixed(2) + '</span></div>' +
     '<div class="tt-sep"></div>' +
     '<div class="tt-row"><span class="tt-label">封板率</span><span class="tt-value ' + (sealData[dataIdx].rate >= 60 ? 'tt-up' : sealData[dataIdx].rate >= 20 ? '' : 'tt-dn') + '">' + sealData[dataIdx].rate.toFixed(1) + '%</span></div>' +
     '<div class="tt-sep"></div>' +
@@ -914,6 +1088,10 @@ document.addEventListener('click', e => {{
         // 触发 K线 MA 重建
         const evt = new Event('change');
         document.querySelector('.ohlc-ma-period')?.dispatchEvent(evt);
+      }} else if (activeColorSwatch.classList.contains('amt-ma-swatch')) {{
+        // 触发成交额 MA 重建
+        const evt = new Event('change');
+        document.querySelector('.amt-ma-period')?.dispatchEvent(evt);
       }} else if (activeColorSwatch.classList.contains('env-peak-swatch') || activeColorSwatch.classList.contains('env-valley-swatch')) {{
         rebuildPredictionChart();
       }} else {{
@@ -924,7 +1102,7 @@ document.addEventListener('click', e => {{
     return;
   }}
   // 点击色块显示/隐藏网格
-  const sw = e.target.closest('.ma-swatch, .ratio-swatch, .ohlc-ma-swatch, .env-peak-swatch, .env-valley-swatch');
+  const sw = e.target.closest('.ma-swatch, .ratio-swatch, .ohlc-ma-swatch, .amt-ma-swatch, .env-peak-swatch, .env-valley-swatch');
   if (sw) {{
     if (activeColorSwatch === sw) {{
       grid.classList.remove('show');
@@ -1168,6 +1346,61 @@ function renderCharts() {{
     }}));
   }}
 
+  /* ---- 第7.5行：成交额均线（Chart.js line，可配置周期） ---- */
+  function renderAmtMA() {{
+    const ctx = document.getElementById('c-amount-ma-line');
+    if (!ctx || winData.length === 0) return;
+    const amtVals = winData.map(d => d.amount / 1e8);
+    const datasets = [];
+    for (let maIdx = 0; maIdx < 3; maIdx++) {{
+      const periodInput = document.querySelector('.amt-ma-period[data-ma="' + maIdx + '"]');
+      const swatch = document.querySelector('.amt-ma-swatch[data-ma="' + maIdx + '"]');
+      if (!periodInput || !swatch) continue;
+      const period = parseInt(periodInput.value) || 0;
+      const color = swatch.dataset.color || swatch.style.background;
+      if (period <= 0) continue;
+      const maData = amtVals.map((v, i) =>
+        i < period - 1 ? null : +(amtVals.slice(i - period + 1, i + 1).reduce((a, b) => a + b, 0) / period).toFixed(4)
+      );
+      datasets.push({{
+        label: 'MA' + period,
+        data: maData,
+        borderColor: color,
+        backgroundColor: 'transparent',
+        fill: false,
+        tension: 0.2,
+        pointRadius: 0,
+        pointHoverRadius: 5,
+        pointHoverBackgroundColor: '#ffffff',
+        borderWidth: 1.2,
+      }});
+    }}
+    // 移除旧chart
+    const oldCh = charts.find(c => c.canvas && c.canvas.id === 'c-amount-ma-line');
+    if (oldCh) {{ oldCh.destroy(); charts = charts.filter(c => c !== oldCh); }}
+    if (datasets.length === 0) return;
+    const ch = new Chart(ctx, {{
+      type: 'line',
+      data: {{ labels: winData.map(d => d.date), datasets: datasets }},
+      options: {{
+        responsive: true, maintainAspectRatio: false,
+        interaction: {{ mode: 'index', intersect: false }},
+        plugins: {{ legend: {{ display: false }}, tooltip: {{ enabled: false }} }},
+        scales: {{
+          x: {{ offset: true, ticks: {{ display: false }}, grid: {{ display: false }} }},
+          y: {{ display: true, position: 'right', ticks: {{ display: false, callback: v => v + '亿' }}, grid: {{ color: '#485c7b55', borderDash: [3, 4], lineWidth: 1 }}, border: {{ display: false }} }}
+        }}
+      }}
+    }});
+    charts.push(ch);
+  }}
+  renderAmtMA();
+  // MA 参数变化时重绘
+  document.querySelectorAll('.amt-ma-period').forEach(input => {{
+    input.addEventListener('change', renderAmtMA);
+    input.addEventListener('input', renderAmtMA);
+  }});
+
 /* ---- 辅助函数：获取ratio颜色配置 ---- */
 function getRatioColors() {{
   const ls = document.querySelector('.ratio-line-swatch');
@@ -1236,8 +1469,8 @@ function makeRatioChartOptions() {{
       layout: {{ background: {{ type: 'solid', color: 'transparent' }}, textColor: '#787b86' }},
       grid: {{ vertLines: {{ color: '#2b2b43' }}, horzLines: {{ color: '#2b2b43' }} }},
       crosshair: {{ mode: LightweightCharts.CrosshairMode.Normal }},
-      rightPriceScale: {{ borderColor: '#2b2b43' }},
-      timeScale: {{ borderColor: '#2b2b43', visible: false }},
+      rightPriceScale: {{ borderColor: '#2b2b43', visible: false }},
+      timeScale: {{ borderColor: '#2b2b43', visible: false, shiftVisibleRangeOnNewBar: false, rightOffset: 0, barSpacing: 8 }},
       handleScroll: false,
       handleScale: false,
     }});
@@ -1254,6 +1487,10 @@ function makeRatioChartOptions() {{
     }}));
     candleSeries.setData(ohlcFormatted);
     ohlcChart.timeScale().fitContent();
+    // 去掉右侧间距，与其它图表右对齐
+    ohlcChart.timeScale().scrollToPosition(0, false);
+    // 自动适配价格范围
+    ohlcChart.priceScale('right').applyOptions({{ autoScale: true }});
 
     // 计算并添加 MA 均线
     const closeVals = ohlcData.map(d => d.close);
@@ -1328,6 +1565,9 @@ function makeRatioChartOptions() {{
   renderOHLC_Kline('c-ohlc', ohlcData, '31');
   renderOHLC_Kline('c-ohlc311', ohlc311Data, '311');
   renderOHLC_Kline('c-ohlc-history', ohlcHistoryData, 'history');
+
+  renderOHLC_Kline('c-ohlc-account', accountOhlcData, 'account');
+  renderOHLC_Kline('c-ohlc-strategy', strategyOhlcData, 'strategy');
 
 
   /* ---- 第9行：311_RATIO（单线 + 上下不同色阴影） ---- */
