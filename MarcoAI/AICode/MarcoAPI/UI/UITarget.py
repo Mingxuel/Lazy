@@ -802,6 +802,33 @@ function syncAllChartsHover(e) {{
   const tt = document.getElementById('custom-tooltip');
   const upPct = d.total > 0 ? (d.up / d.total * 100).toFixed(1) : '0.0';
   const dnPct = d.total > 0 ? (d.down / d.total * 100).toFixed(1) : '0.0';
+
+  // 计算成交额 MA5/MA10 及金叉/死叉估算
+  const amtVals = winData.map(w => w.amount / 1e8);
+  const curMA5 = dataIdx >= 4 ? amtVals.slice(dataIdx-4, dataIdx+1).reduce((a,b) => a+b, 0) / 5 : null;
+  const curMA10 = dataIdx >= 9 ? amtVals.slice(dataIdx-9, dataIdx+1).reduce((a,b) => a+b, 0) / 10 : null;
+  let crossEstimate = '';
+  if (curMA5 !== null && curMA10 !== null) {{
+    const sum4 = amtVals[dataIdx - 4] + amtVals[dataIdx - 3] + amtVals[dataIdx - 2] + amtVals[dataIdx - 1];
+    const sum9 = amtVals.slice(dataIdx - 9, dataIdx).reduce((a,b) => a+b, 0);
+    // 新MA5 = (sum4+x)/5, 新MA10 = (sum9+x)/10
+    // 金叉: (sum4+x)/5 > (sum9+x)/10  =>  x > sum9 - 2*sum4
+    const threshold = sum9 - 2 * sum4;
+    if (curMA5 <= curMA10) {{
+      if (threshold > amtVals[dataIdx]) {{
+        crossEstimate = '<div class="tt-row"><span class="tt-label">金叉需增量</span><span class="tt-value tt-up">+' + (threshold - amtVals[dataIdx]).toFixed(2) + '亿</span></div>';
+      }} else {{
+        crossEstimate = '<div class="tt-row"><span class="tt-label">金叉</span><span class="tt-value tt-up">✓ 已满足</span></div>';
+      }}
+    }} else {{
+      if (threshold < amtVals[dataIdx]) {{
+        crossEstimate = '<div class="tt-row"><span class="tt-label">死叉需减量</span><span class="tt-value tt-dn">-' + (amtVals[dataIdx] - threshold).toFixed(2) + '亿</span></div>';
+      }} else {{
+        crossEstimate = '<div class="tt-row"><span class="tt-label">死叉</span><span class="tt-value tt-dn">✓ 已满足</span></div>';
+      }}
+    }}
+  }}
+
   tt.innerHTML =
     '<div class="tt-date">' + d.date + '</div>' +
     '<div class="tt-sep"></div>' +
@@ -810,22 +837,15 @@ function syncAllChartsHover(e) {{
     '<div class="tt-row"><span class="tt-label">平盘</span><span class="tt-value">' + d.flat + '</span></div>' +
     '<div class="tt-row"><span class="tt-label">总数</span><span class="tt-value">' + d.total + '</span></div>' +
     '<div class="tt-row"><span class="tt-label">总成交额</span><span class="tt-value">' + (d.amount / 1e8).toFixed(2) + '亿</span></div>' +
+    '<div class="tt-row"><span class="tt-label">MA5</span><span class="tt-value">' + (curMA5 !== null ? curMA5.toFixed(2) : '-') + '亿</span></div>' +
+    '<div class="tt-row"><span class="tt-label">MA10</span><span class="tt-value">' + (curMA10 !== null ? curMA10.toFixed(2) : '-') + '亿</span></div>' +
+    (crossEstimate) +
     '<div class="tt-row"><span class="tt-label">均价</span><span class="tt-value">' + priceData[dataIdx].avg_close.toFixed(2) + '</span></div>' +
     '<div class="tt-sep"></div>' +
     '<div class="tt-row"><span class="tt-label">31_RATIO</span><span class="tt-value ' + (r.val >= 0 ? 'tt-up' : 'tt-dn') + '">' + (r.val >= 0 ? '+' : '') + r.val.toFixed(2) + '%</span></div>' +
     '<div class="tt-sep"></div>' +
-    '<div class="tt-row"><span class="tt-label">K O</span><span class="tt-value">' + ohlcData[dataIdx].open.toFixed(2) + '</span></div>' +
-    '<div class="tt-row"><span class="tt-label">K H</span><span class="tt-value ' + (ohlcData[dataIdx].high >= 0 ? 'tt-up' : 'tt-dn') + '">' + ohlcData[dataIdx].high.toFixed(2) + '</span></div>' +
-    '<div class="tt-row"><span class="tt-label">K L</span><span class="tt-value ' + (ohlcData[dataIdx].low >= 0 ? 'tt-up' : 'tt-dn') + '">' + ohlcData[dataIdx].low.toFixed(2) + '</span></div>' +
-    '<div class="tt-row"><span class="tt-label">K C</span><span class="tt-value ' + (ohlcData[dataIdx].close >= 0 ? 'tt-up' : 'tt-dn') + '">' + ohlcData[dataIdx].close.toFixed(2) + '</span></div>' +
-    '<div class="tt-sep"></div>' +
     '<div class="tt-row"><span class="tt-label">311_RATIO</span><span class="tt-value ' + (r311.val >= 0 ? 'tt-up' : 'tt-dn') + '">' + (r311.val >= 0 ? '+' : '') + r311.val.toFixed(2) + '%</span></div>' +
     '<div class="tt-row"><span class="tt-label">HISTORY</span><span class="tt-value ' + (historyData[dataIdx].val >= 0 ? 'tt-up' : 'tt-dn') + '">' + (historyData[dataIdx].val >= 0 ? '+' : '') + historyData[dataIdx].val.toFixed(2) + '%</span></div>' +
-    '<div class="tt-sep"></div>' +
-    '<div class="tt-row"><span class="tt-label">账户K O</span><span class="tt-value">' + accountOhlcData[dataIdx].open.toFixed(2) + '</span></div>' +
-    '<div class="tt-row"><span class="tt-label">账户K C</span><span class="tt-value ' + (accountOhlcData[dataIdx].close >= 0 ? 'tt-up' : 'tt-dn') + '">' + accountOhlcData[dataIdx].close.toFixed(2) + '</span></div>' +
-    '<div class="tt-row"><span class="tt-label">策略K O</span><span class="tt-value">' + strategyOhlcData[dataIdx].open.toFixed(2) + '</span></div>' +
-    '<div class="tt-row"><span class="tt-label">策略K C</span><span class="tt-value ' + (strategyOhlcData[dataIdx].close >= 0 ? 'tt-up' : 'tt-dn') + '">' + strategyOhlcData[dataIdx].close.toFixed(2) + '</span></div>' +
     '<div class="tt-sep"></div>' +
     '<div class="tt-row"><span class="tt-label">封板率</span><span class="tt-value ' + (sealData[dataIdx].rate >= 60 ? 'tt-up' : sealData[dataIdx].rate >= 20 ? '' : 'tt-dn') + '">' + sealData[dataIdx].rate.toFixed(1) + '%</span></div>' +
     '<div class="tt-sep"></div>' +
