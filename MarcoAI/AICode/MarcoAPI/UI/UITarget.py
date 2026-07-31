@@ -321,9 +321,32 @@ def SHOW_TARGET_1D():
     ohlc_json = json.dumps(ohlc_data, ensure_ascii=False)
     ohlc311_json = json.dumps(ohlc311_data, ensure_ascii=False)
     ohlc_history_json = json.dumps(ohlc_history_data, ensure_ascii=False)
+    # 构建成交额 K线（用成交额每日变化率，与昨日成交额的百分比）
+    amount_ohlc = []
+    amt_price = 100.0
+    for i, d in enumerate(win_data):
+        if i == 0:
+            amt_pct = 0.0
+        else:
+            prev_amt = win_data[i - 1]['amount']
+            cur_amt = d['amount']
+            amt_pct = ((cur_amt - prev_amt) / prev_amt * 100) if prev_amt != 0 else 0.0
+        if i > 0:
+            amt_price = amount_ohlc[i - 1]['close']
+        open_price = amt_price
+        close = round(amt_price * (1 + amt_pct / 100), 4)
+        amount_ohlc.append({
+            'date': f"{d['date'][:4]}-{d['date'][4:6]}-{d['date'][6:8]}",
+            'open': open_price,
+            'high': close,
+            'low': close,
+            'close': close,
+        })
+
     account_ohlc_json = json.dumps(account_ohlc, ensure_ascii=False)
     strategy_ohlc_json = json.dumps(strategy_ohlc, ensure_ascii=False)
     strategy_signal_json = json.dumps(strategy_data, ensure_ascii=False)
+    amount_ohlc_json = json.dumps(amount_ohlc, ensure_ascii=False)
     top_json = json.dumps(top_data, ensure_ascii=False)
     bottom_json = json.dumps(bottom_data, ensure_ascii=False)
     topped_json = json.dumps(topped_data, ensure_ascii=False)
@@ -593,20 +616,20 @@ def SHOW_TARGET_1D():
           </div>
         </td>
       </tr>
-      <!-- 第11行：成交额均线 -->
+      <!-- 第11行：成交额 KLINE（lightweight-charts + 均线） -->
       <tr>
-        <td class="col-idx" style="padding:0;"><div style="font-size:13px;font-weight:normal;color:#d1d4dc;line-height:1.2;"><span style="font-size:10px;background:#ffd74022;color:#ffd740;border:1px solid #ffd74044;padding:1px 6px;border-radius:8px;">AMOUNT MA</span></div><div style="font-family:'Orbitron',sans-serif;font-size:36px;font-weight:900;line-height:1;">成交额<br>均线</div></td>
+        <td class="col-idx"><div style="font-size:13px;font-weight:normal;color:#d1d4dc;line-height:1.2;"><span style="font-size:10px;background:#ffd74022;color:#ffd740;border:1px solid #ffd74044;padding:1px 6px;border-radius:8px;">AMOUNT</span></div><div style="font-family:'Orbitron',sans-serif;font-size:36px;font-weight:900;line-height:1.1;">成交额<br>KLINE</div></td>
         <td style="padding:10px 0;">
-          <div class="chart-box" style="height:180px;">
-            <canvas id="c-amount-ma-line"></canvas>
+          <div class="chart-box" style="height:500px;position:relative;">
+            <div id="c-ohlc-amount" style="width:100%;height:100%;"></div>
           </div>
         </td>
         <td class="col-param">
           <div class="param-group">
-            <div class="param-row"><label>MA1</label><input class="amt-ma-period" type="number" value="5" min="0" data-ma="0"><div class="color-picker"><div class="color-swatch amt-ma-swatch" data-ma="0" style="background:#f5a623"></div></div></div>
-            <div class="param-row"><label>MA2</label><input class="amt-ma-period" type="number" value="10" min="0" data-ma="1"><div class="color-picker"><div class="color-swatch amt-ma-swatch" data-ma="1" style="background:#1e90ff"></div></div></div>
-            <div class="param-row"><label>MA3</label><input class="amt-ma-period" type="number" value="0" min="0" data-ma="2"><div class="color-picker"><div class="color-swatch amt-ma-swatch" data-ma="2" style="background:#808080"></div></div></div>
-            <div class="param-row"><label>高度</label><input class="height-input" type="number" value="180" min="60" step="10" data-target="c-amount-ma-line"></div>
+            <div class="param-row"><label>MA1</label><input class="ohlc-ma-period" type="number" value="5" min="0" data-ma="0" data-ohlc="amount"><div class="color-picker"><div class="color-swatch ohlc-ma-swatch" data-ma="0" style="background:#f5a623"></div></div></div>
+            <div class="param-row"><label>MA2</label><input class="ohlc-ma-period" type="number" value="10" min="0" data-ma="1" data-ohlc="amount"><div class="color-picker"><div class="color-swatch ohlc-ma-swatch" data-ma="1" style="background:#1e90ff"></div></div></div>
+            <div class="param-row"><label>MA3</label><input class="ohlc-ma-period" type="number" value="0" min="0" data-ma="2" data-ohlc="amount"><div class="color-picker"><div class="color-swatch ohlc-ma-swatch" data-ma="2" style="background:#808080"></div></div></div>
+            <div class="param-row"><label>高度</label><input class="height-input" type="number" value="500" min="60" step="10" data-target="c-ohlc-amount"></div>
           </div>
         </td>
       </tr>
@@ -706,6 +729,7 @@ const ohlcHistoryData = {ohlc_history_json};
 const accountOhlcData = {account_ohlc_json};
 const strategyOhlcData = {strategy_ohlc_json};
 const strategySignalData = {strategy_signal_json};
+const amountOhlcData = {amount_ohlc_json};
 const topData = {top_json};
 const bottomData = {bottom_json};
 const toppedData = {topped_json};
@@ -1108,10 +1132,6 @@ document.addEventListener('click', e => {{
         // 触发 K线 MA 重建
         const evt = new Event('change');
         document.querySelector('.ohlc-ma-period')?.dispatchEvent(evt);
-      }} else if (activeColorSwatch.classList.contains('amt-ma-swatch')) {{
-        // 触发成交额 MA 重建
-        const evt = new Event('change');
-        document.querySelector('.amt-ma-period')?.dispatchEvent(evt);
       }} else if (activeColorSwatch.classList.contains('env-peak-swatch') || activeColorSwatch.classList.contains('env-valley-swatch')) {{
         rebuildPredictionChart();
       }} else {{
@@ -1122,7 +1142,7 @@ document.addEventListener('click', e => {{
     return;
   }}
   // 点击色块显示/隐藏网格
-  const sw = e.target.closest('.ma-swatch, .ratio-swatch, .ohlc-ma-swatch, .amt-ma-swatch, .env-peak-swatch, .env-valley-swatch');
+  const sw = e.target.closest('.ma-swatch, .ratio-swatch, .ohlc-ma-swatch, .env-peak-swatch, .env-valley-swatch');
   if (sw) {{
     if (activeColorSwatch === sw) {{
       grid.classList.remove('show');
@@ -1366,61 +1386,6 @@ function renderCharts() {{
     }}));
   }}
 
-  /* ---- 第7.5行：成交额均线（Chart.js line，可配置周期） ---- */
-  function renderAmtMA() {{
-    const ctx = document.getElementById('c-amount-ma-line');
-    if (!ctx || winData.length === 0) return;
-    const amtVals = winData.map(d => d.amount / 1e8);
-    const datasets = [];
-    for (let maIdx = 0; maIdx < 3; maIdx++) {{
-      const periodInput = document.querySelector('.amt-ma-period[data-ma="' + maIdx + '"]');
-      const swatch = document.querySelector('.amt-ma-swatch[data-ma="' + maIdx + '"]');
-      if (!periodInput || !swatch) continue;
-      const period = parseInt(periodInput.value) || 0;
-      const color = swatch.dataset.color || swatch.style.background;
-      if (period <= 0) continue;
-      const maData = amtVals.map((v, i) =>
-        i < period - 1 ? null : +(amtVals.slice(i - period + 1, i + 1).reduce((a, b) => a + b, 0) / period).toFixed(4)
-      );
-      datasets.push({{
-        label: 'MA' + period,
-        data: maData,
-        borderColor: color,
-        backgroundColor: 'transparent',
-        fill: false,
-        tension: 0.2,
-        pointRadius: 0,
-        pointHoverRadius: 5,
-        pointHoverBackgroundColor: '#ffffff',
-        borderWidth: 1.2,
-      }});
-    }}
-    // 移除旧chart
-    const oldCh = charts.find(c => c.canvas && c.canvas.id === 'c-amount-ma-line');
-    if (oldCh) {{ oldCh.destroy(); charts = charts.filter(c => c !== oldCh); }}
-    if (datasets.length === 0) return;
-    const ch = new Chart(ctx, {{
-      type: 'line',
-      data: {{ labels: winData.map(d => d.date), datasets: datasets }},
-      options: {{
-        responsive: true, maintainAspectRatio: false,
-        interaction: {{ mode: 'index', intersect: false }},
-        plugins: {{ legend: {{ display: false }}, tooltip: {{ enabled: false }} }},
-        scales: {{
-          x: {{ offset: true, ticks: {{ display: false }}, grid: {{ display: false }} }},
-          y: {{ display: true, position: 'right', ticks: {{ display: false, callback: v => v + '亿' }}, grid: {{ color: '#485c7b55', borderDash: [3, 4], lineWidth: 1 }}, border: {{ display: false }} }}
-        }}
-      }}
-    }});
-    charts.push(ch);
-  }}
-  renderAmtMA();
-  // MA 参数变化时重绘
-  document.querySelectorAll('.amt-ma-period').forEach(input => {{
-    input.addEventListener('change', renderAmtMA);
-    input.addEventListener('input', renderAmtMA);
-  }});
-
 /* ---- 辅助函数：获取ratio颜色配置 ---- */
 function getRatioColors() {{
   const ls = document.querySelector('.ratio-line-swatch');
@@ -1586,6 +1551,7 @@ function makeRatioChartOptions() {{
   renderOHLC_Kline('c-ohlc311', ohlc311Data, '311');
   renderOHLC_Kline('c-ohlc-history', ohlcHistoryData, 'history');
 
+  renderOHLC_Kline('c-ohlc-amount', amountOhlcData, 'amount');
   renderOHLC_Kline('c-ohlc-account', accountOhlcData, 'account');
   renderOHLC_Kline('c-ohlc-strategy', strategyOhlcData, 'strategy');
 
