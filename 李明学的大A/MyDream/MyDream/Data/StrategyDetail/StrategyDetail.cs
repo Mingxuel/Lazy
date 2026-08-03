@@ -167,7 +167,7 @@ namespace MyDream
                     if (strategy_items.Count == 0) continue;
 
                     double ratio = 0.0;
-                    double max_score = 0.0;
+                    double max_score = double.MinValue;
                     int max_index = 0;
                     foreach (var index in Enumerable.Range(0, strategy_items.Count))
                     {

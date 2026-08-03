@@ -20,9 +20,7 @@ def GET_SZ200_5M(stock_code:str):
     df = tq.get_market_data( field_list=["Open","High", "Low", "Close", "Volume", "Amount"], stock_list=[stock_code], start_time=START_DATE, end_time='', count=-1, dividend_type='front', period='5m', fill_data=True )
     return df
 
-def GET_SZ200_5M_ALL():
-    tq.initialize(__file__)
-    
+def GET_SZ200_5M_ALL():    
     stock_codes = STOCK_CODES()
     df = tq.get_market_data( field_list=["Open","High", "Low", "Close", "Volume", "Amount"], stock_list=stock_codes, start_time=START_DATE, end_time='', count=-1, dividend_type='front', period='5m', fill_data=True )
     return df
@@ -30,7 +28,7 @@ def GET_SZ200_5M_ALL():
 def UPDATE_5M_ALL():
     shutil.rmtree(PATH_AIDATA_5M(), ignore_errors=True)
     os.mkdir(PATH_AIDATA_5M())
-
+    tq.initialize(__file__)
     stock_codes = STOCK_CODES()
     with ProcessPoolExecutor(max_workers=MAX_WORKERS) as pool:
         list(pool.map(partial(GENERATE_5M), stock_codes))  # pyright: ignore[reportArgumentType]

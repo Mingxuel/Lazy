@@ -247,7 +247,7 @@ namespace MyDream
                 }
             }
 
-            return volume_buy_3T - volume_sell_2T - volume_sell_1T;
+            return (volume_buy_3T - volume_sell_2T - volume_sell_1T);
         }
     }
 }

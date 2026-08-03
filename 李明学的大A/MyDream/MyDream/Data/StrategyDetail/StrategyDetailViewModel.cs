@@ -76,35 +76,29 @@ namespace MyDream
 
             List<string> selected_dates = new List<string>();
 
-            for (int i = 4; i != 0; i--)
+            string selected_date = StrategyDetailVWAPTickets[StrategyDetailVWAPTicketsIndex].Date!;
+
+            for (int i = 3; i != 0; i--)
             {
-                var date = TradingDates.PreDate(StrategyDetailVWAPTickets[StrategyDetailVWAPTicketsIndex].Date!, i);
-                selected_dates.Add(date!);
+                var date = TradingDates.NextDate(selected_date, i);
+                if (date == null) continue;
+                selected_date = date;
+                break;
             }
 
             List<Record1DItem> records = new List<Record1DItem>();
-            List<Record5MItem> records_5m = new List<Record5MItem>();
-            foreach (var selected_date in selected_dates)
-            {
-                var recor = ZZ5005M.Instance.Read(StrategyDetailVWAPTickets[StrategyDetailVWAPTicketsIndex].StockCode, selected_date)!;
-                foreach (var item in recor)
-                {
-                    item.Time = selected_date! + item.Time;
-                    records_5m.Add(item);
-                }
-            }
-
-            foreach (var record in records_5m)
-            {
-                var datetime = DateTime.ParseExact(record.Time, "yyyyMMddHHmmss", System.Globalization.CultureInfo.InvariantCulture);
-                long seconds = new DateTimeOffset(datetime).ToUnixTimeSeconds() * 1000;
-                Record1DItem item = new Record1DItem(seconds, record.Open, record.High, record.Low, record.Close, record.Volume, record.Amount, 0.0, 0.0, 0.0, 0.0);
-                records.Add(item);
-            }
-
             foreach (var item in ZZ5001D.Instance[StrategyDetailVWAPTickets[StrategyDetailVWAPTicketsIndex].StockCode!]!.Data!)
             {
-
+                if (item == null) continue;
+                DateTime unix_epoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+                TimeSpan offset = TimeSpan.FromMilliseconds(item!.Date);
+                string date = unix_epoch.Add(offset).ToLocalTime().ToString("yyyyMMdd");
+                if (selected_date == date)
+                {
+                    records.Add(item);
+                    break;
+                }
+                records.Add(item);
             }
 
             StrategyDetailKRecords = records;

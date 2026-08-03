@@ -2,6 +2,8 @@ import os
 from re import T
 import sys
 
+#from AICode.MarcoAPI.SZ2005M import UPDATE_5M_ALL
+
 _root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if _root not in sys.path:
     sys.path.insert(0, os.path.dirname(_root))
