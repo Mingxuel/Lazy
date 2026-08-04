@@ -19,8 +19,8 @@ from AICode.MarcoAPI.SZ200Motion1D import UPDATE_1D_WIN_COUNT, UPDATE_1D_PANIC_I
 from AICode.MarcoAPI.UI.UITarget import SHOW_TARGET_1D
 
 if __name__ == "__main__":
-    #SHOW_ONLY = False
-    SHOW_ONLY = True
+    SHOW_ONLY = False
+    #SHOW_ONLY = True
     if SHOW_ONLY:
         SHOW_TARGET_1D()
         exit(0)

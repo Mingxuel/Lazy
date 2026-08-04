@@ -156,5 +156,10 @@ namespace MyDream
         {
             return GetRoot() + "\\..\\Update.bat";
         }
+
+        public static string GetTPO3()
+        {
+            return GetRoot() + "\\Data\\Target\\TPO3";
+        }
     }
 }
