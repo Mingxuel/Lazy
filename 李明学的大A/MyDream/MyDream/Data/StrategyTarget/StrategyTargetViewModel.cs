@@ -206,6 +206,14 @@ namespace MyDream
 
             using (StreamWriter writer = new StreamWriter(APath.GetTPO3(), false))
             {
+                foreach (var data in StrategyTarget3Data)
+                {
+                    writer.WriteLine(data!.StockCode!);
+                }
+            }
+
+            using (StreamWriter writer = new StreamWriter(APath.GetTPO31(), false))
+            {
                 foreach (var data in StrategyTarget31Data)
                 {
                     writer.WriteLine(data!.StockCode!);

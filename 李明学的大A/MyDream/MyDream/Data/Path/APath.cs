@@ -161,5 +161,10 @@ namespace MyDream
         {
             return GetRoot() + "\\Data\\Target\\TPO3";
         }
+
+        public static string GetTPO31()
+        {
+            return GetRoot() + "\\Data\\Target\\TPO31";
+        }
     }
 }
