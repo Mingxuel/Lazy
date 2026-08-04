@@ -204,7 +204,7 @@ namespace MyDream
             file_content = file_content.Replace("===CODES===", history).Replace("===TPO3===", tpo3).Replace("===TPO31===", tpo31);
             File.WriteAllText(APath.GetTHSStrategyFileTarget(), file_content);
 
-            using (StreamWriter writer = new StreamWriter(APath.GetTPO3(), true))
+            using (StreamWriter writer = new StreamWriter(APath.GetTPO3(), false))
             {
                 foreach (var data in StrategyTarget31Data)
                 {
