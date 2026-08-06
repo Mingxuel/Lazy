@@ -1,0 +1,28 @@
+{
+  "runs": [
+    {
+      "date": "2026-08-05 18:28",
+      "pool_size": 677,
+      "pool_hash": "f6bd9014eb9a",
+      "net_value": 16.5885,
+      "total_return_pct": 1558.9,
+      "win_rate": 53.5,
+      "max_drawdown_pct": -25.7,
+      "trades": 271,
+      "wins": 145,
+      "losses": 126
+    }
+  ],
+  "baseline": {
+    "date": "2026-08-05 18:28",
+    "pool_size": 677,
+    "pool_hash": "f6bd9014eb9a",
+    "net_value": 16.5885,
+    "total_return_pct": 1558.9,
+    "win_rate": 53.5,
+    "max_drawdown_pct": -25.7,
+    "trades": 271,
+    "wins": 145,
+    "losses": 126
+  }
+}
