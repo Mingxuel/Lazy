@@ -35,16 +35,22 @@ SCORE_END_TIME   = '14:56:59'   # 评分结束
 BUY_TIME         = '14:57:03'   # 集合竞价挂单(晚3秒避免撮合中买入)
 
 # 311模型参数 — 由 train_walk_forward() 每日动态计算, 严格对齐回测
-KEYS = ['pb_depth', 'vol_contract', 'ma5_dev', 'pc_vs_low_atr', 'high_vs_pc_atr', 'ma_golden']
-W = np.zeros(6)    # 动态更新
-MU = np.zeros(6)   # 动态更新
-SG = np.ones(6)    # 动态更新
+# 5特征: pb_depth/ma5_dev/bear/bull/golden (删vol_contract, R²=0.002无贡献)
+KEYS = ['pb_depth', 'ma5_dev', 'pc_vs_low_atr', 'high_vs_pc_atr', 'ma_golden']
+N_FEAT = 5
+W = np.zeros(N_FEAT)    # 动态更新
+MU = np.zeros(N_FEAT)   # 动态更新
+SG = np.ones(N_FEAT)    # 动态更新
 
 # 交易参数
 STOP_PCT = 0.94          # 止损线: 买入价 × 0.94
 RETRY_TICKS = 2          # 2 tick 未成交则重试
 TICK_INTERVAL = 3        # 每个 tick 约 3 秒 (QMT快照刷新间隔)
 SELL_PRICE_DISCOUNT = 0.01  # 止损/尾盘重挂: 卖一价 - 0.01
+
+# 仓位管理
+CONSEC_HALF = 2           # 连亏几次后半仓
+CONSEC_SKIP = 3           # 连亏几次后跳过当天
 
 # ==================== 日志 ====================
 logging.basicConfig(
@@ -180,12 +186,9 @@ def _load_precomputed(code, d3_date):
         trs.append(max(h - l, abs(h - pc), abs(l - pc)))
     atr10 = float(np.mean(trs))
 
-    d3_vol = all_rows[di_k][5]  # D-3 全天成交量
-
     return {
         'atr10': atr10, 'ma5': ma5, 'ma10': ma10,
         'last_ma5': last_ma5, 'last_ma10': last_ma10,
-        'd3_vol': d3_vol,
         'oldest_ma5_close': oldest_ma5_close,
         'oldest_ma10_close': oldest_ma10_close,
     }
@@ -196,8 +199,7 @@ def precompute_tpo3(tpo3_codes, d3_date):
         data = _load_precomputed(code, d3_date)
         if data is not None:
             _precomputed[code] = data
-            log.info(f"  {name}({code}): ATR10={data['atr10']:.3f} "
-                     f"MA5={data['ma5']:.2f} D3量={data['d3_vol']/1e6:.1f}M")
+            log.info(f"  {name}({code}): ATR10={data['atr10']:.3f} MA5={data['ma5']:.2f} MA10={data['ma10']:.2f}")
 
 # ==================== Walk-Forward 训练 ====================
 # 严格对齐 analysis_311_1d_detail.py 的特征提取和岭回归逻辑
@@ -269,7 +271,7 @@ def train_walk_forward(tds, di):
 
                 f = {}
                 f['pb_depth'] = (r3[4] - c2) / r3[4] * 100 if (r3 and r3[4] > 0) else 0
-                f['vol_contract'] = 1 if (r3 and v2 < r3[5] * 0.8) else 0
+                # 5特征: 不包含量 (vol_contract R²=0.002, 删)
                 f['ma5_dev'] = (c2 - np.mean(cls[-5:])) / np.mean(cls[-5:]) * 100 if n >= 5 else 0
 
                 if n >= 10:
@@ -335,7 +337,6 @@ def compute_features(code, tick):
     ma10_base = p['ma10']
     last_ma5 = p['last_ma5']
     last_ma10 = p['last_ma10']
-    d3_vol = p['d3_vol']
     oldest_5 = p['oldest_ma5_close']
     oldest_10 = p['oldest_ma10_close']
 
@@ -343,7 +344,6 @@ def compute_features(code, tick):
     last_price = _safe_float(tick.get('lastPrice', 0))
     high = _safe_float(tick.get('high', 0))
     low = _safe_float(tick.get('low', 0))
-    today_vol = _safe_float(tick.get('volume', 0))
 
     if pre_close <= 0 or last_price <= 0:
         return None
@@ -352,14 +352,7 @@ def compute_features(code, tick):
     pc_vs_low_atr = (pre_close - low) / atr10 if atr10 > 0 else 0
     high_vs_pc_atr = (high - pre_close) / atr10 if atr10 > 0 else 0
 
-    # vol_contract: D-2累计量(盘中) < D-3全天量 × 0.8
-    # 注意QMT的volume是累计成交量(手), d3_vol也是手
-    vol_contract = 1 if today_vol > 0 and d3_vol > 0 and today_vol < d3_vol * 0.8 else 0
-
-    # ⚠️ MA滚动: 先算D-2的MA5/MA10, 再算ma5_dev和ma_golden
-    # 严格对齐回测: ma5_dev 用 D-2_MA5 而非 D-3_MA5
-    # D-2 MA5 = (D-3_MA5 × 5 - D-7_c + D-2_c) / 5   (丢最老的, 加今天的)
-    # D-2 MA10 = (D-3_MA10 × 10 - D-12_c + D-2_c) / 10
+    # MA滚动: 先算D-2的MA5/MA10, 再算ma5_dev和ma_golden
     ma5_today = (ma5_base * 5 - oldest_5 + last_price) / 5 if ma5_base > 0 else 0
     ma10_today = (ma10_base * 10 - oldest_10 + last_price) / 10 if ma10_base > 0 else 0
     ma5_dev = (last_price - ma5_today) / ma5_today * 100 if ma5_today > 0 else 0
@@ -367,7 +360,6 @@ def compute_features(code, tick):
 
     return {
         'pb_depth': pb_depth,
-        'vol_contract': vol_contract,
         'ma5_dev': ma5_dev,
         'pc_vs_low_atr': pc_vs_low_atr,
         'high_vs_pc_atr': high_vs_pc_atr,
@@ -425,7 +417,7 @@ def write_scores_snapshot(now_str, ticks, tpo3_codes, tpo3_scores):
     lines = [f"# TPO3 评分快照 — {now_str}", ""]
 
     # 权重
-    wn = ['pb_depth', 'vol_contract', 'ma5_dev', 'bear', 'bull', 'golden']
+    wn = ['pb_depth', 'ma5_dev', 'bear', 'bull', 'golden']
     lines.append("=== 当前权重 ===")
     for nm, wt in zip(wn, W):
         lines.append(f"  {nm}: {wt:+.4f}")
@@ -433,7 +425,7 @@ def write_scores_snapshot(now_str, ticks, tpo3_codes, tpo3_scores):
 
     # 原始特征
     lines.append("=== 原始特征 ===")
-    header = f"{'代码':<14} {'名称':<8} " + " ".join(f"{k:>8}" for k in ['pb_depth','vol_ct','ma5_dev','bear','bull','golden'])
+    header = f"{'代码':<14} {'名称':<8} " + " ".join(f"{k:>8}" for k in ['pb_depth','ma5_dev','bear','bull','golden'])
     lines.append(header)
     for _, code in tpo3_codes:
         t = ticks.get(code, {})
@@ -591,8 +583,8 @@ def smart_sell(api, code, volume, sell_price, reason, max_retries=5):
 def execute_buy(api, code, name, close_price, capital):
     """14:57集合竞价买入"""
     limit_up = calc_limit_up(close_price)
-    # 集合竞价阶段不溢价，直接用最新价; 连续交易阶段 ×1.01 确保成交
-    buy_price = round(close_price, 2)
+    # 集合竞价统一撮合价, ×1.01提高匹配概率, 实际成交价仍是撮合价, 不影响仓位成本
+    buy_price = round(min(close_price * 1.01, limit_up), 2)
     volume = int(capital / buy_price / 100) * 100
     if volume < 100:
         log.error(f"  资金不足: ¥{capital:,.0f} 不够买100股 @{buy_price:.2f}")
@@ -677,7 +669,7 @@ def main():
     log.info("=" * 60)
     log.info("  311策略 自动交易 v2.0 (基准版)")
     log.info("  卖出: 止损-6% > 涨停 > 14:55收盘卖")
-    log.info("  买入: 14:57 TPO3最优 @ 集合竞价最新价")
+    log.info("  买入: 14:57 TPO3最优 @ 最新价×1.01(不超涨停)")
     log.info("=" * 60)
 
     # 0. 交易日检查
@@ -727,7 +719,7 @@ def main():
             hold_vol = p.volume
             hold_cost = p.avg_price
             log.info(f"持仓: {hold_code} {hold_vol}股 @{hold_cost:.2f} "
-                     f"(浮盈{(float(p.last_price)/hold_cost-1)*100:+.2f}%)")
+                     f"(现价{p.current_price:.2f} 浮盈{p.profit:+.0f})")
             break
 
     if not hold_code:
@@ -743,20 +735,29 @@ def main():
     W, MU, SG = train_walk_forward(tds, di)
     log.info(f"  W: {np.array2string(W, precision=3, suppress_small=True)}")
 
-    # 4.6. 开盘预挂涨停卖单 (让交易所全天盯着, 不需要逐tick监控)
+    # 5. 连接行情 (必须在挂涨停单之前, 需要股票的昨收)
+    from xtquant import xtdata
+    xtdata.enable_hello = False
+    xtdata.connect()
+    time.sleep(2)
+
+    # 5.5. 开盘预挂涨停卖单 (限价基于股票昨收, 非买入价!)
     limit_up_order_id = 0
     limit_up = 0.0
     if hold_code:
-        limit_up = calc_limit_up(hold_cost)
-        log.info(f"\n🔔 开盘预挂涨停卖单: {hold_code} {hold_vol}股 @{limit_up:.2f}")
+        # 涨停价必须用股票的昨收计算, 不能用自己的买入价
+        ht_init = xtdata.get_full_tick([hold_code]).get(hold_code, {})
+        stock_pre_close = _safe_float(ht_init.get('lastClose', 0))
+        if stock_pre_close <= 0:
+            stock_pre_close = hold_cost  # fallback
+        limit_up = calc_limit_up(stock_pre_close)
+        log.info(f"\n🔔 开盘预挂涨停卖单: {hold_code} {hold_vol}股 "
+                 f"@涨停{limit_up:.2f} (昨收={stock_pre_close:.2f})")
         limit_up_order_id = api.sell(hold_code, hold_vol, limit_up)
         if limit_up_order_id > 0:
             log.info(f"  涨停卖单已挂, 订单ID: {limit_up_order_id}")
         else:
             log.warning(f"  涨停卖单挂单失败! 退回到tick监控涨停")
-
-    # 5. 连接行情
-    from xtquant import xtdata
     xtdata.enable_hello = False
     xtdata.connect()
     time.sleep(2)
@@ -770,7 +771,7 @@ def main():
     log.info(f"  涨停: 开盘预挂单, 成交即走, 不额外监控")
     log.info(f"  止损: -6%触发 → smart_sell(自动撤涨停单)")
     log.info(f"  尾盘: 14:55 撤涨停单 → 收盘卖出")
-    log.info(f"  买入: 14:57:03 挂单 @ 集合竞价最新价")
+    log.info(f"  买入: 14:57:03 挂单 @ 最新价×1.01(不超涨停)")
     log.info(f"  止损/尾盘卖: 卖一-0.01, 2tick未成→撤单重挂")
     log.info(f"  热开关: 改 {CONFIG_FILE} score_now=true 即可触发按需评分")
     log.info("")
@@ -786,6 +787,8 @@ def main():
     last_score_run = -1
     last_tick_write = ""
     tpo3_scores = {}
+    consec_loss = 0           # 连亏计数（回测对齐）
+    consec_updated = False    # 防止卖出后重复更新连亏
 
     try:
         while True:
@@ -881,6 +884,19 @@ def main():
                                     sold = True
 
             # ========================================================
+            #  仓位管理: 卖出后更新连亏计数
+            # ========================================================
+            if sold and not bought and not consec_updated and sell_price_realized:
+                sell_ret = (sell_price_realized - hold_cost) / hold_cost * 100
+                if sell_ret < -0.05:
+                    consec_loss += 1
+                    log.info(f"  连亏+1 (当前{consec_loss}次, 收益率{sell_ret:+.2f}%)")
+                elif sell_ret > 0.05:
+                    consec_loss = 0
+                    log.info(f"  连亏重置 (收益率{sell_ret:+.2f}%)")
+                consec_updated = True
+
+            # ========================================================
             #  14:56:30→14:56:59 循环评分（10次, 以最后一次为准）
             # ========================================================
             if SCORE_START_TIME <= now_str <= SCORE_END_TIME and (sold or not hold_code):
@@ -910,6 +926,13 @@ def main():
             # ========================================================
             if now_str >= BUY_TIME and not bought:
                 if sold or not hold_code:
+                    # 仓位管理: 连亏≥CONSEC_SKIP 跳过, 连亏≥CONSEC_HALF 半仓
+                    if consec_loss >= CONSEC_SKIP:
+                        log.info(f"\n⏭️ 连亏{consec_loss}次 ≥ {CONSEC_SKIP}, 跳过今日买入")
+                        consec_loss = 0
+                        bought = True
+                        break
+                    
                     if tpo3_scores:
                         best_code = max(tpo3_scores, key=lambda c: tpo3_scores[c])
                         names = {c: n for n, c in tpo3}
@@ -921,6 +944,11 @@ def main():
                         else:
                             asset_buy = api.asset()
                             capital = asset_buy.cash if asset_buy else 0
+
+                        # 仓位管理: 连亏≥CONSEC_HALF 半仓
+                        if consec_loss >= CONSEC_HALF:
+                            capital *= 0.5
+                            log.info(f"  连亏{consec_loss}次, 半仓 ¥{capital:,.0f}")
 
                         # 收盘价 = 最新tick的lastPrice
                         bt = ticks.get(best_code, {})
