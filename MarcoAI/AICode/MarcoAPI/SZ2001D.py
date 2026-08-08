@@ -88,7 +88,7 @@ def UPDATE_1D_ALL():
     stock_codes = STOCK_CODES()
 
     tq.initialize(__file__)
-    df = tq.get_market_data( field_list=["Open","High", "Low", "Close", "Volume", "Amount"], stock_list=stock_codes, start_time=START_DATE, end_time='', count=-1, dividend_type='front', period='1d', fill_data=True )
+    df = tq.get_market_data( field_list=["Open","High", "Low", "Close", "Volume", "Amount"], stock_list=stock_codes, start_time=START_DATE, end_time='', count=-1, dividend_type='none', period='1d', fill_data=True )
     _SZ200_1D_ALL_CACHE.clear()
     with ProcessPoolExecutor(max_workers=MAX_WORKERS) as pool:
         for stock_code, stock_cache in zip(stock_codes, pool.map(partial(GENERATE_1D, dataframe=df), stock_codes)):  # pyright: ignore[reportArgumentType]

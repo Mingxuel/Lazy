@@ -17,12 +17,12 @@ from tqcenter import tq
 
 def GET_SZ200_5M(stock_code:str):
     tq.initialize(__file__)
-    df = tq.get_market_data( field_list=["Open","High", "Low", "Close", "Volume", "Amount"], stock_list=[stock_code], start_time=START_DATE, end_time='', count=-1, dividend_type='front', period='5m', fill_data=True )
+    df = tq.get_market_data( field_list=["Open","High", "Low", "Close", "Volume", "Amount"], stock_list=[stock_code], start_time=START_DATE, end_time='', count=-1, dividend_type='none', period='5m', fill_data=True )
     return df
 
 def GET_SZ200_5M_ALL():    
     stock_codes = STOCK_CODES()
-    df = tq.get_market_data( field_list=["Open","High", "Low", "Close", "Volume", "Amount"], stock_list=stock_codes, start_time=START_DATE, end_time='', count=-1, dividend_type='front', period='5m', fill_data=True )
+    df = tq.get_market_data( field_list=["Open","High", "Low", "Close", "Volume", "Amount"], stock_list=stock_codes, start_time=START_DATE, end_time='', count=-1, dividend_type='none', period='5m', fill_data=True )
     return df
 
 def UPDATE_5M_ALL():
@@ -35,7 +35,7 @@ def UPDATE_5M_ALL():
 
 def GENERATE_5M(stock_code:str):
     tq.initialize(__file__)
-    dataframe = tq.get_market_data( field_list=["Open","High", "Low", "Close", "Volume", "Amount"], stock_list=[stock_code], start_time=START_DATE, end_time='', count=-1, dividend_type='front', period='5m', fill_data=True )
+    dataframe = tq.get_market_data( field_list=["Open","High", "Low", "Close", "Volume", "Amount"], stock_list=[stock_code], start_time=START_DATE, end_time='', count=-1, dividend_type='none', period='5m', fill_data=True )
     with open(f"{PATH_AIDATA_5M()}/{stock_code}", "w") as file:
         trading_times = dataframe["Close"].index.tolist()
         for trading_time in trading_times:
