@@ -40,7 +40,7 @@ namespace MyDream
                 double ratio_2026 = 1.0;
                 foreach (var date in TradingDates.Dates)
                 {
-                    var strategy_items = Strategy.Instance.Data[date];
+                    var strategy_items = Strategy.Instance.DataD1[date];
                     if (strategy_items.Count == 0) continue;
 
                     int random_index = new Random().Next(strategy_items.Count);
@@ -88,7 +88,7 @@ namespace MyDream
                 double ratio_2026 = 1.0;
                 foreach (var date in TradingDates.Dates)
                 {
-                    var strategy_items = Strategy.Instance.Data[date];
+                    var strategy_items = Strategy.Instance.DataD1[date];
                     if (strategy_items.Count == 0) continue;
 
                     double ratio = 0.0;
@@ -163,13 +163,13 @@ namespace MyDream
                 double ratio_2026 = 1.0;
                 foreach (var date in dates)
                 {
-                    var strategy_items = Strategy.Instance.Data[date];
+                    var strategy_items = Strategy.Instance.DataD1[date];
                     if (strategy_items.Count == 0) continue;
 
                     double ratio = 0.0;
                     double max_score = double.MinValue;
                     int max_index = 0;
-                    foreach (var index in Enumerable.Range(0, strategy_items.Count))
+                    /*foreach (var index in Enumerable.Range(0, strategy_items.Count))
                     {
                         var pre_date = TradingDates.PreDate(strategy_items[index].Date!, 1);
                         double score = ZZ5005M.Instance.GetScore(strategy_items[index].StockCode!, pre_date!);
@@ -179,8 +179,8 @@ namespace MyDream
                             max_score = score;
                             max_index = index;
                         }
-                    }
-
+                    }*/
+                    max_index = strategy_items.Count - 1;
                     var values = ZZ5005M.Instance.GetM5Ratio(strategy_items[max_index].StockCode!, strategy_items[max_index].Date!);
                     ratio = (values[1] / values[0] - 1.0) * 100.0;
 

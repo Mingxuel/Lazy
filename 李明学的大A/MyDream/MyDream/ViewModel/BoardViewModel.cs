@@ -103,7 +103,7 @@ namespace MyDream
         [RelayCommand]
         private void ClearTPOClick()
         {
-            var directory = APath.GetStrategy();
+            var directory = APath.GetStrategyD1();
             foreach (var filePath in Directory.EnumerateFiles(directory))
             {
                 var fileInfo = new FileInfo(filePath);

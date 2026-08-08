@@ -278,7 +278,7 @@ namespace MyDream
             int total_per_close_win = 0;
             int total_per_high_win = 0;
             int total_per_open_win = 0;
-            foreach (var value in Strategy.Instance.Data.Values)
+            foreach (var value in Strategy.Instance.DataD1.Values)
             {
                 double close_total_ratio = 0.0;
                 double open_total_ratio = 0.0;
@@ -331,7 +331,7 @@ namespace MyDream
         private void UpdateListStrategy()
         {
             StrategyData.Clear();
-            var items = Strategy.Instance.Data[StrategyTradingDates[StrategyTradingDatesIndex]];
+            var items = Strategy.Instance.DataD1[StrategyTradingDates[StrategyTradingDatesIndex]];
             foreach (var item in items)
             {
                 StrategyData.Add(item);
@@ -424,7 +424,7 @@ namespace MyDream
                 DisHighData.Add(item_high);
             }
 
-            foreach (var value in Strategy.Instance.Data)
+            foreach (var value in Strategy.Instance.DataD1)
             {
                 int year = int.Parse(value.Key.Substring(0, 4));
                 int month = int.Parse(value.Key.Substring(4, 2));

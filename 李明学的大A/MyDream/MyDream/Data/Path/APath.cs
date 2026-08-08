@@ -117,9 +117,14 @@ namespace MyDream
             return GetRoot() + "\\Data\\6B\\";
         }
 
-        public static string GetStrategy()
+        public static string GetStrategyD1()
         {
-            return GetRoot() + "\\Data\\Strategy\\";
+            return GetRoot() + "\\Data\\StrategyD1\\";
+        }
+
+        public static string GetStrategyD1All()
+        {
+            return GetRoot() + "\\Data\\StrategyD1All\\";
         }
 
         public static string GetHistory()

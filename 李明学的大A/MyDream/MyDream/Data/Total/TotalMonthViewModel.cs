@@ -196,7 +196,7 @@ namespace MyDream
             int total_per_high_win = 0;
             int total_per_open_win = 0;
             int update_count = 0;
-            foreach (var data in Strategy.Instance.Data)
+            foreach (var data in Strategy.Instance.DataD1)
             {
                 string date = data.Key.Substring(0, 6);
                 int date_year = int.Parse(date!.Substring(0, 4));

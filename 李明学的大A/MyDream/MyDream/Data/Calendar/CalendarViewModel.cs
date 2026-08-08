@@ -77,7 +77,7 @@ namespace MyDream
         {
             CalendarDatas.Clear();
 
-            foreach(var data in Strategy.Instance.Data)
+            foreach(var data in Strategy.Instance.DataD1)
             {
                 if (int.Parse(data.Key.Substring(0, 4)) == CalendarYear && int.Parse(data.Key.Substring(4, 2)) == CalendarMonth)
                 {
