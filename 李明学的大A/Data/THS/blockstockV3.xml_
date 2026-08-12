@@ -1,22 +1,11 @@
-<hevo version="5026" sort_list="27,24,23,26,28,">
+<hevo version="5069" sort_list="27,26,24,">
   <Block name="CODES" id="38" IsLock="false" IsNameChanged="false" IsSecuritiesChanged="true">
 ===CODES===
   </Block>
   <Block name="3" id="39" IsLock="false" IsNameChanged="false" IsSecuritiesChanged="true">
 ===TPO3===
   </Block>
-  <Block name="HISTORY" id="40" IsLock="true" IsNameChanged="false" IsSecuritiesChanged="true">
-  </Block>
-  <Block name="ENV" id="35" IsLock="false" IsNameChanged="false" IsSecuritiesChanged="true">
-    <security market="UFII" code="KS11" />
-    <security market="USHI" code="1A0001" />
-    <security market="USZI" code="399006" />
-    <security market="USHI" code="1B0680" />
-    <security market="URFI" code="881283" />
-    <security market="URFI" code="881157" />
-    <security market="URFI" code="881155" />
-  </Block>
-  <Block name="31" id="36" IsNameChanged="false" IsSecuritiesChanged="true">
+  <Block name="31" id="36" IsLock="false" IsNameChanged="false" IsSecuritiesChanged="true">
 ===TPO31===
   </Block>
 </hevo>
