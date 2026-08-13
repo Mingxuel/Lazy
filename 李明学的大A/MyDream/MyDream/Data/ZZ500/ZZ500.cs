@@ -17,7 +17,7 @@ namespace MyDream
             {
                 EMarket.ZZ500 => APath.GetZZ500Xlsx(),
                 EMarket.SZ200 => APath.GetSZ200Xlsx(),
-                EMarket.SZ100_SZ200 => APath.GetSZ100_SZ200Xlsx(),
+                EMarket.SZ100 => APath.GetSZ100Xlsx(),
                 _ => throw new ArgumentException("Invalid market type")
             };
 
@@ -34,6 +34,7 @@ namespace MyDream
                     item.StockName = row.GetCell(2).StringCellValue.Trim();
                     item.Industry = row.GetCell(5).StringCellValue.Trim();
                     item.Concepts = row.GetCell(7).StringCellValue.Trim().Split(";").ToList();
+                    item.Volume = double.TryParse(row.GetCell(9).ToString()!.Trim(), out double volume) ? volume : 0;
                     Data.Add(item);
                 }
             }
@@ -45,7 +46,7 @@ namespace MyDream
             {
                 EMarket.ZZ500 => APath.GetZZ500TicketsConfig(),
                 EMarket.SZ200 => APath.GetSZ200TicketsConfig(),
-                EMarket.SZ100_SZ200 => APath.GetSZ100_SZ200TicketsConfig(),
+                EMarket.SZ100 => APath.GetSZ100TicketsConfig(),
                 _ => throw new ArgumentException("Invalid market type")
             };
 

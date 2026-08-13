@@ -1,4 +1,5 @@
 ﻿using NPOI.HSSF.Record;
+using NPOI.HSSF.Record.Aggregates;
 using NPOI.SS.Util;
 using System;
 using System.Collections.Generic;
@@ -187,9 +188,20 @@ namespace MyDream
                 var record_5 = ZZ5001D.Instance.PreRecord(stock_code, trading_date!, 5, true);
                 if (record_5 == null || record_4 == null || record_3 == null || record_2 == null || record_1 == null) continue;
                 var m5 = (record_1.Close + record_2.Close + record_3.Close + record_4.Close + record_5.Close) / 5.0;
+
+                double? volume = 0.0;
+                foreach(var data in ZZ500.Data)
+                {
+                    if (data.StockCode == stock_code)
+                    {
+                        volume = data.Volume;
+                        break;
+                    }
+                }
+
                 if (record_4.Volume < record_3.Volume && record_3.Volume < record_2.Volume && record_2.Volume > record_1.Volume &&
                     !record_4.IsTop && record_3.IsTop && !record_2.IsTop && !record_2.IsBottom && !record_1.IsTop && !record_1.IsBottom &&
-                    record_2.IsUp && record_1.Ratio < 0.03 &&
+                    record_2.IsUp && record_1.Ratio < 0.03 && volume! * record_3.Close >= Constants.MaxVolume &&
                     record_1.Close > m5)
                 {
                     StrategyItem strategy_item = new StrategyItem();

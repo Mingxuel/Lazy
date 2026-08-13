@@ -6,6 +6,7 @@
         public string? StockName { get; set; }
         public string? Industry { get; set; }
         public List<string>? Concepts { get; set; }
+        public double? Volume { get; set; }
 
         public ZZ500Item() { }
 
@@ -16,11 +17,12 @@
             StockName = data[1];
             Industry = data[2];
             Concepts = data[3].Split(";").ToList();
+            Volume = double.Parse(data[4]);
         }
 
         public override string ToString()
         {
-            return $"{StockCode}|{StockName}|{Industry}|{string.Join(";", Concepts!)}";
+            return $"{StockCode}|{StockName}|{Industry}|{string.Join(";", Concepts!)}|{Volume}";
         }
     }
 }

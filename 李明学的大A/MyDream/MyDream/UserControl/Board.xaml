@@ -46,9 +46,9 @@
 							<RowDefinition Height="Auto"/>
 							<RowDefinition Height="*"/>
 						</Grid.RowDefinitions>
-						<RadioButton Grid.Row="0" Grid.Column="0" Content="SZ200" Foreground="White" VerticalContentAlignment="Center" GroupName="Tickets" Margin="10" FontWeight="Bold" IsChecked="{Binding SZ200IsSelected}"/>
-						<RadioButton Grid.Row="0" Grid.Column="1" Content="ZZ500" Foreground="White" VerticalContentAlignment="Center" GroupName="Tickets" Margin="10" FontWeight="Bold" IsChecked="{Binding ZZ500IsSelected}"/>
-						<RadioButton Grid.Row="1" Grid.Column="0" Content="SZ100-200" Foreground="White" VerticalContentAlignment="Center" GroupName="Tickets" Margin="10" FontWeight="Bold" IsChecked="{Binding SZ100_SZ200IsSelected}"/>
+						<RadioButton Grid.Row="0" Grid.Column="0" Content="SZ100" Foreground="White" VerticalContentAlignment="Center" GroupName="Tickets" Margin="10" FontWeight="Bold" IsChecked="{Binding SZ100IsSelected}"/>
+						<RadioButton Grid.Row="0" Grid.Column="1" Content="SZ200" Foreground="White" VerticalContentAlignment="Center" GroupName="Tickets" Margin="10" FontWeight="Bold" IsChecked="{Binding SZ200IsSelected}"/>
+						<RadioButton Grid.Row="1" Grid.Column="0" Content="ZZ500" Foreground="White" VerticalContentAlignment="Center" GroupName="Tickets" Margin="10" FontWeight="Bold" IsChecked="{Binding ZZ500IsSelected}"/>
 						<Button Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" Content="QMT UPDATE" Command="{Binding Update1DClickCommand}" FontWeight="Bold" Height="50" Margin="10"/>
 						<Button Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="2" Content="1M UPDATE" Command="{Binding UPDATE1MClickCommand}" FontWeight="Bold" Height="50" Margin="10"/>
 						<Button Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="2" Content="5M UPDATE" Command="{Binding UPDATE5MClickCommand}" FontWeight="Bold" Height="50" Margin="10"/>

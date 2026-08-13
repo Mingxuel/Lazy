@@ -32,18 +32,18 @@ namespace MyDream
         private EPage kPage = EPage.Main;
 
         [ObservableProperty]
+        private bool sZ100IsSelected = false;
+
+        [ObservableProperty]
         private bool sZ200IsSelected = false;
 
         [ObservableProperty]
         private bool zZ500IsSelected = false;
 
-        [ObservableProperty]
-        private bool sZ100_SZ200IsSelected = false;
-
         public BoardViewModel()
         {
             //默认选择ZZ500
-            SZ200IsSelected = true;
+            SZ100IsSelected = true;
         }
 
         [RelayCommand]
@@ -65,8 +65,8 @@ namespace MyDream
                         stock_codes.Add(line.Trim());
                     }
                 }
-                string file_sz50_sz250 = APath.GetSZ100_SZ200TicketsConfig();
-                foreach (var line in File.ReadLines(file_sz50_sz250))
+                string file_sz100 = APath.GetSZ100TicketsConfig();
+                foreach (var line in File.ReadLines(file_sz100))
                 {
                     if (!string.IsNullOrEmpty(line.Trim()) && !stock_codes.Contains(line.Trim()))
                     {
@@ -193,7 +193,7 @@ namespace MyDream
             EMarket market = EMarket.ZZ500;
             if (SZ200IsSelected) market = EMarket.SZ200;
             else if (ZZ500IsSelected) market = EMarket.ZZ500;
-            else if (SZ100_SZ200IsSelected) market = EMarket.SZ100_SZ200;
+            else if (SZ100IsSelected) market = EMarket.SZ100;
 
             //更新ZZ500数据
             Output = "更新ZZ500数据\n";

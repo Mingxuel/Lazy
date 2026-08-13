@@ -8,8 +8,8 @@ namespace MyDream
 {
     public enum EMarket
     {
-        ZZ500,
+        SZ100,
         SZ200,
-        SZ100_SZ200
+        ZZ500,
     }
 }

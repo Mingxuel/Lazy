@@ -12,7 +12,7 @@ import ast
 import pandas as pd
 
 HISTORY_1D_COUNT = 3
-ACTIVE_COUNT = 1240
+ACTIVE_COUNT = 1156
 
 def UPDATE_TRADING_DATES():
     config_file = GET_ROOT_PATH() + "/Data/交易日.config"

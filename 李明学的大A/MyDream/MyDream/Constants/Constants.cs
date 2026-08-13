@@ -14,5 +14,7 @@ namespace MyDream
         public const double PlanRatio = 0.45;
 
         public const double MinVWAP = -2.3;
+
+        public const double MaxVolume = 20000000000;
     }
 }
