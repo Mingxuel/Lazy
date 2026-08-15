@@ -154,14 +154,16 @@ def _load_kline(codes: set[str]) -> dict[str, dict[str, Any]]:
         ohlcv = []
         ma = {5: [], 10: [], 20: [], 60: []}
         for i, r in enumerate(rows):
+            # r[0] 是 YYYYMMDD（如 20260105），LightweightCharts 要求 YYYY-MM-DD
+            t = r[0][:4] + '-' + r[0][4:6] + '-' + r[0][6:8]
             ohlcv.append({
-                "time": r[0], "open": float(r[1]), "high": float(r[2]),
+                "time": t, "open": float(r[1]), "high": float(r[2]),
                 "low": float(r[3]), "close": float(r[4]), "volume": float(r[5]),
             })
             for p in (5, 10, 20, 60):
                 if i >= p - 1:
                     avg = sum(closes[i - p + 1:i + 1]) / p
-                    ma[p].append({"time": r[0], "value": round(avg, 2)})
+                    ma[p].append({"time": t, "value": round(avg, 2)})
         kline[code] = {"ohlcv": ohlcv, "ma5": ma[5], "ma10": ma[10], "ma20": ma[20], "ma60": ma[60]}
     return kline
 
