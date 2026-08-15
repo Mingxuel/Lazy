@@ -167,22 +167,19 @@ namespace MyDream
                     if (strategy_items.Count == 0) continue;
 
                     double ratio = 0.0;
-                    double max_score = double.MinValue;
-                    int max_index = 0;
-                    /*foreach (var index in Enumerable.Range(0, strategy_items.Count))
-                    {
-                        var pre_date = TradingDates.PreDate(strategy_items[index].Date!, 1);
-                        double score = ZZ5005M.Instance.GetScore(strategy_items[index].StockCode!, pre_date!);
+                    int max_index = strategy_items.Count - 1;
+                    ratio = GetRatio(strategy_items[max_index]);
 
-                        if (score > max_score)
+                    double? volume = 0.0;
+                    foreach (var data in ZZ500.Data)
+                    {
+                        if (data.StockCode == strategy_items[max_index].StockCode)
                         {
-                            max_score = score;
-                            max_index = index;
+                            volume = data.Volume;
+                            break;
                         }
-                    }*/
-                    max_index = strategy_items.Count - 1;
-                    var values = ZZ5005M.Instance.GetM5Ratio(strategy_items[max_index].StockCode!, strategy_items[max_index].Date!);
-                    ratio = (values[1] / values[0] - 1.0) * 100.0;
+                    }
+                    var record_2 = ZZ5001D.Instance.PreRecord(strategy_items[max_index].StockCode!, strategy_items[max_index].Date!, 2);
 
                     StrategyDetailVWAPTicketItem ticket_item = new StrategyDetailVWAPTicketItem();
                     ticket_item.Date = date;
@@ -192,10 +189,8 @@ namespace MyDream
                     ticket_item.HighRatio = strategy_items[max_index].HighRatio;
                     ticket_item.LowRatio = strategy_items[max_index].LowRatio;
                     ticket_item.OpenRatio = strategy_items[max_index].OpenRatio;
-                    ticket_item.Ratio = (values[1] / values[0] - 1.0).ToString("P2");
-                    ticket_item.BuyPrice = values[0];
-                    ticket_item.SellPrice = values[1];
-                    ticket_item.Score = Math.Round(max_score, 2);
+                    ticket_item.Ratio = (ratio / 100.0).ToString("P2");
+                    ticket_item.Score = Math.Round((double)volume! * record_2!.Close! / 100000000, 2);
                     DataVWAPTickets.Add(ticket_item);
 
                     total += 1;
@@ -242,7 +237,7 @@ namespace MyDream
 
         private double GetRatio(StrategyItem item)
         {
-            double botton_ratio = -0.05;
+            double botton_ratio = -0.06;
 
             var record_1 = ZZ5001D.Instance.PreRecord(item.StockCode!, item.Date!, 0);
             var record_2 = ZZ5001D.Instance.PreRecord(item.StockCode!, item.Date!, 1);

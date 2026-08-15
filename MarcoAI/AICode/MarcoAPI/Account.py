@@ -6,8 +6,8 @@ if _root not in sys.path:
     sys.path.insert(0, os.path.dirname(_root))
 
 import openpyxl
-from AICode.MarcoAPI.Path import PATH_THS_HISTORY_XLSX, PATH_THS_HISTORY
-from AICode.MarcoAPI.TradingDates import TRADING_DATES
+from AICode.MarcoAPI.Update.Path import PATH_THS_HISTORY_XLSX, PATH_THS_HISTORY
+from AICode.MarcoAPI.Update.TradingDates import TRADING_DATES
 
 # ── 交割单字段索引 ──
 COL_DATE = 0

@@ -201,7 +201,7 @@ namespace MyDream
 
                 if (record_4.Volume < record_3.Volume && record_3.Volume < record_2.Volume && record_2.Volume > record_1.Volume &&
                     !record_4.IsTop && record_3.IsTop && !record_2.IsTop && !record_2.IsBottom && !record_1.IsTop && !record_1.IsBottom &&
-                    record_2.IsUp && record_1.Ratio < 0.03 && volume! * record_3.Close >= Constants.MaxVolume &&
+                    record_2.IsUp && record_1.Ratio < 0.03 && volume! * record_2.Close >= Constants.MaxVolume &&
                     record_1.Close > m5)
                 {
                     StrategyItem strategy_item = new StrategyItem();

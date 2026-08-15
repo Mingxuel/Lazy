@@ -13,7 +13,7 @@ import pandas as pd
 
 #HISTORY_1D_COUNT = 3
 HISTORY_1D_COUNT = -1
-ACTIVE_COUNT = 1162
+START_DATE = "20260101"
 
 def UPDATE_TRADING_DATES():
     config_file = GET_ROOT_PATH() + "/Data/交易日.config"
@@ -30,13 +30,15 @@ def UPDATE_TRADING_DATES():
 def DOWNLOAD_HISTORY_1D():
     stock_codes = ZZ500_STOCK_CODES()
     trading_dates = TRADING_DATES()
+    stock_codes_count = len(stock_codes)
 
     pre_count = 0
     while True:
-        if HISTORY_1D_COUNT == -1:
-            xtdata.download_history_data2(stock_codes, "1d", trading_dates[0], trading_dates[-1])
-        else:
-            xtdata.download_history_data2(stock_codes, "1d", trading_dates[-HISTORY_1D_COUNT], trading_dates[-1])
+        #if HISTORY_1D_COUNT == -1:
+        #    xtdata.download_history_data2(stock_codes, "1d", trading_dates[0], trading_dates[-1])
+        #else:
+        #    xtdata.download_history_data2(stock_codes, "1d", trading_dates[-HISTORY_1D_COUNT], trading_dates[-1])
+        xtdata.download_history_data2(stock_codes, "1d", START_DATE, trading_dates[-1])
 
         xtdata.subscribe_whole_quote(stock_codes)
         data_1d = xtdata.get_market_data_ex([], stock_codes, "1d", trading_dates[-1], trading_dates[-1], 1, dividend_type="front_ratio", fill_data=False)
@@ -45,7 +47,7 @@ def DOWNLOAD_HISTORY_1D():
         for stock_code in stock_codes:
             if data_1d[stock_code].size != 0 and data_1d[stock_code].index[-1] == trading_dates[-1]:
                 count = count + 1
-        if count < ACTIVE_COUNT or count != pre_count:
+        if count < stock_codes_count or count != pre_count:
             pre_count = count
         else:
             time.sleep(10)

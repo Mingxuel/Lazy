@@ -51,6 +51,8 @@ namespace MyDream
         {
             if (MessageBox.Show("确定要更新所有数据吗?", "更新数据", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
             {
+                UpdateConfig();
+
                 List<string> stock_codes = new List<string>();
                 string file_zz500 = APath.GetZZ500TicketsConfig();
                 foreach (var line in File.ReadLines(file_zz500))
@@ -148,7 +150,7 @@ namespace MyDream
         private void RuntimeClick()
         {
             List<string> stock_codes = new List<string>();
-            foreach ( var data in StrategyTarget.Instance.Data3)
+            foreach (var data in StrategyTarget.Instance.Data3)
             {
                 stock_codes.Add(data.StockCode!);
             }
@@ -190,29 +192,17 @@ namespace MyDream
 
         private void UpdateStrategy()
         {
-            EMarket market = EMarket.ZZ500;
-            if (SZ200IsSelected) market = EMarket.SZ200;
-            else if (ZZ500IsSelected) market = EMarket.ZZ500;
-            else if (SZ100IsSelected) market = EMarket.SZ100;
-
-            //更新ZZ500数据
-            Output = "更新ZZ500数据\n";
-            ZZ500.ReadFromXlsx(market);
-            ZZ500.WriteToConfig(market);
-            //更新板块
-            Output += "更新板块\n";
-            Industry.InitData(market);
-            Industry.WriteDataToConfig();
-            //更新概念
-            Output += "更新概念\n";
-            Concepts.InitData(market);
-            Concepts.WriteDataToConfig();
+            UpdateConfig();
 
             //初始化数据类
             //初始化交易日数据
             TradingDates.Init();
             TradingTimes.Init();
             //初始化ZZ500股票代码
+            EMarket market = EMarket.ZZ500;
+            if (SZ200IsSelected) market = EMarket.SZ200;
+            else if (ZZ500IsSelected) market = EMarket.ZZ500;
+            else if (SZ100IsSelected) market = EMarket.SZ100;
             ZZ500StockCodes.Init(market);
             //初始化ZZ500股票代码
             ZZ5001D.Instance.Init();
@@ -230,6 +220,27 @@ namespace MyDream
             UpdateCalendar();
             UpdateDistributionDate();
             UpdateDistribution();
+        }
+
+        private void UpdateConfig()
+        {
+            EMarket market = EMarket.ZZ500;
+            if (SZ200IsSelected) market = EMarket.SZ200;
+            else if (ZZ500IsSelected) market = EMarket.ZZ500;
+            else if (SZ100IsSelected) market = EMarket.SZ100;
+
+            //更新ZZ500数据
+            Output = "更新ZZ500数据\n";
+            ZZ500.ReadFromXlsx(market);
+            ZZ500.WriteToConfig(market);
+            //更新板块
+            Output += "更新板块\n";
+            Industry.InitData(market);
+            Industry.WriteDataToConfig();
+            //更新概念
+            Output += "更新概念\n";
+            Concepts.InitData(market);
+            Concepts.WriteDataToConfig();
         }
     }
 }
