@@ -79,15 +79,61 @@ def _load_strategy(strategy_name: str):
     return daily
 
 
+STOCK_SELL_STOP = -0.06  # 次日卖出止损线：低于此跌幅直接止损
+
+
+def _limit_ratio(code: str) -> float:
+    """按股票代码判断当日涨停幅度。创业/科创板 20%，主板 10%"""
+    pure = code.split(".")[0]
+    if pure.startswith(("300", "301", "302", "688", "689")):
+        return 0.20
+    return 0.10
+
+
+def _limit_price(pre_close: float, ratio: float) -> float:
+    """涨停价 = 前收×(1+涨幅)，四舍五入到分"""
+    from decimal import Decimal, ROUND_HALF_UP
+    return float((Decimal(str(pre_close)) * Decimal(str(1 + ratio)))
+                 .quantize(Decimal("0.01"), rounding=ROUND_HALF_UP))
+
+
 def _stock_return(cols: list[str]) -> float | None:
-    """计算单只股票收益率 = (收盘-前收)/前收；数据无效返回 None"""
+    """按次日卖出规则计算单只股票收益率；数据无效返回 None。
+
+    卖出规则（按优先级）：
+      1. 开盘涨跌幅 < -6%        -> 按开盘价卖出
+      2. 最低价涨跌幅 < -6%      -> 按 -6% 止损卖出
+      3. 最高价触及涨停价        -> 按涨停价卖出
+      4. 以上都不满足            -> 按收盘价卖出
+    """
     try:
+        code = cols[0]
+        open_p = float(cols[4])
+        high = float(cols[5])
+        low = float(cols[6])
         close = float(cols[7])
         pre_close = float(cols[10])
     except (ValueError, IndexError):
         return None
     if pre_close <= 0:
         return None
+
+    # 规则1：开盘涨跌幅 < -6% -> 按开盘价卖出
+    open_ratio = (open_p - pre_close) / pre_close
+    if open_ratio < STOCK_SELL_STOP:
+        return open_ratio
+
+    # 规则2：最低价 < -6% -> 按 -6% 止损卖出
+    low_ratio = (low - pre_close) / pre_close
+    if low_ratio < STOCK_SELL_STOP:
+        return STOCK_SELL_STOP
+
+    # 规则3：最高价触及涨停 -> 按涨停价卖出
+    limit_p = _limit_price(pre_close, _limit_ratio(code))
+    if high >= limit_p:
+        return (limit_p - pre_close) / pre_close
+
+    # 规则4：否则按收盘价卖出
     return (close - pre_close) / pre_close
 
 

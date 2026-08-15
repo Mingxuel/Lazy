@@ -174,6 +174,7 @@ def _render_html(data: dict[str, Any]) -> str:
 <head>
 <meta charset="utf-8">
 <title>策略回测 & 实盘目标股看板</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230f172a'/%3E%3Crect width='64' height='64' rx='14' fill='url(%23g)'/%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='64' y2='64'%3E%3Cstop offset='0' stop-color='%232b6cb0'/%3E%3Cstop offset='1' stop-color='%231d4ed8'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath d='M16 44 L26 34 L34 40 L48 24' stroke='white' stroke-width='4' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='M48 24 L42 24 M48 24 L48 30' stroke='white' stroke-width='4' fill='none' stroke-linecap='round'/%3E%3Crect x='30' y='28' width='5' height='12' rx='1.5' fill='%23f59e0b'/%3E%3C/svg%3E">
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <!-- TradingView Lightweight Charts -->
 <script src="https://unpkg.com/lightweight-charts@4.1.3/dist/lightweight-charts.standalone.production.js"></script>
