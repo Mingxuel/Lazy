@@ -141,7 +141,11 @@ def _load_candidates(strategy_name: str) -> dict[str, list[list[str]]]:
 
 
 def _load_kline(codes: set[str]) -> dict[str, dict[str, Any]]:
-    """读取候选股的最近 KLINE_DAYS 天原始日线（1D_ORIGIN），并自行计算 MA5/10/20/60 均线"""
+    """读取候选股的【全部历史】原始日线（1D_ORIGIN）。
+
+    仅传原始 OHLCV，所有指标（MA/MACD/KDJ/BOLL/VWAP）与月线聚合
+    均由前端 JS 动态计算，便于配置切换。
+    """
     kline = {}
     for code in codes:
         path = os.path.join(PATH_AIDATA_1D_ORIGIN(), code)
@@ -149,22 +153,15 @@ def _load_kline(codes: set[str]) -> dict[str, dict[str, Any]]:
             continue
         lines = _read_text(path).splitlines()
         rows = [l.split("|") for l in lines if l.strip() and len(l.split("|")) >= 6]
-        rows = rows[-KLINE_DAYS:]
-        closes = [float(r[4]) for r in rows]
         ohlcv = []
-        ma = {5: [], 10: [], 20: [], 60: []}
-        for i, r in enumerate(rows):
+        for r in rows:
             # r[0] 是 YYYYMMDD（如 20260105），LightweightCharts 要求 YYYY-MM-DD
             t = r[0][:4] + '-' + r[0][4:6] + '-' + r[0][6:8]
             ohlcv.append({
                 "time": t, "open": float(r[1]), "high": float(r[2]),
                 "low": float(r[3]), "close": float(r[4]), "volume": float(r[5]),
             })
-            for p in (5, 10, 20, 60):
-                if i >= p - 1:
-                    avg = sum(closes[i - p + 1:i + 1]) / p
-                    ma[p].append({"time": t, "value": round(avg, 2)})
-        kline[code] = {"ohlcv": ohlcv, "ma5": ma[5], "ma10": ma[10], "ma20": ma[20], "ma60": ma[60]}
+        kline[code] = {"ohlcv": ohlcv}
     return kline
 
 
@@ -236,9 +233,30 @@ th {{ color: #9aa0a6; font-weight: 500; }}
 .date-item.active, .stock-item.active {{ background: #2b6cb0; color: #fff; }}
 .stock-count {{ color: #9aa0a6; font-size: 12px; margin-left: 6px; }}
 .stock-market {{ color: #6b7280; font-size: 11px; margin-left: 4px; }}
-#kline {{ width: 100%; height: 60vh; }}
+#kline {{ width: 100%; height: 62vh; display: flex; flex-direction: column; }}
+#kline-main {{ flex: 3; min-height: 0; }}
+#kline-ind {{ flex: 1; min-height: 0; margin-top: 4px; }}
 .chart-title {{ font-size: 13px; color: #c9cdd4; margin-bottom: 8px; min-height: 18px; }}
 .empty-hint {{ color: #6b7280; font-size: 13px; padding: 20px; text-align: center; }}
+/* K 线工具栏 */
+.kline-toolbar {{ display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }}
+.kline-toolbar select, .kline-toolbar input[type="color"] {{
+  background: #1c2029; color: #e4e6eb; border: 1px solid #2a3140; border-radius: 6px; padding: 5px 8px; font-size: 12px; height: 28px;
+}}
+.kline-toolbar select:focus {{ outline: none; border-color: #2b6cb0; }}
+.kline-toolbar button {{
+  background: #1c2029; color: #e4e6eb; border: 1px solid #2a3140; border-radius: 6px; padding: 5px 10px; font-size: 12px; cursor: pointer; height: 28px;
+}}
+.kline-toolbar button:hover {{ background: #252b38; border-color: #3a4556; }}
+.kline-chk {{ display: inline-flex; align-items: center; gap: 4px; font-size: 12px; color: #c9cdd4; cursor: pointer; }}
+.kline-chk input {{ accent-color: #2b6cb0; }}
+.kline-ma-config {{ display: none; background: #161a22; border: 1px solid #2a3140; border-radius: 6px; padding: 8px; margin-bottom: 8px; }}
+.ma-row {{ display: flex; align-items: center; gap: 6px; margin-bottom: 6px; }}
+.ma-row span {{ color: #9aa0a6; font-size: 12px; width: 24px; }}
+.ma-row input[type="number"] {{ width: 60px; background: #1c2029; color: #e4e6eb; border: 1px solid #2a3140; border-radius: 5px; padding: 4px 6px; font-size: 12px; }}
+.ma-row input[type="color"] {{ width: 32px; height: 24px; padding: 0; border: 1px solid #2a3140; border-radius: 5px; background: none; cursor: pointer; }}
+.ma-row .ma-del {{ width: 24px; height: 24px; background: #1c2029; color: #ef5350; border: 1px solid #2a3140; border-radius: 5px; cursor: pointer; font-size: 14px; line-height: 1; }}
+.ma-row .ma-del:hover {{ background: #3a1f1f; border-color: #ef5350; }}
 </style>
 </head>
 <body>
@@ -311,7 +329,26 @@ th {{ color: #9aa0a6; font-weight: 500; }}
       </div>
       <div style="background:#1a1e27;border-radius:8px;padding:10px">
         <div class="chart-title" id="kline-title"></div>
-        <div id="kline"><div class="empty-hint">请选择候选池日期与个股</div></div>
+        <div class="kline-toolbar">
+          <select id="kline-period" title="周期">
+            <option value="day">日线</option>
+            <option value="month">月线</option>
+          </select>
+          <select id="kline-indicator" title="副图指标">
+            <option value="volume">成交量</option>
+            <option value="macd">MACD</option>
+            <option value="kdj">KDJ</option>
+          </select>
+          <label class="kline-chk"><input type="checkbox" id="kline-boll" checked> BOLL</label>
+          <label class="kline-chk"><input type="checkbox" id="kline-vwap"> VWAP</label>
+          <button id="kline-ma-btn" type="button">MA 配置</button>
+          <button id="kline-ma-add" type="button" style="display:none">+</button>
+        </div>
+        <div class="kline-ma-config" id="kline-ma-config"></div>
+        <div id="kline">
+          <div id="kline-main"><div class="empty-hint">请选择候选池日期与个股</div></div>
+          <div id="kline-ind"></div>
+        </div>
       </div>
     </div>
   </div>
@@ -344,7 +381,6 @@ DATA.strategies.forEach(s => {{
   const opt = document.createElement('option'); opt.value = s; opt.textContent = s; strategySelect2.appendChild(opt);
 }});
 strategySelect2.value = DATA.strategies[0];
-loadCandidates();
 
 function fmtPct(v) {{ return (v * 100).toFixed(2) + '%'; }}
 function pctClass(v) {{ return v >= 0 ? 'pos' : 'neg'; }}
@@ -453,6 +489,202 @@ function selectDate(date) {{
   selectStock(stocks[0][0]);
 }}
 
+/* ==================== K 线增强（分栏指标/MA配置/BOLL/VWAP/月线） ==================== */
+/* klineState：周期(day/month)、副图指标(volume/macd/kdj)、MA列表、BOLL/VWAP开关 */
+const klineState = {{
+  period: 'day',
+  indicator: 'volume',
+  ma: [{{ p: 5, c: '#42a5f5' }}, {{ p: 10, c: '#ffca28' }}, {{ p: 20, c: '#ab47bc' }}, {{ p: 60, c: '#66bb6a' }}],
+  showBOLL: true,
+  showVWAP: false,
+}};
+
+/* ---- 周期数据：日线原样，月线聚合 ---- */
+function monthKey(time) {{ return time.slice(0, 7); }}  // "2026-01"
+function aggregateMonthly(daily) {{
+  const map = new Map();
+  daily.forEach(d => {{
+    const mk = monthKey(d.time);
+    const g = map.get(mk);
+    if (!g) {{
+      map.set(mk, {{ time: d.time.slice(0, 7) + '-01', open: d.open, high: d.high, low: d.low, close: d.close, volume: d.volume }});
+    }} else {{
+      g.high = Math.max(g.high, d.high);
+      g.low = Math.min(g.low, d.low);
+      g.close = d.close;
+      g.volume += d.volume;
+    }}
+  }});
+  return Array.from(map.values()).sort((a, b) => a.time < b.time ? -1 : 1);
+}}
+function getSeriesData(k) {{
+  return klineState.period === 'month' ? aggregateMonthly(k.ohlcv) : k.ohlcv;
+}}
+
+/* ---- 指标计算 ---- */
+function calcMA(data, period) {{
+  const out = [];
+  let sum = 0;
+  for (let i = 0; i < data.length; i++) {{
+    sum += data[i].close;
+    if (i >= period) sum -= data[i - period].close;
+    if (i >= period - 1) out.push({{ time: data[i].time, value: +(sum / period).toFixed(3) }});
+  }}
+  return out;
+}}
+function emaArr(values, period) {{
+  const k = 2 / (period + 1);
+  const out = [];
+  let prev = null;
+  for (let i = 0; i < values.length; i++) {{
+    prev = i === 0 ? values[i] : values[i] * k + prev * (1 - k);
+    out.push(prev);
+  }}
+  return out;
+}}
+function calcMACD(data) {{
+  const closes = data.map(d => d.close);
+  const ema12 = emaArr(closes, 12), ema26 = emaArr(closes, 26);
+  const dif = closes.map((_, i) => ema12[i] - ema26[i]);
+  const dea = emaArr(dif, 9);
+  const bars = data.map((d, i) => ({{
+    time: d.time, value: (dif[i] - dea[i]) * 2, color: (dif[i] - dea[i]) >= 0 ? '#ef535055' : '#26a69a55',
+  }}));
+  const difLine = data.map((d, i) => ({{ time: d.time, value: +dif[i].toFixed(3) }}));
+  const deaLine = data.map((d, i) => ({{ time: d.time, value: +dea[i].toFixed(3) }}));
+  return {{ bars, dif: difLine, dea: deaLine }};
+}}
+function calcKDJ(data, n = 9, m1 = 3, m2 = 3) {{
+  const out = [];
+  let rsv = [], k = 50, d = 50;
+  for (let i = 0; i < data.length; i++) {{
+    if (i >= n - 1) {{
+      let hh = -Infinity, ll = Infinity;
+      for (let j = i - n + 1; j <= i; j++) {{ hh = Math.max(hh, data[j].high); ll = Math.min(ll, data[j].low); }}
+      rsv[i] = (hh === ll) ? 50 : (data[i].close - ll) / (hh - ll) * 100;
+    }} else {{
+      rsv[i] = 50;
+    }}
+    k = (m1 - 1) / m1 * k + (1 / m1) * rsv[i];
+    d = (m2 - 1) / m2 * d + (1 / m2) * k;
+    out.push({{ time: data[i].time, K: k, D: d, J: 3 * k - 2 * d }});
+  }}
+  return out;
+}}
+function calcBOLL(data, period = 20, mult = 2) {{
+  const up = [], mid = [], low = [];
+  for (let i = 0; i < data.length; i++) {{
+    if (i >= period - 1) {{
+      let s = 0;
+      for (let j = i - period + 1; j <= i; j++) s += data[j].close;
+      const ma = s / period;
+      let v = 0;
+      for (let j = i - period + 1; j <= i; j++) v += (data[j].close - ma) * (data[j].close - ma);
+      const sd = Math.sqrt(v / period);
+      const t = data[i].time;
+      up.push({{ time: t, value: +(ma + mult * sd).toFixed(3) }});
+      mid.push({{ time: t, value: +ma.toFixed(3) }});
+      low.push({{ time: t, value: +(ma - mult * sd).toFixed(3) }});
+    }}
+  }}
+  return {{ up, mid, low }};
+}}
+function calcVWAP(data) {{
+  const out = [];
+  let cumPV = 0, cumV = 0;
+  for (let i = 0; i < data.length; i++) {{
+    const tp = (data[i].high + data[i].low + data[i].close) / 3;
+    cumPV += tp * data[i].volume;
+    cumV += data[i].volume;
+    out.push({{ time: data[i].time, value: +(cumPV / (cumV || 1)).toFixed(3) }});
+  }}
+  return out;
+}}
+
+/* ---- K 线渲染（主图 + 独立副图指标，双实例同步时间轴） ---- */
+let _mainChart = null, _indChart = null, _syncing = false;
+function makeChart(el) {{
+  return LightweightCharts.createChart(el, {{
+    layout: {{ background: {{ type: LightweightCharts.ColorType.Solid, color: '#171a21' }}, textColor: '#d1d4dc' }},
+    grid: {{ vertLines: {{ color: '#2b2b43' }}, horzLines: {{ color: '#2b2b43' }} }},
+    rightPriceScale: {{ borderColor: '#2b2b43' }},
+    timeScale: {{ borderColor: '#2b2b43' }},
+    height: el.offsetHeight || 360,
+  }});
+}}
+function destroyKline() {{
+  if (_mainChart) {{ _mainChart.remove(); _mainChart = null; }}
+  if (_indChart) {{ _indChart.remove(); _indChart = null; }}
+}}
+function syncCharts(from, to) {{
+  from.timeScale().subscribeVisibleLogicalRangeChange(range => {{
+    if (_syncing || !range) return;
+    _syncing = true;
+    to.timeScale().setVisibleLogicalRange(range);
+    _syncing = false;
+  }});
+}}
+function renderKline(k) {{
+  const data = getSeriesData(k);
+  const mainEl = document.getElementById('kline-main');
+  const indEl = document.getElementById('kline-ind');
+  mainEl.innerHTML = ''; indEl.innerHTML = '';
+  destroyKline();
+  _mainChart = makeChart(mainEl);
+  _indChart = makeChart(indEl);
+
+  // 主图：K线
+  const candle = _mainChart.addCandlestickSeries({{
+    upColor: '#ef5350', downColor: '#26a69a', borderUpColor: '#ef5350', borderDownColor: '#26a69a',
+    wickUpColor: '#ef5350', wickDownColor: '#26a69a',
+  }});
+  candle.setData(data);
+  // 主图：MA（可配置周期与颜色）
+  klineState.ma.forEach(ma => {{
+    if (ma.p <= 0) return;
+    const line = _mainChart.addLineSeries({{ color: ma.c, lineWidth: 1, priceLineVisible: false, lastValueVisible: false }});
+    line.setData(calcMA(data, ma.p));
+  }});
+  // 主图：BOLL
+  if (klineState.showBOLL) {{
+    const boll = calcBOLL(data);
+    _mainChart.addLineSeries({{ color: '#90caf9', lineWidth: 1, priceLineVisible: false, lastValueVisible: false }}).setData(boll.up);
+    _mainChart.addLineSeries({{ color: '#90caf9', lineWidth: 1, lineStyle: LightweightCharts.LineStyle.Dotted, priceLineVisible: false, lastValueVisible: false }}).setData(boll.mid);
+    _mainChart.addLineSeries({{ color: '#90caf9', lineWidth: 1, priceLineVisible: false, lastValueVisible: false }}).setData(boll.low);
+  }}
+  // 主图：VWAP
+  if (klineState.showVWAP) {{
+    const vw = _mainChart.addLineSeries({{ color: '#ff7043', lineWidth: 2, priceLineVisible: true, lastValueVisible: true }});
+    vw.setData(calcVWAP(data));
+  }}
+
+  // 副图：成交量 / MACD / KDJ
+  if (klineState.indicator === 'volume') {{
+    const vol = _indChart.addHistogramSeries({{ priceFormat: {{ type: 'volume' }}, priceScaleId: 'vol' }});
+    vol.setData(data.map(d => ({{ time: d.time, value: d.volume, color: d.close >= d.open ? '#ef535066' : '#26a69a66' }})));
+    _indChart.priceScale('vol').applyOptions({{ scaleMargins: {{ top: 0.05, bottom: 0.05 }} }});
+  }} else if (klineState.indicator === 'macd') {{
+    const macd = calcMACD(data);
+    const bar = _indChart.addHistogramSeries({{ priceScaleId: 'macd' }});
+    bar.setData(macd.bars);
+    _indChart.addLineSeries({{ color: '#ffca28', lineWidth: 1, priceLineVisible: false, lastValueVisible: false }}).setData(macd.dif);
+    _indChart.addLineSeries({{ color: '#66bb6a', lineWidth: 1, priceLineVisible: false, lastValueVisible: false }}).setData(macd.dea);
+  }} else if (klineState.indicator === 'kdj') {{
+    const kdj = calcKDJ(data);
+    const kd = _indChart.addLineSeries({{ color: '#42a5f5', lineWidth: 1, priceLineVisible: false, lastValueVisible: false }});
+    kd.setData(kdj.map(x => ({{ time: x.time, value: +x.K.toFixed(2) }})));
+    const dd = _indChart.addLineSeries({{ color: '#ffca28', lineWidth: 1, priceLineVisible: false, lastValueVisible: false }});
+    dd.setData(kdj.map(x => ({{ time: x.time, value: +x.D.toFixed(2) }})));
+    const jj = _indChart.addLineSeries({{ color: '#ab47bc', lineWidth: 1, priceLineVisible: false, lastValueVisible: false }});
+    jj.setData(kdj.map(x => ({{ time: x.time, value: +x.J.toFixed(2) }})));
+  }}
+
+  syncCharts(_mainChart, _indChart);
+  syncCharts(_indChart, _mainChart);
+  _mainChart.timeScale().fitContent();
+  _indChart.timeScale().fitContent();
+}}
+
 function selectStock(code) {{
   current.code = code;
   document.querySelectorAll('.stock-item').forEach(el => {{
@@ -460,40 +692,67 @@ function selectStock(code) {{
   }});
   const k = DATA.kline[code];
   const title = document.getElementById('kline-title');
-  title.textContent = code + '  日线（最近 ' + (k ? k.ohlcv.length : 0) + ' 日）';
-  const container = document.getElementById('kline');
+  title.textContent = code + '  ' + (klineState.period === 'month' ? '月线' : '日线') + '（共 ' + (k ? k.ohlcv.length : 0) + ' 根）';
+  const mainEl = document.getElementById('kline-main');
+  const indEl = document.getElementById('kline-ind');
   if (!k || k.ohlcv.length === 0) {{
-    container.innerHTML = '<div class="empty-hint">暂无 K 线数据</div>';
+    destroyKline();
+    mainEl.innerHTML = '<div class="empty-hint">暂无 K 线数据</div>';
+    indEl.innerHTML = '';
     return;
   }}
-  // 延迟到容器布局完成后渲染
-  requestAnimationFrame(() => renderKline(container, k));
+  requestAnimationFrame(() => renderKline(k));
 }}
 
-function renderKline(container, k) {{
-  container.innerHTML = '';
-  const chart = LightweightCharts.createChart(container, {{
-    layout: {{ background: {{ type: LightweightCharts.ColorType.Solid, color: '#171a21' }}, textColor: '#d1d4dc' }},
-    grid: {{ vertLines: {{ color: '#2b2b43' }}, horzLines: {{ color: '#2b2b43' }} }},
-    rightPriceScale: {{ borderColor: '#2b2b43' }},
-    timeScale: {{ borderColor: '#2b2b43' }},
+/* ---- MA 配置面板 ---- */
+function renderMaConfig() {{
+  const cfg = document.getElementById('kline-ma-config');
+  if (cfg.style.display === 'none') return;
+  cfg.innerHTML = '';
+  klineState.ma.forEach((ma, i) => {{
+    const row = document.createElement('div');
+    row.className = 'ma-row';
+    row.innerHTML = '<span>MA</span><input type="number" class="ma-p" value="' + ma.p + '" min="1" max="250" title="周期">' +
+      '<input type="color" class="ma-c" value="' + ma.c + '" title="颜色">' +
+      '<button type="button" class="ma-del">×</button>';
+    row.querySelector('.ma-p').onchange = e => {{ ma.p = +e.target.value || 5; rerenderKline(); }};
+    row.querySelector('.ma-c').oninput = e => {{ ma.c = e.target.value; rerenderKline(); }};
+    row.querySelector('.ma-del').onclick = () => {{ klineState.ma.splice(i, 1); renderMaConfig(); rerenderKline(); }};
+    cfg.appendChild(row);
   }});
-  const candle = chart.addCandlestickSeries({{
-    upColor: '#ef5350', downColor: '#26a69a', borderUpColor: '#ef5350', borderDownColor: '#26a69a',
-    wickUpColor: '#ef5350', wickDownColor: '#26a69a',
-  }});
-  candle.setData(k.ohlcv);
-  const colors = {{ 5: '#42a5f5', 10: '#ffca28', 20: '#ab47bc', 60: '#66bb6a' }};
-  [5,10,20,60].forEach(p => {{
-    const line = chart.addLineSeries({{ color: colors[p], lineWidth: 1, priceLineVisible: false, lastValueVisible: false }});
-    line.setData(k['ma' + p]);
-  }});
-  const vol = chart.addHistogramSeries({{
-    priceFormat: {{ type: 'volume' }}, priceScaleId: '', scaleMargins: {{ top: 0.8, bottom: 0 }},
-  }});
-  vol.setData(k.ohlcv.map(d => ({{ time: d.time, value: d.volume, color: d.close >= d.open ? '#ef535055' : '#26a69a55' }})));
-  chart.timeScale().fitContent();
 }}
+function rerenderKline() {{
+  if (current.code && DATA.kline[current.code]) {{
+    requestAnimationFrame(() => renderKline(DATA.kline[current.code]));
+  }}
+}}
+function initKlineControls() {{
+  document.getElementById('kline-period').onchange = e => {{
+    klineState.period = e.target.value;
+    const title = document.getElementById('kline-title');
+    const k = current.code && DATA.kline[current.code];
+    title.textContent = (current.code || '') + '  ' + (e.target.value === 'month' ? '月线' : '日线') + '（共 ' + (k ? k.ohlcv.length : 0) + ' 根）';
+    rerenderKline();
+  }};
+  document.getElementById('kline-indicator').onchange = e => {{ klineState.indicator = e.target.value; rerenderKline(); }};
+  document.getElementById('kline-boll').onchange = e => {{ klineState.showBOLL = e.target.checked; rerenderKline(); }};
+  document.getElementById('kline-vwap').onchange = e => {{ klineState.showVWAP = e.target.checked; rerenderKline(); }};
+  const maBtn = document.getElementById('kline-ma-btn');
+  const cfg = document.getElementById('kline-ma-config');
+  maBtn.onclick = () => {{
+    const show = (cfg.style.display === 'none' || cfg.style.display === '');
+    cfg.style.display = show ? 'block' : 'none';
+    if (show) renderMaConfig();
+  }};
+  const addBtn = document.getElementById('kline-ma-add');
+  addBtn.onclick = () => {{
+    klineState.ma.push({{ p: 5, c: '#e91e63' }});
+    renderMaConfig(); rerenderKline();
+  }};
+  addBtn.style.display = 'inline-block';
+}}
+initKlineControls();
+loadCandidates();  // 所有函数与 klineState 声明就绪后再加载候选池，避免 TDZ 报错
 
 strategySelect.addEventListener('change', loadStrategy);
 strategySelect2.addEventListener('change', loadCandidates);
@@ -509,21 +768,32 @@ function logCmd(msg) {{
   cmdOutput.scrollTop = cmdOutput.scrollHeight;
 }}
 
-/* 检测访问方式：双击 file:// 打开时无法调用 Python 命令，需通过本地服务访问 */
+/* 访问方式：file://（双击打开）用 marcoai:// 协议触发命令；http 服务用 fetch */
 const IS_FILE_PROTOCOL = (location.protocol === 'file:');
-function showServiceNotice() {{
-  let bar = document.getElementById('service-notice');
-  if (!bar) {{
-    bar = document.createElement('div');
-    bar.id = 'service-notice';
-    bar.style.cssText = 'margin-bottom:14px;padding:10px 14px;border-radius:8px;font-size:13px;line-height:1.6;background:#2b1a1a;border:1px solid #ef5350;color:#ffb3b3;';
-    document.getElementById('panel-backtest').parentElement.insertBefore(bar, document.getElementById('panel-backtest'));
+
+/* 通过 marcoai:// 自定义协议触发本地 Python 命令（无需服务，双击即用） */
+function runViaProtocol(cmd, payload, btn) {{
+  btn.classList.add('running');
+  btn.querySelector('.spinner').style.display = 'inline-block';
+  logCmd('执行: ' + cmd + '（通过 marcoai:// 协议）');
+  let url = 'marcoai://run?cmd=' + encodeURIComponent(cmd);
+  if (payload && payload.strategy) url += '&strategy=' + encodeURIComponent(payload.strategy);
+  try {{
+    location.href = url;
+    logCmd('已发起，结果将弹窗显示');
+  }} catch (err) {{
+    logCmd('发起失败: ' + err + '（请确认已运行 register_protocol.py 注册协议）');
   }}
-  bar.textContent = '左侧快捷命令需通过本地服务才能执行。请先运行：python AICode/MarcoAPI/StrategyService.py，再访问 http://localhost:8765/ （当前为直接打开文件，命令无法触发）';
+  btn.classList.remove('running');
+  btn.querySelector('.spinner').style.display = 'none';
 }}
 
-/* 统一命令执行入口：POST 到本地服务 /api/cmd，后端执行对应 Python 脚本 */
+/* 统一命令执行入口 */
 async function runCommand(cmd, payload, btn) {{
+  if (IS_FILE_PROTOCOL) {{
+    runViaProtocol(cmd, payload, btn);
+    return;
+  }}
   btn.classList.add('running');
   btn.querySelector('.spinner').style.display = 'inline-block';
   try {{
@@ -541,20 +811,13 @@ async function runCommand(cmd, payload, btn) {{
     }}
     return data;
   }} catch (err) {{
-    if (IS_FILE_PROTOCOL) {{
-      showServiceNotice();
-      logCmd('当前是直接打开文件，无法调用本地命令。请启动服务并访问 http://localhost:8765/ 后重试。');
-    }} else {{
-      logCmd('请求失败: ' + err + '（请确认已启动本地服务，命令：python AICode/MarcoAPI/StrategyService.py）');
-    }}
+    logCmd('请求失败: ' + err + '（请确认已启动本地服务，命令：python AICode/MarcoAPI/StrategyService.py）');
     return null;
   }} finally {{
     btn.classList.remove('running');
     btn.querySelector('.spinner').style.display = 'none';
   }}
 }}
-
-if (IS_FILE_PROTOCOL) showServiceNotice();
 
 /* ---- 命令1：数据更新 ---- */
 function onClickUpdateData(btn) {{
