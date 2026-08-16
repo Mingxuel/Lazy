@@ -58,6 +58,45 @@ def _read_text(path):
     return raw.decode("utf-8", errors="ignore")
 
 
+def _to_float(v: str) -> float:
+    try:
+        return float(v)
+    except (ValueError, TypeError):
+        return 0.0
+
+
+def _load_strategy_detail(strategies: list[str]) -> dict[str, dict[str, list[dict[str, object]]]]:
+    """加载各策略每天的选股详情，返回 {策略: {日期: [{code,name,market,open,high,low,close,pre,vol,amount,chg}]}}"""
+    out: dict[str, dict[str, list[dict[str, object]]]] = {}
+    for name in strategies:
+        daily = _load_strategy(name)
+        detail: dict[str, list[dict[str, object]]] = {}
+        for date in sorted(daily):
+            rows = []
+            for r in daily[date]:
+                if len(r) < 11:
+                    continue
+                close = _to_float(r[7])
+                pre = _to_float(r[10])
+                item = {
+                    "code": r[0],
+                    "name": r[1] if len(r) > 1 else "",
+                    "market": r[2] if len(r) > 2 else "",
+                    "open": _to_float(r[4]),
+                    "high": _to_float(r[5]),
+                    "low": _to_float(r[6]),
+                    "close": close,
+                    "pre": pre,
+                    "vol": _to_float(r[8]),
+                    "amount": _to_float(r[9]),
+                    "chg": round((close - pre) / pre * 100, 2) if pre else 0.0,
+                }
+                rows.append(item)
+            detail[date] = rows
+        out[name] = detail
+    return out
+
+
 def _build_strategy_payload(strategy_name: str) -> dict[str, object]:
     """构建单个策略的回测数据"""
     daily = _load_strategy(strategy_name)
@@ -140,12 +179,13 @@ def _load_candidates(strategy_name: str) -> dict[str, list[list[str]]]:
     return dict(sorted(candidates.items(), key=lambda x: x[0], reverse=True))
 
 
-def _load_kline(codes: set[str]) -> dict[str, dict[str, Any]]:
+def _load_kline(codes: set[str], names: dict[str, str] | None = None) -> dict[str, dict[str, Any]]:
     """读取候选股的【全部历史】原始日线（1D_ORIGIN）。
 
     仅传原始 OHLCV，所有指标（MA/MACD/KDJ/BOLL/VWAP）与月线聚合
-    均由前端 JS 动态计算，便于配置切换。
+    均由前端 JS 动态计算，便于配置切换。names 提供 code->股票名称。
     """
+    names = names or {}
     kline = {}
     for code in codes:
         path = os.path.join(PATH_AIDATA_1D_ORIGIN(), code)
@@ -161,7 +201,7 @@ def _load_kline(codes: set[str]) -> dict[str, dict[str, Any]]:
                 "time": t, "open": float(r[1]), "high": float(r[2]),
                 "low": float(r[3]), "close": float(r[4]), "volume": float(r[5]),
             })
-        kline[code] = {"ohlcv": ohlcv}
+        kline[code] = {"ohlcv": ohlcv, "name": names.get(code, code)}
     return kline
 
 
@@ -176,7 +216,7 @@ def _render_html(data: dict[str, Any]) -> str:
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230f172a'/%3E%3Crect width='64' height='64' rx='14' fill='url(%23g)'/%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='64' y2='64'%3E%3Cstop offset='0' stop-color='%232b6cb0'/%3E%3Cstop offset='1' stop-color='%231d4ed8'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath d='M16 44 L26 34 L34 40 L48 24' stroke='white' stroke-width='4' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='M48 24 L42 24 M48 24 L48 30' stroke='white' stroke-width='4' fill='none' stroke-linecap='round'/%3E%3Crect x='30' y='28' width='5' height='12' rx='1.5' fill='%23f59e0b'/%3E%3C/svg%3E">
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <!-- TradingView Lightweight Charts -->
-<script src="https://unpkg.com/lightweight-charts@4.1.3/dist/lightweight-charts.standalone.production.js"></script>
+<script src="https://unpkg.com/lightweight-charts@5.0.8/dist/lightweight-charts.standalone.production.js"></script>
 <style>
 * {{ box-sizing: border-box; margin: 0; padding: 0; }}
 html, body {{ height: 100%; }}
@@ -219,6 +259,27 @@ th, td {{ padding: 6px 8px; text-align: left; border-bottom: 1px solid #262c38; 
 th {{ color: #9aa0a6; font-weight: 500; }}
 .pos {{ color: #26a69a; }} .neg {{ color: #ef5350; }}
 .chart-wrap {{ position: relative; height: 320px; }}
+#panel-detail table {{ font-size: 12px; }}
+#panel-detail td {{ white-space: nowrap; }}
+#panel-detail tbody tr:hover {{ background: #1c2029; }}
+#detail-groups {{ max-height: 74vh; overflow-y: auto; }}
+.detail-date-head {{ background: #1c2029; color: #ffca28; font-size: 12px; font-weight: 600; padding: 6px 10px; margin: 8px 0 4px; border-radius: 5px; border-left: 3px solid #ffca28; }}
+.detail-date-head:first-child {{ margin-top: 0; }}
+table.detail-table {{ width: 100%; border-collapse: collapse; margin-bottom: 4px; table-layout: fixed; }}
+table.detail-table th, table.detail-table td {{ padding: 5px 6px; text-align: right; border-bottom: 1px solid #232a36; overflow: hidden; text-overflow: ellipsis; }}
+table.detail-table th:first-child, table.detail-table td:first-child {{ text-align: center; }}
+table.detail-table thead th {{ position: sticky; top: 0; background: #141821; color: #9aa0a6; font-weight: 600; z-index: 1; }}
+table.detail-table tbody tr:hover {{ background: #1c2029; }}
+/* 固定列宽 */
+table.detail-table th:nth-child(1) {{ width: 30px; }}
+table.detail-table th:nth-child(2) {{ width: 78px; }}
+table.detail-table th:nth-child(3) {{ width: 86px; }}
+table.detail-table th:nth-child(4) {{ width: 66px; }}
+table.detail-table th:nth-child(5) {{ width: 78px; }}
+table.detail-table th:nth-child(n+6):nth-child(-n+10) {{ width: 56px; }}
+table.detail-table th:nth-child(11) {{ width: 78px; }}
+table.detail-table th:nth-child(12) {{ width: 82px; }}
+#panel-detail .card {{ padding: 12px 16px 8px; }}
 .mode-badge {{ display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 12px; margin-right: 6px; }}
 .b-first {{ background: #42a5f5; color: #0b1a2a; }}
 .b-last {{ background: #ef5350; color: #2a0b0b; }}
@@ -234,9 +295,15 @@ th {{ color: #9aa0a6; font-weight: 500; }}
 .stock-count {{ color: #9aa0a6; font-size: 12px; margin-left: 6px; }}
 .stock-market {{ color: #6b7280; font-size: 11px; margin-left: 4px; }}
 #kline {{ width: 100%; height: 62vh; display: flex; flex-direction: column; }}
-#kline-main {{ flex: 3; min-height: 0; }}
-#kline-ind {{ flex: 1; min-height: 0; margin-top: 4px; }}
+#kline-main {{ flex: 3 1 0; min-height: 0; }}
+.kline-ind {{ flex: 1 1 0; min-height: 0; margin-top: 4px; }}
 .chart-title {{ font-size: 13px; color: #c9cdd4; margin-bottom: 8px; min-height: 18px; }}
+.kline-info {{ font-size: 12px; color: #9aa0a6; margin-bottom: 6px; min-height: 16px; font-family: Consolas, monospace; }}
+.kline-info .up {{ color: #ef5350; }}
+.kline-info .down {{ color: #26a69a; }}
+.chg-big {{ font-size: 20px; font-weight: 700; margin-right: 10px; }}
+.chg-big.up {{ color: #ef5350; }}
+.chg-big.down {{ color: #26a69a; }}
 .empty-hint {{ color: #6b7280; font-size: 13px; padding: 20px; text-align: center; }}
 /* K 线工具栏 */
 .kline-toolbar {{ display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }}
@@ -257,6 +324,17 @@ th {{ color: #9aa0a6; font-weight: 500; }}
 .ma-row input[type="color"] {{ width: 32px; height: 24px; padding: 0; border: 1px solid #2a3140; border-radius: 5px; background: none; cursor: pointer; }}
 .ma-row .ma-del {{ width: 24px; height: 24px; background: #1c2029; color: #ef5350; border: 1px solid #2a3140; border-radius: 5px; cursor: pointer; font-size: 14px; line-height: 1; }}
 .ma-row .ma-del:hover {{ background: #3a1f1f; border-color: #ef5350; }}
+/* 指标栏管理 */
+.kline-bars {{ display: none; background: #161a22; border: 1px solid #2a3140; border-radius: 6px; padding: 8px; margin-bottom: 8px; }}
+.bar-row {{ display: flex; align-items: center; gap: 6px; margin-bottom: 6px; flex-wrap: wrap; }}
+.bar-row .bar-label {{ color: #9aa0a6; font-size: 12px; width: 26px; }}
+.bar-row select {{ background: #1c2029; color: #e4e6eb; border: 1px solid #2a3140; border-radius: 5px; padding: 4px 6px; font-size: 12px; }}
+.bar-row .bar-volma {{ color: #9aa0a6; font-size: 11px; }}
+.bar-row .bar-volma-input {{ width: 70px; background: #1c2029; color: #e4e6eb; border: 1px solid #2a3140; border-radius: 5px; padding: 4px 6px; font-size: 12px; }}
+.bar-row .bar-del {{ width: 24px; height: 24px; background: #1c2029; color: #ef5350; border: 1px solid #2a3140; border-radius: 5px; cursor: pointer; font-size: 14px; line-height: 1; }}
+.bar-row .bar-del:hover {{ background: #3a1f1f; border-color: #ef5350; }}
+/* 涨跌颜色配置 */
+.kline-color-config {{ display: none; background: #161a22; border: 1px solid #2a3140; border-radius: 6px; padding: 8px; margin-bottom: 8px; }}
 </style>
 </head>
 <body>
@@ -277,6 +355,7 @@ th {{ color: #9aa0a6; font-weight: 500; }}
 <div class="tabs">
   <div class="tab active" data-tab="backtest" onclick="switchTab('backtest')">策略回测</div>
   <div class="tab" data-tab="candidate" onclick="switchTab('candidate')">实盘候选池</div>
+  <div class="tab" data-tab="detail" onclick="switchTab('detail')">策略选股</div>
 </div>
 
 <div id="panel-backtest" class="tab-panel active">
@@ -329,29 +408,41 @@ th {{ color: #9aa0a6; font-weight: 500; }}
       </div>
       <div style="background:#1a1e27;border-radius:8px;padding:10px">
         <div class="chart-title" id="kline-title"></div>
+        <div class="kline-info" id="kline-info"></div>
         <div class="kline-toolbar">
           <select id="kline-period" title="周期">
             <option value="day">日线</option>
             <option value="month">月线</option>
           </select>
-          <select id="kline-indicator" title="副图指标">
-            <option value="volume">成交量</option>
-            <option value="macd">MACD</option>
-            <option value="kdj">KDJ</option>
-          </select>
-          <label class="kline-chk"><input type="checkbox" id="kline-boll" checked> BOLL</label>
+          <button id="kline-bar-btn" type="button">指标栏</button>
+          <label class="kline-chk"><input type="checkbox" id="kline-boll"> BOLL</label>
           <label class="kline-chk"><input type="checkbox" id="kline-vwap"> VWAP</label>
           <button id="kline-ma-btn" type="button">MA 配置</button>
           <button id="kline-ma-add" type="button" style="display:none">+</button>
+          <button id="kline-color-btn" type="button">涨跌颜色</button>
         </div>
+        <div class="kline-bars" id="kline-bars"></div>
         <div class="kline-ma-config" id="kline-ma-config"></div>
+        <div class="kline-color-config" id="kline-color-config"></div>
         <div id="kline">
           <div id="kline-main"><div class="empty-hint">请选择候选池日期与个股</div></div>
-          <div id="kline-ind"></div>
         </div>
       </div>
     </div>
   </div>
+</div>
+
+<div id="panel-detail" class="tab-panel">
+  <div class="toolbar">
+    <div><label>策略：</label>
+      <select id="detail-strategy"></select>
+    </div>
+    <div><label>月份：</label>
+      <select id="detail-date"></select>
+    </div>
+    <div id="detail-count" style="font-size:12px;color:#9aa0a6;"></div>
+  </div>
+  <div id="detail-groups" class="card"></div>
 </div>
 
 <script>
@@ -362,6 +453,7 @@ function switchTab(name) {{
   document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === name));
   document.getElementById('panel-backtest').classList.toggle('active', name === 'backtest');
   document.getElementById('panel-candidate').classList.toggle('active', name === 'candidate');
+  document.getElementById('panel-detail').classList.toggle('active', name === 'detail');
   // 候选池 TAB 激活时重绘 K 线（容器可见后再渲染）
   if (name === 'candidate' && current.code) {{
     requestAnimationFrame(() => selectStock(current.code));
@@ -493,11 +585,13 @@ function selectDate(date) {{
 /* klineState：周期(day/month)、副图指标(volume/macd/kdj)、MA列表、BOLL/VWAP开关 */
 const klineState = {{
   period: 'day',
-  indicator: 'volume',
+  bars: [{{ type: 'volume', volMA: [5, 10] }}],   // 指标栏列表，最多 MAX_BARS 个
   ma: [{{ p: 5, c: '#42a5f5' }}, {{ p: 10, c: '#ffca28' }}, {{ p: 20, c: '#ab47bc' }}, {{ p: 60, c: '#66bb6a' }}],
-  showBOLL: true,
+  showBOLL: false,
   showVWAP: false,
+  colors: {{ up: '#ef5350', down: '#26a69a', limitUp: '#f5c518' }},  // 涨/跌/涨停颜色
 }};
+const MAX_BARS = 3;
 
 /* ---- 周期数据：日线原样，月线聚合 ---- */
 function monthKey(time) {{ return time.slice(0, 7); }}  // "2026-01"
@@ -600,91 +694,163 @@ function calcVWAP(data) {{
   }}
   return out;
 }}
+/* 涨停幅度：创业/科创板20%，主板10% */
+function limitRatio(code) {{
+  const pure = code.split('.')[0];
+  if (pure && (pure.startsWith('300') || pure.startsWith('301') || pure.startsWith('302') ||
+               pure.startsWith('688') || pure.startsWith('689'))) return 0.20;
+  return 0.10;
+}}
+/* 涨停价 = 前收×(1+涨幅)，四舍五入到分 */
+function limitPrice(preClose, ratio) {{
+  return Math.round(preClose * (1 + ratio) * 100) / 100;
+}}
+/* 标记每根K线是否涨停（收盘触及涨停价），返回 time -> isLimit 映射 */
+function markLimitUp(data, code) {{
+  const ratio = limitRatio(code);
+  const map = new Map();
+  for (let i = 1; i < data.length; i++) {{
+    const pre = data[i - 1].close;
+    if (pre > 0 && data[i].close >= limitPrice(pre, ratio)) map.set(data[i].time, true);
+  }}
+  return map;
+}}
+/* 成交量均线（VOL MA），对成交量序列求均值 */
+function calcVolMA(data, period) {{
+  const out = [];
+  let sum = 0;
+  for (let i = 0; i < data.length; i++) {{
+    sum += data[i].volume;
+    if (i >= period) sum -= data[i - period].volume;
+    if (i >= period - 1) out.push({{ time: data[i].time, value: +(sum / period).toFixed(1) }});
+  }}
+  return out;
+}}
 
-/* ---- K 线渲染（主图 + 独立副图指标，双实例同步时间轴） ---- */
-let _mainChart = null, _indChart = null, _syncing = false;
-function makeChart(el) {{
-  return LightweightCharts.createChart(el, {{
+/* ---- K 线渲染（LightweightCharts v5 原生分栏：主图 + 最多3个指标栏，自动对齐与十字线贯穿） ---- */
+let _chart = null;
+function destroyKline() {{
+  if (_chart) {{ try {{ _chart.remove(); }} catch(e) {{}} _chart = null; }}
+}}
+/* 主图悬浮时在标题栏下方显示当天数据 */
+function showDayInfo(chart, candleSeries, data) {{
+  chart.subscribeCrosshairMove(param => {{
+    const info = document.getElementById('kline-info');
+    if (!param.time) {{ if (info && info.dataset.base) info.textContent = info.dataset.base; return; }}
+    let d = param.seriesData ? param.seriesData.get(candleSeries) : null;
+    if (!d) {{ for (let i = 0; i < data.length; i++) {{ if (data[i].time === param.time) {{ d = data[i]; break; }} }} }}
+    if (!d) return;
+    const base = info.dataset.base || '';
+    const chg = d.open > 0 ? ((d.close - d.open) / d.open * 100).toFixed(2) : '0.00';
+    const cls = d.close >= d.open ? 'up' : 'down';
+    info.innerHTML = base + ' <span class="' + cls + '">' + d.time + '</span>' +
+      ' 开 ' + d.open + ' 高 ' + d.high + ' 低 ' + d.low + ' 收 ' + d.close +
+      ' 涨跌 <span class="' + cls + '">' + chg + '%</span>' +
+      ' 量 ' + d.volume;
+  }});
+}}
+/* 渲染单个指标栏（v5 addPane 分栏，pane 为独立窗格） */
+function renderIndicatorBar(pane, bar, data, limitMap) {{
+  if (bar.type === 'volume') {{
+    const vol = pane.addSeries(LightweightCharts.HistogramSeries, {{ priceFormat: {{ type: 'volume' }} }});
+    vol.setData(data.map(d => ({{
+      time: d.time, value: d.volume,
+      color: limitMap.has(d.time) ? klineState.colors.limitUp + 'aa' : (d.close >= d.open ? klineState.colors.up + '66' : klineState.colors.down + '66'),
+    }})));
+    // 成交量均线（可配置）
+    (bar.volMA || []).forEach((p, i) => {{
+      if (p <= 0) return;
+      pane.addSeries(LightweightCharts.LineSeries, {{ color: i === 0 ? '#ffca28' : '#ff7043', lineWidth: 1, priceLineVisible: false, lastValueVisible: false }})
+        .setData(calcVolMA(data, p));
+    }});
+  }} else if (bar.type === 'macd') {{
+    const macd = calcMACD(data);
+    const b = pane.addSeries(LightweightCharts.HistogramSeries, {{}});
+    b.setData(macd.bars.map(x => ({{
+      time: x.time, value: x.value,
+      color: x.value >= 0 ? klineState.colors.up + '55' : klineState.colors.down + '55',
+    }})));
+    pane.addSeries(LightweightCharts.LineSeries, {{ color: '#ffca28', lineWidth: 1, priceLineVisible: false, lastValueVisible: false }}).setData(macd.dif);
+    pane.addSeries(LightweightCharts.LineSeries, {{ color: '#66bb6a', lineWidth: 1, priceLineVisible: false, lastValueVisible: false }}).setData(macd.dea);
+  }} else if (bar.type === 'kdj') {{
+    const kdj = calcKDJ(data);
+    pane.addSeries(LightweightCharts.LineSeries, {{ color: '#42a5f5', lineWidth: 1, priceLineVisible: false, lastValueVisible: false }}).setData(kdj.map(x => ({{ time: x.time, value: +x.K.toFixed(2) }})));
+    pane.addSeries(LightweightCharts.LineSeries, {{ color: '#ffca28', lineWidth: 1, priceLineVisible: false, lastValueVisible: false }}).setData(kdj.map(x => ({{ time: x.time, value: +x.D.toFixed(2) }})));
+    pane.addSeries(LightweightCharts.LineSeries, {{ color: '#ab47bc', lineWidth: 1, priceLineVisible: false, lastValueVisible: false }}).setData(kdj.map(x => ({{ time: x.time, value: +x.J.toFixed(2) }})));
+  }}
+}}
+function renderKline(k) {{
+  const data = getSeriesData(k);
+  const box = document.getElementById('kline');
+  box.innerHTML = '<div id="kline-main"></div>';
+  destroyKline();
+
+  const mainEl = document.getElementById('kline-main');
+  _chart = LightweightCharts.createChart(mainEl, {{
     layout: {{ background: {{ type: LightweightCharts.ColorType.Solid, color: '#171a21' }}, textColor: '#d1d4dc' }},
     grid: {{ vertLines: {{ color: '#2b2b43' }}, horzLines: {{ color: '#2b2b43' }} }},
     rightPriceScale: {{ borderColor: '#2b2b43' }},
     timeScale: {{ borderColor: '#2b2b43' }},
-    height: el.offsetHeight || 360,
+    crosshair: {{ mode: LightweightCharts.CrosshairMode.Normal }},
+    height: mainEl.offsetHeight || 600,
   }});
-}}
-function destroyKline() {{
-  if (_mainChart) {{ _mainChart.remove(); _mainChart = null; }}
-  if (_indChart) {{ _indChart.remove(); _indChart = null; }}
-}}
-function syncCharts(from, to) {{
-  from.timeScale().subscribeVisibleLogicalRangeChange(range => {{
-    if (_syncing || !range) return;
-    _syncing = true;
-    to.timeScale().setVisibleLogicalRange(range);
-    _syncing = false;
-  }});
-}}
-function renderKline(k) {{
-  const data = getSeriesData(k);
-  const mainEl = document.getElementById('kline-main');
-  const indEl = document.getElementById('kline-ind');
-  mainEl.innerHTML = ''; indEl.innerHTML = '';
-  destroyKline();
-  _mainChart = makeChart(mainEl);
-  _indChart = makeChart(indEl);
 
-  // 主图：K线
-  const candle = _mainChart.addCandlestickSeries({{
-    upColor: '#ef5350', downColor: '#26a69a', borderUpColor: '#ef5350', borderDownColor: '#26a69a',
-    wickUpColor: '#ef5350', wickDownColor: '#26a69a',
+  // 涨停标记（黄色显示）
+  const limitMap = markLimitUp(data, current.code);
+
+  // 主图：K线（涨停日黄色）
+  const c = klineState.colors;
+  const candle = _chart.addSeries(LightweightCharts.CandlestickSeries, {{
+    upColor: c.up, downColor: c.down, borderUpColor: c.up, borderDownColor: c.down,
+    wickUpColor: c.up, wickDownColor: c.down,
   }});
-  candle.setData(data);
+  candle.setData(data.map(d => {{
+    const o = {{ time: d.time, open: d.open, high: d.high, low: d.low, close: d.close }};
+    if (limitMap.has(d.time)) o.color = c.limitUp;
+    return o;
+  }}));
   // 主图：MA（可配置周期与颜色）
   klineState.ma.forEach(ma => {{
     if (ma.p <= 0) return;
-    const line = _mainChart.addLineSeries({{ color: ma.c, lineWidth: 1, priceLineVisible: false, lastValueVisible: false }});
-    line.setData(calcMA(data, ma.p));
+    _chart.addSeries(LightweightCharts.LineSeries, {{ color: ma.c, lineWidth: 1, priceLineVisible: false, lastValueVisible: false }}).setData(calcMA(data, ma.p));
   }});
   // 主图：BOLL
   if (klineState.showBOLL) {{
     const boll = calcBOLL(data);
-    _mainChart.addLineSeries({{ color: '#90caf9', lineWidth: 1, priceLineVisible: false, lastValueVisible: false }}).setData(boll.up);
-    _mainChart.addLineSeries({{ color: '#90caf9', lineWidth: 1, lineStyle: LightweightCharts.LineStyle.Dotted, priceLineVisible: false, lastValueVisible: false }}).setData(boll.mid);
-    _mainChart.addLineSeries({{ color: '#90caf9', lineWidth: 1, priceLineVisible: false, lastValueVisible: false }}).setData(boll.low);
+    _chart.addSeries(LightweightCharts.LineSeries, {{ color: '#90caf9', lineWidth: 1, priceLineVisible: false, lastValueVisible: false }}).setData(boll.up);
+    _chart.addSeries(LightweightCharts.LineSeries, {{ color: '#90caf9', lineWidth: 1, lineStyle: LightweightCharts.LineStyle.Dotted, priceLineVisible: false, lastValueVisible: false }}).setData(boll.mid);
+    _chart.addSeries(LightweightCharts.LineSeries, {{ color: '#90caf9', lineWidth: 1, priceLineVisible: false, lastValueVisible: false }}).setData(boll.low);
   }}
   // 主图：VWAP
   if (klineState.showVWAP) {{
-    const vw = _mainChart.addLineSeries({{ color: '#ff7043', lineWidth: 2, priceLineVisible: true, lastValueVisible: true }});
-    vw.setData(calcVWAP(data));
+    _chart.addSeries(LightweightCharts.LineSeries, {{ color: '#ff7043', lineWidth: 2, priceLineVisible: true, lastValueVisible: true }}).setData(calcVWAP(data));
   }}
 
-  // 副图：成交量 / MACD / KDJ
-  if (klineState.indicator === 'volume') {{
-    const vol = _indChart.addHistogramSeries({{ priceFormat: {{ type: 'volume' }}, priceScaleId: 'vol' }});
-    vol.setData(data.map(d => ({{ time: d.time, value: d.volume, color: d.close >= d.open ? '#ef535066' : '#26a69a66' }})));
-    _indChart.priceScale('vol').applyOptions({{ scaleMargins: {{ top: 0.05, bottom: 0.05 }} }});
-  }} else if (klineState.indicator === 'macd') {{
-    const macd = calcMACD(data);
-    const bar = _indChart.addHistogramSeries({{ priceScaleId: 'macd' }});
-    bar.setData(macd.bars);
-    _indChart.addLineSeries({{ color: '#ffca28', lineWidth: 1, priceLineVisible: false, lastValueVisible: false }}).setData(macd.dif);
-    _indChart.addLineSeries({{ color: '#66bb6a', lineWidth: 1, priceLineVisible: false, lastValueVisible: false }}).setData(macd.dea);
-  }} else if (klineState.indicator === 'kdj') {{
-    const kdj = calcKDJ(data);
-    const kd = _indChart.addLineSeries({{ color: '#42a5f5', lineWidth: 1, priceLineVisible: false, lastValueVisible: false }});
-    kd.setData(kdj.map(x => ({{ time: x.time, value: +x.K.toFixed(2) }})));
-    const dd = _indChart.addLineSeries({{ color: '#ffca28', lineWidth: 1, priceLineVisible: false, lastValueVisible: false }});
-    dd.setData(kdj.map(x => ({{ time: x.time, value: +x.D.toFixed(2) }})));
-    const jj = _indChart.addLineSeries({{ color: '#ab47bc', lineWidth: 1, priceLineVisible: false, lastValueVisible: false }});
-    jj.setData(kdj.map(x => ({{ time: x.time, value: +x.J.toFixed(2) }})));
-  }}
+  // 各指标栏：v5 原生分栏（addPane），价格刻度/时间轴/十字线自动对齐
+  klineState.bars.forEach(bar => {{
+    const pane = _chart.addPane();
+    renderIndicatorBar(pane, bar, data, limitMap);
+  }});
 
-  syncCharts(_mainChart, _indChart);
-  syncCharts(_indChart, _mainChart);
-  _mainChart.timeScale().fitContent();
-  _indChart.timeScale().fitContent();
+  _chart.timeScale().fitContent();
+  showDayInfo(_chart, candle, data);
 }}
 
+/* 标题栏 HTML：涨跌幅放最前（大字号红绿色），后跟名称/代码/周期 */
+function klineTitleHtml(k, code) {{
+  let chg = '';
+  if (k && k.ohlcv.length) {{
+    const last = k.ohlcv[k.ohlcv.length - 1];
+    const prev = k.ohlcv.length > 1 ? k.ohlcv[k.ohlcv.length - 2].close : last.open;
+    const pct = prev > 0 ? (last.close - prev) / prev * 100 : 0;
+    const cls = pct >= 0 ? 'up' : 'down';
+    chg = '<span class="chg-big ' + cls + '">' + (pct >= 0 ? '+' : '') + pct.toFixed(2) + '%</span>';
+  }}
+  const name = (k && k.name ? k.name + '  ' : '');
+  const per = klineState.period === 'month' ? '月线' : '日线';
+  const n = k ? k.ohlcv.length : 0;
+  return '<span style="font-size:14px;font-weight:600;color:#e4e6eb">' + name + code + '  ' + per + '（共 ' + n + ' 根）</span> ' + chg;
+}}
 function selectStock(code) {{
   current.code = code;
   document.querySelectorAll('.stock-item').forEach(el => {{
@@ -692,13 +858,14 @@ function selectStock(code) {{
   }});
   const k = DATA.kline[code];
   const title = document.getElementById('kline-title');
-  title.textContent = code + '  ' + (klineState.period === 'month' ? '月线' : '日线') + '（共 ' + (k ? k.ohlcv.length : 0) + ' 根）';
-  const mainEl = document.getElementById('kline-main');
-  const indEl = document.getElementById('kline-ind');
+  title.innerHTML = klineTitleHtml(k, code);
+  const info = document.getElementById('kline-info');
+  const base = (k && k.name ? k.name + '  ' : '') + code + '  ' + (klineState.period === 'month' ? '月线' : '日线');
+  info.dataset.base = base;
+  info.textContent = base;
   if (!k || k.ohlcv.length === 0) {{
     destroyKline();
-    mainEl.innerHTML = '<div class="empty-hint">暂无 K 线数据</div>';
-    indEl.innerHTML = '';
+    document.getElementById('kline').innerHTML = '<div id="kline-main"><div class="empty-hint">暂无 K 线数据</div></div>';
     return;
   }}
   requestAnimationFrame(() => renderKline(k));
@@ -726,15 +893,79 @@ function rerenderKline() {{
     requestAnimationFrame(() => renderKline(DATA.kline[current.code]));
   }}
 }}
+/* ---- 指标栏管理面板 ---- */
+function renderBarConfig() {{
+  const box = document.getElementById('kline-bars');
+  box.innerHTML = '';
+  klineState.bars.forEach((bar, i) => {{
+    const row = document.createElement('div');
+    row.className = 'bar-row';
+    row.innerHTML = '<span class="bar-label">栏' + (i + 1) + '</span>' +
+      '<select class="bar-type">' +
+      '<option value="volume"' + (bar.type === 'volume' ? ' selected' : '') + '>成交量</option>' +
+      '<option value="macd"' + (bar.type === 'macd' ? ' selected' : '') + '>MACD</option>' +
+      '<option value="kdj"' + (bar.type === 'kdj' ? ' selected' : '') + '>KDJ</option>' +
+      '</select>' +
+      '<span class="bar-volma" title="成交量均线，逗号分隔">VOL MA:</span>' +
+      '<input type="text" class="bar-volma-input" value="' + (bar.volMA || []).join(',') + '" placeholder="5,10">' +
+      '<button type="button" class="bar-del">×</button>';
+    row.querySelector('.bar-type').onchange = e => {{ bar.type = e.target.value; renderBarConfig(); rerenderKline(); }};
+    row.querySelector('.bar-volma-input').onchange = e => {{
+      const arr = e.target.value.split(',').map(x => parseInt(x, 10)).filter(x => !isNaN(x) && x > 0);
+      bar.volMA = arr.length ? arr.slice(0, 3) : [5, 10];
+      rerenderKline();
+    }};
+    row.querySelector('.bar-del').onclick = () => {{
+      klineState.bars.splice(i, 1);
+      renderBarConfig(); rerenderKline();
+    }};
+    // 非成交量栏隐藏 VOL MA 配置
+    if (bar.type !== 'volume') {{
+      row.querySelector('.bar-volma').style.display = 'none';
+      row.querySelector('.bar-volma-input').style.display = 'none';
+    }}
+    box.appendChild(row);
+  }});
+  const add = document.createElement('button');
+  add.type = 'button';
+  add.textContent = '+ 添加指标栏';
+  add.style.cssText = 'width:100%;margin-top:4px;background:#1c2029;color:#e4e6eb;border:1px solid #2a3140;border-radius:6px;padding:5px;font-size:12px;cursor:pointer;';
+  add.onclick = () => {{
+    if (klineState.bars.length >= MAX_BARS) return;
+    const types = ['volume', 'macd', 'kdj'].filter(t => !klineState.bars.some(b => b.type === t));
+    klineState.bars.push({{ type: types[0] || 'macd', volMA: [5, 10] }});
+    renderBarConfig(); rerenderKline();
+  }};
+  if (klineState.bars.length < MAX_BARS) box.appendChild(add);
+}}
+/* ---- 涨跌/涨停颜色配置面板 ---- */
+function renderColorConfig() {{
+  const box = document.getElementById('kline-color-config');
+  box.innerHTML = '';
+  const defs = [['up', '涨', klineState.colors.up], ['down', '跌', klineState.colors.down], ['limitUp', '涨停', klineState.colors.limitUp]];
+  defs.forEach(([key, label, val]) => {{
+    const row = document.createElement('div');
+    row.className = 'ma-row';
+    row.innerHTML = '<span>' + label + '</span><input type="color" value="' + val + '" title="' + label + '">';
+    row.querySelector('input').oninput = e => {{ klineState.colors[key] = e.target.value; renderColorConfig(); rerenderKline(); }};
+    box.appendChild(row);
+  }});
+}}
 function initKlineControls() {{
   document.getElementById('kline-period').onchange = e => {{
     klineState.period = e.target.value;
-    const title = document.getElementById('kline-title');
     const k = current.code && DATA.kline[current.code];
-    title.textContent = (current.code || '') + '  ' + (e.target.value === 'month' ? '月线' : '日线') + '（共 ' + (k ? k.ohlcv.length : 0) + ' 根）';
+    document.getElementById('kline-title').innerHTML = klineTitleHtml(k, current.code || '');
     rerenderKline();
   }};
-  document.getElementById('kline-indicator').onchange = e => {{ klineState.indicator = e.target.value; rerenderKline(); }};
+  const barsPanel = document.getElementById('kline-bars');
+  const barBtn = document.getElementById('kline-bar-btn');
+  function toggleBarsPanel(forceShow) {{
+    const show = (forceShow !== undefined) ? forceShow : (barsPanel.style.display === 'none' || barsPanel.style.display === '');
+    barsPanel.style.display = show ? 'block' : 'none';
+    if (show) renderBarConfig();
+  }}
+  barBtn.onclick = () => toggleBarsPanel();
   document.getElementById('kline-boll').onchange = e => {{ klineState.showBOLL = e.target.checked; rerenderKline(); }};
   document.getElementById('kline-vwap').onchange = e => {{ klineState.showVWAP = e.target.checked; rerenderKline(); }};
   const maBtn = document.getElementById('kline-ma-btn');
@@ -750,9 +981,94 @@ function initKlineControls() {{
     renderMaConfig(); rerenderKline();
   }};
   addBtn.style.display = 'inline-block';
+  // 涨跌颜色面板开关
+  const colorBtn = document.getElementById('kline-color-btn');
+  const colorCfg = document.getElementById('kline-color-config');
+  colorBtn.onclick = () => {{
+    const show = (colorCfg.style.display === 'none' || colorCfg.style.display === '');
+    colorCfg.style.display = show ? 'block' : 'none';
+    if (show) renderColorConfig();
+  }};
+  renderBarConfig();
 }}
 initKlineControls();
 loadCandidates();  // 所有函数与 klineState 声明就绪后再加载候选池，避免 TDZ 报错
+
+/* ------- 策略选股详情 TAB ------- */
+function fmtNum(v) {{
+  if (v >= 1e8) return (v / 1e8).toFixed(2) + '亿';
+  if (v >= 1e4) return (v / 1e4).toFixed(2) + '万';
+  return v.toFixed(2);
+}}
+function loadDetail() {{
+  const s = document.getElementById('detail-strategy').value;
+  const m = document.getElementById('detail-date').value;  // YYYYMM
+  const detail = DATA.strategy_detail[s] || {{}};
+  // 收集该月所有日期（降序），同一天的多只股票框在一起
+  const dates = Object.keys(detail).filter(d => d.startsWith(m)).sort().reverse();
+  let total = 0;
+  const box = document.getElementById('detail-groups');
+  box.innerHTML = '';
+  dates.forEach(date => {{
+    const rows = detail[date];
+    if (!rows || rows.length === 0) return;
+    // 日期区块标题（显示为 YYYY-MM-DD）
+    const head = document.createElement('div');
+    head.className = 'detail-date-head';
+    head.textContent = date.slice(0, 4) + '-' + date.slice(4, 6) + '-' + date.slice(6, 8) + '（' + rows.length + ' 只）';
+    box.appendChild(head);
+    // 该日股票表格
+    const table = document.createElement('table');
+    table.className = 'detail-table';
+    table.innerHTML = '<thead><tr><th>#</th><th>代码</th><th>名称</th><th>涨跌幅%</th><th>市值(亿)</th><th>开盘</th><th>最高</th><th>最低</th><th>收盘</th><th>前收</th><th>成交量</th><th>成交额(万)</th></tr></thead>';
+    const tbody = document.createElement('tbody');
+    rows.forEach((row, i) => {{
+      total++;
+      const cls = row.chg >= 0 ? 'neg' : 'pos';  // 涨红跌绿
+      const tr = document.createElement('tr');
+      tr.innerHTML = '<td>' + (i + 1) + '</td>' +
+        '<td>' + row.code + '</td><td>' + row.name + '</td>' +
+        '<td class="' + cls + '">' + row.chg.toFixed(2) + '</td>' +
+        '<td>' + fmtNum(row.market) + '</td>' +
+        '<td>' + row.open.toFixed(2) + '</td><td>' + row.high.toFixed(2) + '</td>' +
+        '<td>' + row.low.toFixed(2) + '</td><td>' + row.close.toFixed(2) + '</td>' +
+        '<td>' + row.pre.toFixed(2) + '</td>' +
+        '<td>' + fmtNum(row.vol) + '</td>' +
+        '<td>' + fmtNum(row.amount) + '</td>';
+      tbody.appendChild(tr);
+    }});
+    table.appendChild(tbody);
+    box.appendChild(table);
+  }});
+  document.getElementById('detail-count').textContent = m.slice(0, 4) + '年' + m.slice(4, 6) + '月 共选股 ' + total + ' 只（' + dates.length + ' 个交易日）';
+}}
+function initDetailTab() {{
+  const sel = document.getElementById('detail-strategy');
+  DATA.strategies.forEach(s => {{
+    const opt = document.createElement('option'); opt.value = s; opt.textContent = s; sel.appendChild(opt);
+  }});
+  sel.value = DATA.strategies[0];
+  sel.onchange = fillDetailDates;
+  document.getElementById('detail-date').onchange = loadDetail;
+  fillDetailDates();
+}}
+function fillDetailDates() {{
+  const s = document.getElementById('detail-strategy').value;
+  const dates = Object.keys(DATA.strategy_detail[s] || {{}}).sort().reverse();
+  // 提取月份 YYYYMM 去重降序（日期为 20260814，取前 6 位即 202608）
+  const months = Array.from(new Set(dates.map(d => d.slice(0, 6))));
+  const ds = document.getElementById('detail-date');
+  ds.innerHTML = '';
+  months.forEach(mth => {{
+    const opt = document.createElement('option');
+    opt.value = mth;
+    opt.textContent = mth.slice(0, 4) + '年' + mth.slice(4, 6) + '月';  // 202608 -> 2026年08月
+    ds.appendChild(opt);
+  }});
+  if (months.length) ds.value = months[0];
+  loadDetail();
+}}
+initDetailTab();
 
 strategySelect.addEventListener('change', loadStrategy);
 strategySelect2.addEventListener('change', loadCandidates);
@@ -1002,18 +1318,25 @@ def GENERATE_STRATEGY_UI(strategy_name: str | None = None, open_browser: bool = 
     # 候选池 + K 线
     candidates = {}
     all_codes = set()
+    code_names: dict[str, str] = {}
     for name in strategies:
         candidates[name] = _load_candidates(name)
         for rows in candidates[name].values():
             for r in rows:
                 all_codes.add(r[0])
-    kline = _load_kline(all_codes)
+                if len(r) >= 2 and r[0] not in code_names:
+                    code_names[r[0]] = r[1]
+    kline = _load_kline(all_codes, code_names)
+
+    # 策略选股详情（第三个 TAB）
+    strategy_detail = _load_strategy_detail(strategies)
 
     data = {
         "strategies": strategies,
         "backtest": backtest,
         "candidates": candidates,
         "kline": kline,
+        "strategy_detail": strategy_detail,
     }
 
     html = _render_html(data)
