@@ -1112,6 +1112,39 @@ function runViaProtocol(cmd, payload, btn) {{
   btn.querySelector('.spinner').style.display = 'none';
 }}
 
+/* 轮询数据更新日志，实时显示各步骤进度，完成后刷新页面 */
+function pollUpdateLog() {{
+  const poll = async () => {{
+    try {{
+      const res = await fetch('/api/update_log');
+      const data = await res.json();
+      if (data.log) {{
+        // 只保留关键步骤行，过滤详细日志
+        const lines = data.log.split('\\n');
+        const key = lines.filter(l => {{
+          const s = l.trim();
+          return s.startsWith('=====') || s.startsWith('!!!!!') || s.startsWith('UPDATE_') || s.includes('数据更新完成') || s.includes('数据更新失败') || s.startsWith('数据更新');
+        }});
+        const text = key.join('\\n');
+        const pre = document.getElementById('cmd-output');
+        if (pre.textContent !== text) {{
+          pre.textContent = text;
+          pre.scrollTop = pre.scrollHeight;
+        }}
+      }}
+      if (!data.running && data.done) {{
+        logCmd('数据更新完成，正在刷新页面...');
+        setTimeout(() => location.reload(), 1000);
+        return;
+      }}
+      if (data.running) setTimeout(poll, 1500);
+    }} catch (err) {{
+      setTimeout(poll, 1500);
+    }}
+  }};
+  poll();
+}}
+
 /* 统一命令执行入口 */
 async function runCommand(cmd, payload, btn) {{
   if (IS_FILE_PROTOCOL) {{
@@ -1130,10 +1163,9 @@ async function runCommand(cmd, payload, btn) {{
     const data = await res.json();
     if (data.ok) {{
       logCmd(data.output || '完成');
-      // 数据更新完成后自动刷新页面，让服务用最新数据重新生成图表
+      // 数据更新改为异步：轮询 /api/update_log 实时显示各步骤日志，完成后刷新
       if (cmd === 'UPDATE_DATA') {{
-        logCmd('数据已更新，正在刷新页面...');
-        setTimeout(() => location.reload(), 800);
+        pollUpdateLog();
       }}
     }} else {{
       logCmd('失败: ' + (data.error || '未知错误'));

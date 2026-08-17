@@ -15,10 +15,13 @@
 """
 
 import argparse
+import contextlib
+import io
 import json
 import os
 import subprocess
 import sys
+import threading
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 _root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -29,12 +32,73 @@ from AICode.MarcoAPI.StrategyUI import (
     CMD_UPDATE_DATA, CMD_UPDATE_THS,
     GENERATE_STRATEGY_UI, _list_strategies,
 )
+from AICode.MarcoAPI.Update.Update1D import UPDATE_ALL
 
 HOST = "127.0.0.1"
 PORT = 8765
 
+# ---- 异步数据更新（独立进程，避免 QMT tq 后台线程限制） ----
+_update_running = False
+_update_done = False
+_update_proc = None
+_update_lock = threading.Lock()
+_update_log_file = os.path.join(_root, "..", "AIData", "update.log")
+_update_log_file = os.path.abspath(_update_log_file)
+
+
+def _run_update_background():
+    """启动独立 Python 进程执行 UPDATE_ALL，stdout/stderr 实时写入日志文件"""
+    global _update_running, _update_done, _update_proc
+    # 独立更新脚本：在子进程主线程跑 UPDATE_ALL（QMT tq 需主线程）
+    script = (
+        "import sys, os\n"
+        "sys.path.insert(0, os.getcwd())\n"
+        "from AICode.MarcoAPI.Update.Update1D import UPDATE_ALL\n"
+        "try:\n"
+        "    UPDATE_ALL()\n"
+        "    print('\\n数据更新完成')\n"
+        "except BaseException as exc:\n"
+        "    import traceback\n"
+        "    print('数据更新失败: %s: %s' % (type(exc).__name__, exc))\n"
+        "    traceback.print_exc()\n"
+    )
+    os.makedirs(os.path.dirname(_update_log_file), exist_ok=True)
+    with open(_update_log_file, "w", encoding="utf-8") as f:
+        _update_proc = subprocess.Popen(
+            [sys.executable, "-u", "-c", script],
+            cwd=GIT_REPO_DIR,
+            stdout=f,
+            stderr=subprocess.STDOUT,
+            creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
+        )
+
+
+def _wait_update_proc():
+    """等待子进程结束，更新 done 状态"""
+    global _update_running, _update_done, _update_proc
+    try:
+        if _update_proc:
+            _update_proc.wait()
+    finally:
+        with _update_lock:
+            _update_running = False
+            _update_done = True
+
+
+def _update_status() -> dict:
+    global _update_running, _update_done
+    # 读取日志文件
+    log = ""
+    try:
+        if os.path.isfile(_update_log_file):
+            log = open(_update_log_file, encoding="utf-8", errors="replace").read()
+    except Exception:
+        pass
+    with _update_lock:
+        return {"ok": True, "running": _update_running, "done": _update_done, "log": log}
+
 # git 工作目录 = 项目根（StrategyService.py 位于 AICode/MarcoAPI/，其上两级为项目根）
-GIT_REPO_DIR = os.path.dirname(os.path.dirname(_root))
+GIT_REPO_DIR = os.path.dirname(_root)  # 项目根（_root=AICode）
 GIT_COMMIT_MSG = "Updated"
 
 
@@ -106,6 +170,8 @@ class StrategyHandler(BaseHTTPRequestHandler):
             html = _dashboard_html().encode("utf-8")
             self._send_headers(200, "text/html; charset=utf-8")
             self.wfile.write(html)
+        elif self.path == "/api/update_log":
+            self._send_json(_update_status())
         else:
             self._send_json({"ok": False, "error": f"未找到 {self.path}"}, 404)
 
@@ -126,11 +192,18 @@ class StrategyHandler(BaseHTTPRequestHandler):
         strategy = payload.get("strategy") or ""
 
         if cmd == "UPDATE_DATA":
-            try:
-                output = CMD_UPDATE_DATA()
-                self._send_json({"ok": True, "output": output, "running": False})
-            except Exception as exc:
-                self._send_json({"ok": False, "error": str(exc), "running": False}, 500)
+            global _update_running, _update_done, _update_proc
+            if _update_running:
+                self._send_json({"ok": True, "output": "数据正在更新中，请稍候...", "running": True})
+                return
+            # 重置状态并启动独立更新进程（子进程主线程跑 UPDATE_ALL，避免 QMT tq 线程限制）
+            with _update_lock:
+                _update_running = True
+                _update_done = False
+                _update_proc = None
+            _run_update_background()
+            threading.Thread(target=_wait_update_proc, daemon=True).start()
+            self._send_json({"ok": True, "output": "开始更新数据，进度请查看下方日志...", "running": True})
             return
 
         if cmd == "UPDATE_THS":

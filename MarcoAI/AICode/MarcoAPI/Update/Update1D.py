@@ -59,13 +59,16 @@ def UPDATE_ALL():
         ("UPDATE_TARGET_TPO_5", UPDATE_TARGET_TPO_5),
     ]
     for name, fn in steps:
-        print(f"\n===== {name} BEGIN =====")
+        print(f"\n===== {name} =====")
         try:
-            fn()
-            print(f"===== {name} END =====")
-        except Exception as exc:
-            print(f"!!!!! {name} FAILED: {exc}")
-    print("\n全部数据更新完成")
+            # 抑制内部步骤的详细输出，只保留步骤名
+            import io, contextlib
+            with contextlib.redirect_stdout(io.StringIO()):
+                fn()
+            print(f"===== {name} 完成 =====")
+        except BaseException as exc:  # 捕获所有异常，避免静默中断后续步骤
+            print(f"!!!!! {name} FAILED: {type(exc).__name__}: {exc}")
+    print("全部数据更新完成")
 
 
 if __name__ == "__main__":
