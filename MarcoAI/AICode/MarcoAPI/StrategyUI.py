@@ -194,13 +194,17 @@ def _load_kline(codes: set[str], names: dict[str, str] | None = None) -> dict[st
         lines = _read_text(path).splitlines()
         rows = [l.split("|") for l in lines if l.strip() and len(l.split("|")) >= 6]
         ohlcv = []
+        prev_close = None
         for r in rows:
             # r[0] 是 YYYYMMDD（如 20260105），LightweightCharts 要求 YYYY-MM-DD
             t = r[0][:4] + '-' + r[0][4:6] + '-' + r[0][6:8]
+            close = float(r[4])
             ohlcv.append({
                 "time": t, "open": float(r[1]), "high": float(r[2]),
-                "low": float(r[3]), "close": float(r[4]), "volume": float(r[5]),
+                "low": float(r[3]), "close": close, "volume": float(r[5]),
+                "pre_close": prev_close if prev_close is not None else float(r[1]),
             })
+            prev_close = close
         kline[code] = {"ohlcv": ohlcv, "name": names.get(code, code)}
     return kline
 
@@ -737,12 +741,15 @@ function showDayInfo(chart, candleSeries, data) {{
   chart.subscribeCrosshairMove(param => {{
     const info = document.getElementById('kline-info');
     if (!param.time) {{ if (info && info.dataset.base) info.textContent = info.dataset.base; return; }}
-    let d = param.seriesData ? param.seriesData.get(candleSeries) : null;
-    if (!d) {{ for (let i = 0; i < data.length; i++) {{ if (data[i].time === param.time) {{ d = data[i]; break; }} }} }}
+    // 始终从完整 data（内嵌含 pre_close）查找，避免 seriesData 不含 pre_close 导致涨跌幅用 open
+    let d = null;
+    for (let i = 0; i < data.length; i++) {{ if (data[i].time === param.time) {{ d = data[i]; break; }} }}
+    if (!d) d = param.seriesData ? param.seriesData.get(candleSeries) : null;
     if (!d) return;
     const base = info.dataset.base || '';
-    const chg = d.open > 0 ? ((d.close - d.open) / d.open * 100).toFixed(2) : '0.00';
-    const cls = d.close >= d.open ? 'up' : 'down';
+    const pc = d.pre_close || d.open;
+    const chg = pc > 0 ? ((d.close - pc) / pc * 100).toFixed(2) : '0.00';
+    const cls = d.close >= pc ? 'up' : 'down';
     info.innerHTML = base + ' <span class="' + cls + '">' + d.time + '</span>' +
       ' 开 ' + d.open + ' 高 ' + d.high + ' 低 ' + d.low + ' 收 ' + d.close +
       ' 涨跌 <span class="' + cls + '">' + chg + '%</span>' +
@@ -841,7 +848,7 @@ function klineTitleHtml(k, code) {{
   let chg = '';
   if (k && k.ohlcv.length) {{
     const last = k.ohlcv[k.ohlcv.length - 1];
-    const prev = k.ohlcv.length > 1 ? k.ohlcv[k.ohlcv.length - 2].close : last.open;
+    const prev = last.pre_close || last.open;
     const pct = prev > 0 ? (last.close - prev) / prev * 100 : 0;
     const cls = pct >= 0 ? 'up' : 'down';
     chg = '<span class="chg-big ' + cls + '">' + (pct >= 0 ? '+' : '') + pct.toFixed(2) + '%</span>';
@@ -1122,6 +1129,11 @@ async function runCommand(cmd, payload, btn) {{
     const data = await res.json();
     if (data.ok) {{
       logCmd(data.output || '完成');
+      // 数据更新完成后自动刷新页面，让服务用最新数据重新生成图表
+      if (cmd === 'UPDATE_DATA') {{
+        logCmd('数据已更新，正在刷新页面...');
+        setTimeout(() => location.reload(), 800);
+      }}
     }} else {{
       logCmd('失败: ' + (data.error || '未知错误'));
     }}
@@ -1207,16 +1219,16 @@ addCmdBtn('git 同步', 'git add . && commit && push 推送到远程仓库', fal
 
 
 def _list_strategy_files(strategy_name: str) -> list[str]:
-    """返回策略目录下按日期升序的全部文件名（仅数字日期），无则返回空列表"""
-    base = os.path.join(PATH_AIDATA_STRATEGY(), strategy_name)
+    """返回实盘候选池(TARGET)目录下按日期升序的全部文件名（仅数字日期），无则返回空列表"""
+    base = PATH_AIDATA_TARGET(strategy_name)
     if not os.path.isdir(base):
         return []
     return sorted(d for d in os.listdir(base) if d.isdigit())
 
 
 def _read_strategy_stocks(strategy_name: str, date: str) -> list[str]:
-    """读取某策略某日期的选股股票代码列表（带 .SH/.SZ 后缀，如 603087.SH）"""
-    path = os.path.join(PATH_AIDATA_STRATEGY(), strategy_name, date)
+    """读取某策略某日期的实盘候选池股票代码列表（带 .SH/.SZ 后缀，如 603087.SH）"""
+    path = os.path.join(PATH_AIDATA_TARGET(strategy_name), date)
     if not os.path.isfile(path):
         return []
     codes = []

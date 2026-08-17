@@ -2,12 +2,12 @@
 """
 MarcoAI 自定义协议命令处理器 (marcoai://)
 ========================================
-当网页通过 `location.href = "marcoai://run?cmd=UPDATE_THS&strategy=TPO31"` 触发时，
+当网页通过 `location.href = "marcoai://run?cmd=UPDATE_THS&strategy=TPO_3"` 触发时，
 Windows 会唤起本程序，解析 URL 中的参数并执行对应的 Python 命令，然后用消息框显示结果。
 
 用法（注册协议后）:
     marcoai://run?cmd=UPDATE_DATA
-    marcoai://run?cmd=UPDATE_THS&strategy=TPO31
+    marcoai://run?cmd=UPDATE_THS&strategy=TPO_3
     marcoai://run?cmd=GIT_SYNC
 
 本程序不依赖本地 HTTP 服务，因此网页直接双击打开（file://）也能触发命令。
@@ -55,7 +55,7 @@ def _show_result(title: str, text: str):
 
 
 def main(argv):
-    """argv[1] 是传入的完整 URL，如 marcoai://run?cmd=UPDATE_THS&strategy=TPO31"""
+    """argv[1] 是传入的完整 URL，如 marcoai://run?cmd=UPDATE_THS&strategy=TPO_3"""
     url = argv[1] if len(argv) > 1 else "marcoai://run?cmd=?"
     parsed = urllib.parse.urlparse(url)
     params = dict(urllib.parse.parse_qsl(parsed.query))

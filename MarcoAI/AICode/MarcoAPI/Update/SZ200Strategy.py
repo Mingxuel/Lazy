@@ -15,37 +15,39 @@ from AICode.MarcoAPI.Update.Path import *
 from AICode.MarcoAPI.Update.Data import DATA_1D
 from AICode.MarcoAPI.Update.SZ2001D import GET_SZ200_1D_PREVIOUS
 
-def UPDATE_STRATEGY_TPO31():
-    """策略 TPO31：市值用 T-3 日收盘价计算（>= 200 亿）"""
-    _UPDATE_STRATEGY_TPO("TPO31", PATH_AIDATA_STRATEGY_TPO31(), market_index=3)
+def UPDATE_STRATEGY_TPO_3():
+    """策略 TPO_3：市值统一用 T-2 日收盘价计算（>= 200 亿），T-1 收盘涨跌幅 < 3%"""
+    _UPDATE_STRATEGY_TPO("TPO_3", PATH_AIDATA_STRATEGY_TPO_3(), market_index=2, max_ratio=3.0)
 
-def UPDATE_STRATEGY_TPO32():
-    """策略 TPO32：市值用 T-2 日收盘价计算（>= 200 亿）"""
-    _UPDATE_STRATEGY_TPO("TPO32", PATH_AIDATA_STRATEGY_TPO32(), market_index=2)
+def UPDATE_STRATEGY_TPO_4():
+    """策略 TPO_4：市值统一用 T-2 日收盘价计算（>= 200 亿），T-1 收盘涨跌幅 < 4%"""
+    _UPDATE_STRATEGY_TPO("TPO_4", PATH_AIDATA_STRATEGY_TPO_4(), market_index=2, max_ratio=4.0)
 
-def UPDATE_STRATEGY_TPO33():
-    """策略 TPO33：市值用 T-1 日收盘价计算（>= 200 亿）"""
-    _UPDATE_STRATEGY_TPO("TPO33", PATH_AIDATA_STRATEGY_TPO33(), market_index=1)
+def UPDATE_STRATEGY_TPO_5():
+    """策略 TPO_5：市值统一用 T-2 日收盘价计算（>= 200 亿），T-1 收盘涨跌幅 < 5%"""
+    _UPDATE_STRATEGY_TPO("TPO_5", PATH_AIDATA_STRATEGY_TPO_5(), market_index=2, max_ratio=5.0)
 
-def _UPDATE_STRATEGY_TPO(strategy_name: str, strategy_dir: str, market_index: int):
+def _UPDATE_STRATEGY_TPO(strategy_name: str, strategy_dir: str, market_index: int, max_ratio: float = 3.0):
     """TPO 系列通用选股：生成回测数据到 Strategy/{strategy_name}/。
 
     写入 T-0 日全部加工数据（28列），供回测使用。
-    实盘候选池由 SZ200Target.py 的 UPDATE_TARGET_TPO31/32/33 生成（TARGET/ 目录）。
-    唯一差异：市值用 market_index 对应日（3=T-3, 2=T-2, 1=T-1）的收盘价计算。
+    实盘候选池由 SZ200Target.py 的 UPDATE_TARGET_TPO_3/4/5 生成（TARGET/ 目录）。
+    市值统一用 market_index（默认 2=T-2）日收盘价计算；
+    三策略差异由 max_ratio（T-1 收盘涨跌幅上限）区分：TPO_3<3%、TPO_4<4%、TPO_5<5%。
     """
     shutil.rmtree(strategy_dir, ignore_errors=True)
     os.makedirs(strategy_dir, exist_ok=True)
     stock_codes = STOCK_CODES_ALL()
     trading_dates = TRADING_DATES()
     with ProcessPoolExecutor(max_workers=32) as pool:
-        list(pool.map(partial(GENERATE_STRATEGY_TPO, stock_codes, strategy_dir, market_index), trading_dates))
+        list(pool.map(partial(GENERATE_STRATEGY_TPO, stock_codes, strategy_dir, market_index, max_ratio), trading_dates))
 
-def GENERATE_STRATEGY_TPO(stock_codes: list[str], strategy_dir: str, market_index: int, trading_date: str):
+def GENERATE_STRATEGY_TPO(stock_codes: list[str], strategy_dir: str, market_index: int, max_ratio: float, trading_date: str):
     """worker（回测数据）: 以 trading_date 为 T-0，逐股按加工字段判断是否满足完整 TPO 形态。
 
     写入 T-0 日全部加工数据（28列）到 Strategy/{strategy}/{T-0日期}，供回测使用。
-    市值用 market_index 对应日（3=T-3, 2=T-2, 1=T-1）的收盘价计算。
+    市值统一用 market_index（默认 2=T-2）日收盘价计算；
+    三策略差异由 max_ratio（T-1 收盘涨跌幅上限）区分。
     """
     print("UPDATE_TARGET_TPO: " + trading_date)
     sell_date = trading_date                    # T-0
@@ -74,8 +76,8 @@ def GENERATE_STRATEGY_TPO(stock_codes: list[str], strategy_dir: str, market_inde
             continue
         if record_2.is_top != 0:
             continue
-        # T-1 涨跌幅<3%、缩量、收盘价>MA5
-        if record_1.ratio >= 3.0:
+        # T-1 收盘涨跌幅 < max_ratio（按策略 3%/4%/5%）、缩量、收盘价>MA5
+        if record_1.ratio >= max_ratio:
             continue
         if record_1.is_volume_down != 1:
             continue
@@ -111,7 +113,7 @@ def _write_row(file: TextIO, date: str, code: str, name: str, market_value: floa
 
 if __name__ == "__main__":
     #SHOW_TARGET_1D()
-    UPDATE_STRATEGY_TPO31()
-    UPDATE_STRATEGY_TPO32()
-    UPDATE_STRATEGY_TPO33()
+    UPDATE_STRATEGY_TPO_3()
+    UPDATE_STRATEGY_TPO_4()
+    UPDATE_STRATEGY_TPO_5()
     #SHOW_TARGET_1D()

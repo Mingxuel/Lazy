@@ -102,14 +102,14 @@ def PATH_AIDATA_STRATEGY() -> str:
 def PATH_AIDATA_STRATEGY_RESULT() -> str:
     return GET_ROOT_PATH() + "/MarcoAI/AIData/STRATEGY/RESULT"
 
-def PATH_AIDATA_STRATEGY_TPO31() -> str:
-    return GET_ROOT_PATH() + "/MarcoAI/AIData/Strategy/TPO31"
+def PATH_AIDATA_STRATEGY_TPO_3() -> str:
+    return GET_ROOT_PATH() + "/MarcoAI/AIData/Strategy/TPO_3"
 
-def PATH_AIDATA_STRATEGY_TPO32() -> str:
-    return GET_ROOT_PATH() + "/MarcoAI/AIData/Strategy/TPO32"
+def PATH_AIDATA_STRATEGY_TPO_4() -> str:
+    return GET_ROOT_PATH() + "/MarcoAI/AIData/Strategy/TPO_4"
 
-def PATH_AIDATA_STRATEGY_TPO33() -> str:
-    return GET_ROOT_PATH() + "/MarcoAI/AIData/Strategy/TPO33"
+def PATH_AIDATA_STRATEGY_TPO_5() -> str:
+    return GET_ROOT_PATH() + "/MarcoAI/AIData/Strategy/TPO_5"
 
 def PATH_AIDATA_1D_MOTION_PRICE() -> str:
     return GET_ROOT_PATH() + "/MarcoAI/AIData/1D_MOTION_PRICE"

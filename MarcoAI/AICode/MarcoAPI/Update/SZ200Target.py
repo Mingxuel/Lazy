@@ -13,9 +13,9 @@
     MarcoAI/AIData/TARGET/{策略}/{T-2日期}，每行 股票代码|股票名称|市值
 
 API 说明:
-    UPDATE_TARGET_TPO31()  市值用 T-3 日收盘价计算
-    UPDATE_TARGET_TPO32()  市值用 T-2 日收盘价计算
-    UPDATE_TARGET_TPO33()  市值用 T-1 日收盘价计算（T-1 未发生，兜底用 T-2）
+    UPDATE_TARGET_TPO_3()  市值统一用 T-2 日收盘价计算（>= 200 亿）
+    UPDATE_TARGET_TPO_4()  市值统一用 T-2 日收盘价计算（>= 200 亿）
+    UPDATE_TARGET_TPO_5()  市值统一用 T-2 日收盘价计算（>= 200 亿）
 """
 
 import os
@@ -34,19 +34,19 @@ from AICode.MarcoAPI.Update.Path import *
 from AICode.MarcoAPI.Update.SZ2001D import GET_SZ200_1D_PREVIOUS
 
 
-def UPDATE_TARGET_TPO31():
-    """实盘候选池 TPO31：市值用 T-3 日收盘价计算（>= 200 亿）"""
-    _UPDATE_TARGET_CANDIDATE("TPO31", market_index=3)
+def UPDATE_TARGET_TPO_3():
+    """实盘候选池 TPO_3：市值统一用 T-2 日收盘价计算（>= 200 亿）"""
+    _UPDATE_TARGET_CANDIDATE("TPO_3", market_index=2)
 
 
-def UPDATE_TARGET_TPO32():
-    """实盘候选池 TPO32：市值用 T-2 日收盘价计算（>= 200 亿）"""
-    _UPDATE_TARGET_CANDIDATE("TPO32", market_index=2)
+def UPDATE_TARGET_TPO_4():
+    """实盘候选池 TPO_4：市值统一用 T-2 日收盘价计算（>= 200 亿）"""
+    _UPDATE_TARGET_CANDIDATE("TPO_4", market_index=2)
 
 
-def UPDATE_TARGET_TPO33():
-    """实盘候选池 TPO33：市值用 T-1 日收盘价计算（>= 200 亿）"""
-    _UPDATE_TARGET_CANDIDATE("TPO33", market_index=1)
+def UPDATE_TARGET_TPO_5():
+    """实盘候选池 TPO_5：市值统一用 T-2 日收盘价计算（>= 200 亿）"""
+    _UPDATE_TARGET_CANDIDATE("TPO_5", market_index=2)
 
 
 def _UPDATE_TARGET_CANDIDATE(strategy_name: str, market_index: int):
@@ -67,8 +67,7 @@ def GENERATE_TARGET_CANDIDATE(stock_codes: list[str], target_dir: str, market_in
         T-3 首板（lian_ban==1）放量涨停 + T-2 上涨放量未涨停
     首板用 1D 加工字段 lian_ban==1 判断，无需 T-4 数据。
     市值筛选:
-        market_index=3（T-3）/2（T-2）在候选池产生时可判断，做市值>=200亿筛选
-        market_index=1（T-1）属于未来，候选池产生时不筛市值（市值字段记 0）
+        统一用 T-2 日（record_0）收盘价计算市值，>= 200 亿才保留
     候选池记录在 T-2 日（trading_date），最新候选池 = 最新交易日，下个交易日可买入。
     每行只存 股票代码|股票名称|市值。
     """
@@ -97,16 +96,14 @@ def GENERATE_TARGET_CANDIDATE(stock_codes: list[str], target_dir: str, market_in
             continue
         if record_0.is_top != 0:
             continue
-        # 市值：仅 T-3/T-2 日在候选池产生时可判断；T-1 属于未来，不做市值筛选
+        # 市值：统一用 T-2 日（record_0）收盘价计算，>= 200 亿才保留
         market_value = 0.0
-        if market_index != 1:
-            info = GET_STOCK_INFO(code)
-            if info is None or info[1] <= 0:
-                continue
-            market_record = {3: record_1, 2: record_0}[market_index]
-            market_value = float(info[1]) * market_record.close
-            if market_value < 2e10:              # 市值 >= 200 亿才保留
-                continue
+        info = GET_STOCK_INFO(code)
+        if info is None or info[1] <= 0:
+            continue
+        market_value = float(info[1]) * record_0.close
+        if market_value < 2e10:              # 市值 >= 200 亿才保留
+            continue
         rows.append(f"{code}|{name}|{market_value:.2f}")
 
     with open(f"{target_dir}/{t2_date}", "a") as file:
@@ -117,6 +114,6 @@ def GENERATE_TARGET_CANDIDATE(stock_codes: list[str], target_dir: str, market_in
 
 
 if __name__ == "__main__":
-    UPDATE_TARGET_TPO31()
-    UPDATE_TARGET_TPO32()
-    UPDATE_TARGET_TPO33()
+    UPDATE_TARGET_TPO_3()
+    UPDATE_TARGET_TPO_4()
+    UPDATE_TARGET_TPO_5()

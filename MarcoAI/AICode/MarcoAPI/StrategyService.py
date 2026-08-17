@@ -4,7 +4,7 @@
 用 Python 标准库 http.server 起一个本地 HTTP 服务，同时：
     - GET  /                     返回 StrategyDashboard.html（策略看板）
     - POST /api/cmd              执行侧边栏快捷命令（更新数据 / 更新同花顺板块）
-       请求体: {"cmd": "UPDATE_DATA" | "UPDATE_THS", "strategy": "TPO31"}
+       请求体: {"cmd": "UPDATE_DATA" | "UPDATE_THS", "strategy": "TPO_3"}
        返回体: {"ok": true, "output": "...", "running": false}
 
 用法:
