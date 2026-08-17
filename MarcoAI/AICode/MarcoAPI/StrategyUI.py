@@ -240,9 +240,10 @@ body {{ font-family: 'Microsoft YaHei', sans-serif; background: #0f1117; color: 
 .sidebar .cmd.running .spinner {{ display: inline-block; width: 12px; height: 12px; border: 2px solid #9aa0a6; border-top-color: transparent; border-radius: 50%; animation: spin .8s linear infinite; flex-shrink: 0; }}
 @keyframes spin {{ to {{ transform: rotate(360deg); }} }}
 .sidebar .cmd .spinner {{ display: none; }}
-.sidebar .cmd-output {{ padding: 12px 14px 16px; border-top: 1px solid #262c38; overflow: hidden; display: flex; flex-direction: column; min-height: 90px; }}
+.sidebar .cmd-output {{ padding: 12px 14px 16px; border-top: 1px solid #262c38; overflow: hidden; display: flex; flex-direction: column; min-height: 320px; flex: 1 1 0; }}
 .sidebar .cmd-output .label {{ font-size: 11px; color: #9aa0a6; margin-bottom: 6px; }}
-.sidebar .cmd-output pre {{ flex: 1; font-size: 11px; line-height: 1.5; color: #b8c0cc; white-space: pre-wrap; word-break: break-all; overflow-y: auto; max-height: 22vh; font-family: Consolas, monospace; }}
+.sidebar .cmd-output pre {{ flex: 1; font-size: 11px; line-height: 1.5; color: #b8c0cc; white-space: pre-wrap; word-break: break-all; overflow-y: auto; max-height: 44vh; font-family: Consolas, monospace; }}
+.sidebar .cmds {{ overflow-y: auto; max-height: 30vh; }}
 .main {{ flex: 1; padding: 20px; overflow-y: auto; }}
 h1 {{ font-size: 22px; margin-bottom: 16px; }}
 .toolbar {{ display: flex; gap: 16px; align-items: center; margin-bottom: 14px; flex-wrap: wrap; }}
@@ -1251,12 +1252,17 @@ def _code_to_ths_security(code: str) -> str:
 
 
 def CMD_UPDATE_DATA() -> str:
-    """【快捷命令】更新全部数据：通达信日线、SZ100 股票池、加工日线、策略、候选池等"""
+    """【快捷命令】更新全部数据，返回各步骤详细日志：通达信日线、SZ100 股票池、加工日线、策略、候选池等"""
+    import contextlib
+    import io
+    buf = io.StringIO()
     try:
-        UPDATE_ALL()
-        return "数据更新完成"
+        with contextlib.redirect_stdout(buf):
+            UPDATE_ALL()
+        logs = buf.getvalue().strip()
+        return (logs + "\n数据更新完成") if logs else "数据更新完成"
     except Exception as exc:
-        return f"数据更新失败: {exc}"
+        return (buf.getvalue().strip() + f"\n数据更新失败: {exc}").strip()
 
 
 def CMD_UPDATE_THS(strategy_name: str) -> str:
