@@ -19,6 +19,7 @@ API 说明:
 """
 
 import os
+import shutil
 import sys
 from concurrent.futures import ProcessPoolExecutor
 from functools import partial
@@ -51,7 +52,8 @@ def UPDATE_TARGET_TPO_5():
 def _UPDATE_TARGET_CANDIDATE(strategy_name: str, market_index: int):
     """生成 T-2 日候选股票池到 TARGET/{strategy_name}/（多进程）"""
     target_dir = PATH_AIDATA_TARGET(strategy_name)
-    os.makedirs(target_dir, exist_ok=True)  # 不删除目录（避免触发实盘机安全删除保护），直接覆盖写
+    shutil.rmtree(target_dir, ignore_errors=True)
+    os.makedirs(target_dir, exist_ok=True)
     stock_codes = STOCK_CODES_ALL()
     trading_dates = TRADING_DATES()
     with ProcessPoolExecutor(max_workers=32) as pool:

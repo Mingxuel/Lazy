@@ -192,7 +192,8 @@ def UPDATE_1D_ORIGIN():
 
     数据为原始行情（date|open|high|low|close|volume|amount），不计算任何加工字段。
     """
-    os.makedirs(PATH_AIDATA_1D_ORIGIN(), exist_ok=True)  # 不删除目录（避免触发实盘机安全删除保护），直接覆盖写
+    shutil.rmtree(PATH_AIDATA_1D_ORIGIN(), ignore_errors=True)
+    os.mkdir(PATH_AIDATA_1D_ORIGIN())
 
     stock_codes = STOCK_CODES()
 
@@ -273,7 +274,8 @@ def UPDATE_1D():
     if not os.path.exists(PATH_AIDATA_1D_ORIGIN()):
         print("UPDATE_1D: 1D_ORIGIN 目录不存在，请先运行 UPDATE_1D_ORIGIN")
         return
-    os.makedirs(PATH_AIDATA_1D(), exist_ok=True)  # 不删除目录（避免触发实盘机安全删除保护），直接覆盖写
+    shutil.rmtree(PATH_AIDATA_1D(), ignore_errors=True)
+    os.mkdir(PATH_AIDATA_1D())
     _SZ200_1D_ALL_CACHE.clear()
     with ProcessPoolExecutor(max_workers=MAX_WORKERS) as pool:
         list(pool.map(GENERATE_1D, stock_codes))

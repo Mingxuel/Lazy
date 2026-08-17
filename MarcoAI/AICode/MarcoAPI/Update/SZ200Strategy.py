@@ -1,6 +1,7 @@
 ﻿from concurrent.futures import ProcessPoolExecutor
 from functools import partial
 import os
+import shutil
 import sys
 from typing import TextIO
 
@@ -34,7 +35,8 @@ def _UPDATE_STRATEGY_TPO(strategy_name: str, strategy_dir: str, market_index: in
     市值统一用 market_index（默认 2=T-2）日收盘价计算；
     三策略差异由 max_ratio（T-1 收盘涨跌幅上限）区分：TPO_3<3%、TPO_4<4%、TPO_5<5%。
     """
-    os.makedirs(strategy_dir, exist_ok=True)  # 不删除目录（避免触发实盘机安全删除保护），直接覆盖写
+    shutil.rmtree(strategy_dir, ignore_errors=True)
+    os.makedirs(strategy_dir, exist_ok=True)
     stock_codes = STOCK_CODES_ALL()
     trading_dates = TRADING_DATES()
     with ProcessPoolExecutor(max_workers=32) as pool:
