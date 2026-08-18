@@ -29,7 +29,7 @@ _root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if _root not in sys.path:
     sys.path.insert(0, os.path.dirname(_root))
 from AICode.MarcoAPI.Backtest import (
-    _load_strategy, _daily_return, INIT_CAPITAL, SELL_MODES
+    _load_strategy, _daily_return, INIT_CAPITAL, SELL_MODES, _stock_return
 )
 from AICode.MarcoAPI.Update.Path import (
     PATH_AIDATA_STRATEGY, PATH_AIDATA_TARGET, PATH_AIDATA_1D_ORIGIN, PATH_AIDATA
@@ -78,6 +78,7 @@ def _load_strategy_detail(strategies: list[str]) -> dict[str, dict[str, list[dic
                     continue
                 close = _to_float(r[7])
                 pre = _to_float(r[10])
+                sell_ret = _stock_return(r)  # 实际卖出收益率（按卖出规则：止损优先/涨停/收盘）
                 item = {
                     "code": r[0],
                     "name": r[1] if len(r) > 1 else "",
@@ -90,6 +91,7 @@ def _load_strategy_detail(strategies: list[str]) -> dict[str, dict[str, list[dic
                     "vol": _to_float(r[8]),
                     "amount": _to_float(r[9]),
                     "chg": round((close - pre) / pre * 100, 2) if pre else 0.0,
+                    "sell_chg": round(sell_ret * 100, 2) if sell_ret is not None else 0.0,
                 }
                 rows.append(item)
             detail[date] = rows
@@ -280,10 +282,11 @@ table.detail-table th:nth-child(1) {{ width: 30px; }}
 table.detail-table th:nth-child(2) {{ width: 78px; }}
 table.detail-table th:nth-child(3) {{ width: 86px; }}
 table.detail-table th:nth-child(4) {{ width: 66px; }}
-table.detail-table th:nth-child(5) {{ width: 78px; }}
-table.detail-table th:nth-child(n+6):nth-child(-n+10) {{ width: 56px; }}
-table.detail-table th:nth-child(11) {{ width: 78px; }}
-table.detail-table th:nth-child(12) {{ width: 82px; }}
+table.detail-table th:nth-child(5) {{ width: 70px; }}
+table.detail-table th:nth-child(6) {{ width: 76px; }}
+table.detail-table th:nth-child(n+7):nth-child(-n+11) {{ width: 56px; }}
+table.detail-table th:nth-child(12) {{ width: 78px; }}
+table.detail-table th:nth-child(13) {{ width: 82px; }}
 #panel-detail .card {{ padding: 12px 16px 8px; }}
 .mode-badge {{ display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 12px; margin-right: 6px; }}
 .b-first {{ background: #42a5f5; color: #0b1a2a; }}
@@ -1028,15 +1031,17 @@ function loadDetail() {{
     // 该日股票表格
     const table = document.createElement('table');
     table.className = 'detail-table';
-    table.innerHTML = '<thead><tr><th>#</th><th>代码</th><th>名称</th><th>涨跌幅%</th><th>市值(亿)</th><th>开盘</th><th>最高</th><th>最低</th><th>收盘</th><th>前收</th><th>成交量</th><th>成交额(万)</th></tr></thead>';
+    table.innerHTML = '<thead><tr><th>#</th><th>代码</th><th>名称</th><th>涨跌幅%</th><th>实际卖出%</th><th>市值(亿)</th><th>开盘</th><th>最高</th><th>最低</th><th>收盘</th><th>前收</th><th>成交量</th><th>成交额(万)</th></tr></thead>';
     const tbody = document.createElement('tbody');
     rows.forEach((row, i) => {{
       total++;
       const cls = row.chg >= 0 ? 'neg' : 'pos';  // 涨红跌绿
+      const scls = (row.sell_chg || 0) >= 0 ? 'neg' : 'pos';  // 实际卖出涨跌颜色
       const tr = document.createElement('tr');
       tr.innerHTML = '<td>' + (i + 1) + '</td>' +
         '<td>' + row.code + '</td><td>' + row.name + '</td>' +
         '<td class="' + cls + '">' + row.chg.toFixed(2) + '</td>' +
+        '<td class="' + scls + '">' + (row.sell_chg || 0).toFixed(2) + '</td>' +
         '<td>' + fmtNum(row.market) + '</td>' +
         '<td>' + row.open.toFixed(2) + '</td><td>' + row.high.toFixed(2) + '</td>' +
         '<td>' + row.low.toFixed(2) + '</td><td>' + row.close.toFixed(2) + '</td>' +
