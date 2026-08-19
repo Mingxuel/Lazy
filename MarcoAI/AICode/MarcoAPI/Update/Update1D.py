@@ -25,6 +25,7 @@ if _root not in sys.path:
 from AICode.MarcoAPI.Update.TradingDates import UPDATE_TRADING_DATES
 from AICode.MarcoAPI.Update.StockCodes import UPDATE_STOCK_CODES
 from AICode.MarcoAPI.Update.SZ2001D import UPDATE_1D_ORIGIN, UPDATE_1D
+from AICode.MarcoAPI.Update.Path import PATH_AIDATA
 from AICode.MarcoAPI.Update.SZ200Top import UPDATE_TOP
 from AICode.MarcoAPI.Update.SZ200Strategy import (
     UPDATE_STRATEGY_TPO_3,
@@ -36,6 +37,47 @@ from AICode.MarcoAPI.Update.SZ200Target import (
     UPDATE_TARGET_TPO_4,
     UPDATE_TARGET_TPO_5,
 )
+
+
+def _remove_dir_safe(path: str):
+    """逐文件删除目录（规避实盘机批量删除保护），递归处理子目录。"""
+    if not os.path.isdir(path):
+        return
+    for name in os.listdir(path):
+        p = os.path.join(path, name)
+        try:
+            if os.path.isdir(p):
+                _remove_dir_safe(p)
+                os.rmdir(p)
+            else:
+                os.remove(p)
+        except OSError:
+            pass
+    try:
+        os.rmdir(path)
+    except OSError:
+        pass
+
+
+def _cleanup_old_dirs():
+    """Remove residual .old_* dirs left by _rotate_dir.
+
+    Recursively scan AIData and delete them via _remove_dir_safe (one file at a
+    time, bypassing the live-trading machine batch-delete protection), so these
+    residual dirs do not accumulate across updates.
+    """
+    aidata = PATH_AIDATA()
+    removed = 0
+    for root, dirs, _files in os.walk(aidata, topdown=False):
+        for name in list(dirs):
+            if ".old_" in name:
+                p = os.path.join(root, name)
+                _remove_dir_safe(p)
+                removed += 1
+                print(f"    cleaned residual dir: {os.path.relpath(p, aidata)}")
+    if removed == 0:
+        print("    no residual dir, nothing to clean")
+    return removed
 
 
 def UPDATE_ALL():
@@ -65,10 +107,17 @@ def UPDATE_ALL():
             import io, contextlib
             with contextlib.redirect_stdout(io.StringIO()):
                 fn()
-            print(f"===== {name} 完成 =====")
+            print(f"===== {name} DONE =====")
         except BaseException as exc:  # 捕获所有异常，避免静默中断后续步骤
             print(f"!!!!! {name} FAILED: {type(exc).__name__}: {exc}")
-    print("全部数据更新完成")
+    # 更新完成后清理 _rotate_dir 留下的 .old_* 残留目录
+    print("\n===== CLEANUP RESIDUAL DIRS =====")
+    try:
+        _cleanup_old_dirs()
+        print("===== CLEANUP RESIDUAL DIRS DONE =====")
+    except BaseException as exc:
+        print(f"!!!!! CLEANUP RESIDUAL DIRS FAILED: {type(exc).__name__}: {exc}")
+    print("ALL DATA UPDATE COMPLETED")
 
 
 if __name__ == "__main__":

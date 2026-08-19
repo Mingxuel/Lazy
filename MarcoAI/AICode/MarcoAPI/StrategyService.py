@@ -47,29 +47,22 @@ _update_log_file = os.path.abspath(_update_log_file)
 
 
 def _run_update_background():
-    """启动独立 Python 进程执行 UPDATE_ALL，stdout/stderr 实时写入日志文件"""
+    """启动 Update1D.py 独立进程执行数据更新，stdout/stderr 实时写入日志文件"""
     global _update_running, _update_done, _update_proc
-    # 独立更新脚本：在子进程主线程跑 UPDATE_ALL（QMT tq 需主线程）
-    script = (
-        "import sys, os\n"
-        "sys.path.insert(0, os.getcwd())\n"
-        "from AICode.MarcoAPI.Update.Update1D import UPDATE_ALL\n"
-        "try:\n"
-        "    UPDATE_ALL()\n"
-        "    print('\\n数据更新完成')\n"
-        "except BaseException as exc:\n"
-        "    import traceback\n"
-        "    print('数据更新失败: %s: %s' % (type(exc).__name__, exc))\n"
-        "    traceback.print_exc()\n"
-    )
     os.makedirs(os.path.dirname(_update_log_file), exist_ok=True)
+    # 运行 Update1D.py 脚本（其 __main__ 调用 UPDATE_ALL 并 print 步骤日志）
+    update_py = os.path.join("AICode", "MarcoAPI", "Update", "Update1D.py")
     with open(_update_log_file, "w", encoding="utf-8") as f:
+        # 强制子进程以 UTF-8 输出，避免 Windows 默认 GBK 编码导致日志乱码
+        env = os.environ.copy()
+        env["PYTHONIOENCODING"] = "utf-8"
         _update_proc = subprocess.Popen(
-            [sys.executable, "-u", "-c", script],
+            [sys.executable, "-u", update_py],
             cwd=GIT_REPO_DIR,
             stdout=f,
             stderr=subprocess.STDOUT,
             creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
+            env=env,
         )
 
 

@@ -24,3 +24,146 @@ git 同步完成
 同花顺板块已更新:
 策略 TPO_3: 20260819 共 2 只(TPO3), 20260818 共 2 只(TPO31)
 已覆盖: C:\同花顺远航版\bin\users\狗蛋儿家的金\blockstockV3.xml
+[GIT_SYNC] -: 命令: GIT_SYNC
+策略: -
+
+$ git add .
+$ git commit -m "Updated"
+[dev 98fed01f9] Updated
+ 2334 files changed, 3532 insertions(+), 12131 deletions(-)
+ delete mode 100644 MarcoAI/AIData/1D/000410.SZ
+ delete mode 100644 MarcoAI/AIData/1D/000510.SZ
+ delete mode 100644 MarcoAI/AIData/1D/000555.SZ
+ delete mode 100644 MarcoAI/AIData/1D/000727.SZ
+ delete mode 100644 MarcoAI/AIData/1D/000899.SZ
+ delete mode 100644 MarcoAI/AIData/1D/000917.SZ
+ delete mode 100644 MarcoAI/AIData/1D/002020.SZ
+ delete mode 100644 MarcoAI/AIData/1D/002181.SZ
+ delete mode 100644 MarcoAI/AIData/1D/002204.SZ
+ delete mode 100644 MarcoAI/AIData/1D/002276.SZ
+ delete mode 100644 MarcoAI/AIData/1D/002565.SZ
+ delete mode 100644 MarcoAI/AIData/1D/002626.SZ
+ delete mode 100644 MarcoAI/AIData/1D/002668.SZ
+ delete mode 100644 MarcoAI/AIData/1D/002832.SZ
+ delete mode 100644 MarcoAI/AIData/1D/002865.SZ
+ delete mode 100644 MarcoAI/AIData/1D/002922.SZ
+ delete mode 100644 MarcoAI/AIData/1D/002931.SZ
+ delete mode 100644 MarcoAI/AIData/1D/002937.SZ
+ delete mode 100644 MarcoAI/AIData/1D/002980.SZ
+ delete mode 100644 MarcoAI/AIData/1D/600198.SH
+ delete mode 100644 MarcoAI/AIData/1D/600345.SH
+ delete mode 100644 MarcoAI/AIData/1D/600391.SH
+ delete mode 100644 MarcoAI/AIData/1D/600446.SH
+ delete mode 100644 MarcoAI/AIData/1D/600458.SH
+ delete mode 100644 MarcoAI/AIData/1D/600645.SH
+ delete mode 100644 MarcoAI/AIData/1D/603093.SH
+ delete mode 100644 MarcoAI/AIData/1D/603218.SH
+ delete mode 100644 MarcoAI/AIData/1D/603220.SH
+ delete mode 100644 MarcoAI/AIData/1D/603281.SH
+ delete mode 100644 MarcoAI/AIData/1D/603341.SH
+ delete mode 100644 MarcoAI/AIData/1D/603690.SH
+ delete mode 100644 MarcoAI/AIData/1D/603859.SH
+ delete mode 100644 MarcoAI/AIData/1D/603883.SH
+ delete mode 100644 MarcoAI/AIData/1D/603995.SH
+ delete mode 100644 MarcoAI/AIData/1D/605006.SH
+ delete mode 100644 MarcoAI/AIData/1D/605318.SH
+ delete mode 100644 MarcoAI/AIData/1D_ORIGIN/000410.SZ
+ delete mode 100644 MarcoAI/AIData/1D_ORIGIN/000510.SZ
+ delete mode 100644 MarcoAI/AIData/1D_ORIGIN/000555.SZ
+ delete mode 100644 MarcoAI/AIData/1D_ORIGIN/000727.SZ
+ delete mode 100644 MarcoAI/AIData/1D_ORIGIN/000899.SZ
+ delete mode 100644 MarcoAI/AIData/1D_ORIGIN/000917.SZ
+ delete mode 100644 MarcoAI/AIData/1D_ORIGIN/002020.SZ
+ delete mode 100644 MarcoAI/AIData/1D_ORIGIN/002181.SZ
+ delete mode 100644 MarcoAI/AIData/1D_ORIGIN/002204.SZ
+ delete mode 100644 MarcoAI/AIData/1D_ORIGIN/002276.SZ
+ delete mode 100644 MarcoAI/AIData/1D_ORIGIN/002565.SZ
+ delete mode 100644 MarcoAI/AIData/1D_ORIGIN/002626.SZ
+ delete mode 100644 MarcoAI/AIData/1D_ORIGIN/002668.SZ
+ delete mode 100644 MarcoAI/AIData/1D_ORIGIN/002832.SZ
+ delete mode 100644 MarcoAI/AIData/1D_ORIGIN/002865.SZ
+ delete mode 100644 MarcoAI/AIData/1D_ORIGIN/002922.SZ
+ delete mode 100644 MarcoAI/AIData/1D_ORIGIN/002931.SZ
+ delete mode 100644 MarcoAI/AIData/1D_ORIGIN/002937.SZ
+ delete mode 100644 MarcoAI/AIData/1D_ORIGIN/002980.SZ
+ delete mode 100644 MarcoAI/AIData/1D_ORIGIN/600198.SH
+ delete mode 100644 MarcoAI/AIData/1D_ORIGIN/600345.SH
+ delete mode 100644 MarcoAI/AIData/1D_ORIGIN/600391.SH
+ delete mode 100644 MarcoAI/AIData/1D_ORIGIN/600446.SH
+ delete mode 100644 MarcoAI/AIData/1D_ORIGIN/600458.SH
+ delete mode 100644 MarcoAI/AIData/1D_ORIGIN/600645.SH
+ delete mode 100644 MarcoAI/AIData/1D_ORIGIN/603093.SH
+ delete mode 100644 MarcoAI/AIData/1D_ORIGIN/603218.SH
+ delete mode 100644 MarcoAI/AIData/1D_ORIGIN/603220.SH
+ delete mode 100644 MarcoAI/AIData/1D_ORIGIN/603281.SH
+ delete mode 100644 MarcoAI/AIData/1D_ORIGIN/603341.SH
+ delete mode 100644 MarcoAI/AIData/1D_ORIGIN/603690.SH
+ delete mode 100644 MarcoAI/AIData/1D_ORIGIN/603859.SH
+ delete mode 100644 MarcoAI/AIData/1D_ORIGIN/603883.SH
+ delete mode 100644 MarcoAI/AIData/1D_ORIGIN/603995.SH
+ delete mode 100644 MarcoAI/AIData/1D_ORIGIN/605006.SH
+ delete mode 100644 MarcoAI/AIData/1D_ORIGIN/605318.SH
+ create mode 100644 MarcoAI/AIData/STRATEGY/TPO_3/20260819
+ create mode 100644 MarcoAI/AIData/STRATEGY/TPO_4/20260819
+ create mode 100644 MarcoAI/AIData/STRATEGY/TPO_5/20260819
+ create mode 100644 MarcoAI/AIData/TARGET/TPO_3/20260819
+ create mode 100644 MarcoAI/AIData/TARGET/TPO_4/20260819
+ create mode 100644 MarcoAI/AIData/TARGET/TPO_5/20260819
+ create mode 100644 MarcoAI/AIData/TOP/20260819
+ create mode 100644 MarcoAI/AIData/TOP_ORIGIN/主板，2026年8月19日涨停所有股.xlsx
+Auto packing the repository for optimum performance.
+See "git help gc" for manual housekeeping.
+$ git push
+remote: Powered by [01;33mGITEE.COM [0m[1.1.23]        
+remote: Set trace flag 2a4b59a1        
+To https://gitee.com/mingxuel/lazy.git
+   a93907ec3..98fed01f9  dev -> dev
+git 同步完成
+[UPDATE_DATA] -: 命令: UPDATE_DATA
+策略: -
+
+===== UPDATE_TRADING_DATES =====
+===== UPDATE_TRADING_DATES DONE =====
+
+===== UPDATE_STOCK_CODES =====
+===== UPDATE_STOCK_CODES DONE =====
+
+===== UPDATE_1D_ORIGIN =====
+===== UPDATE_1D_ORIGIN DONE =====
+
+===== UPDATE_TOP =====
+===== UPDATE_TOP DONE =====
+
+===== UPDATE_1D =====
+===== UPDATE_1D DONE =====
+
+===== UPDATE_STRATEGY_TPO_3 =====
+===== UPDATE_STRATEGY_TPO_3 DONE =====
+
+===== UPDATE_STRATEGY_TPO_4 =====
+===== UPDATE_STRATEGY_TPO_4 DONE =====
+
+===== UPDATE_STRATEGY_TPO_5 =====
+===== UPDATE_STRATEGY_TPO_5 DONE =====
+
+===== UPDATE_TARGET_TPO_3 =====
+===== UPDATE_TARGET_TPO_3 DONE =====
+
+===== UPDATE_TARGET_TPO_4 =====
+===== UPDATE_TARGET_TPO_4 DONE =====
+
+===== UPDATE_TARGET_TPO_5 =====
+===== UPDATE_TARGET_TPO_5 DONE =====
+
+===== CLEANUP RESIDUAL DIRS =====
+    cleaned residual dir: STRATEGY\TPO_3.old_1787154548
+    cleaned residual dir: STRATEGY\TPO_4.old_1787154576
+    cleaned residual dir: STRATEGY\TPO_5.old_1787154596
+    cleaned residual dir: TARGET\TPO_3.old_1787154615
+    cleaned residual dir: TARGET\TPO_4.old_1787154626
+    cleaned residual dir: TARGET\TPO_5.old_1787154638
+    cleaned residual dir: 1D.old_1787154537
+    cleaned residual dir: 1D_ORIGIN.old_1787154494
+===== CLEANUP RESIDUAL DIRS DONE =====
+ALL DATA UPDATE COMPLETED
+数据更新完成

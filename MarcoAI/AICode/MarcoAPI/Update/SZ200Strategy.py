@@ -1,7 +1,6 @@
 ﻿from concurrent.futures import ProcessPoolExecutor
 from functools import partial
 import os
-import shutil
 import sys
 from typing import TextIO
 
@@ -13,7 +12,7 @@ from AICode.MarcoAPI.Update.StockCodes import *
 from AICode.MarcoAPI.Update.TradingDates import *
 from AICode.MarcoAPI.Update.Path import *
 from AICode.MarcoAPI.Update.Data import DATA_1D
-from AICode.MarcoAPI.Update.SZ2001D import GET_SZ200_1D_PREVIOUS
+from AICode.MarcoAPI.Update.SZ2001D import GET_SZ200_1D_PREVIOUS, _rotate_dir
 
 def UPDATE_STRATEGY_TPO_3():
     """策略 TPO_3：市值统一用 T-2 日收盘价计算（>= 200 亿），T-1 收盘涨跌幅 < 3%"""
@@ -35,8 +34,7 @@ def _UPDATE_STRATEGY_TPO(strategy_name: str, strategy_dir: str, market_index: in
     市值统一用 market_index（默认 2=T-2）日收盘价计算；
     三策略差异由 max_ratio（T-1 收盘涨跌幅上限）区分：TPO_3<3%、TPO_4<4%、TPO_5<5%。
     """
-    shutil.rmtree(strategy_dir, ignore_errors=True)
-    os.makedirs(strategy_dir, exist_ok=True)
+    _rotate_dir(strategy_dir)
     stock_codes = STOCK_CODES_ALL()
     trading_dates = TRADING_DATES()
     with ProcessPoolExecutor(max_workers=32) as pool:

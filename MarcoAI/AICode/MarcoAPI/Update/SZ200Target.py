@@ -19,7 +19,6 @@ API 说明:
 """
 
 import os
-import shutil
 import sys
 from concurrent.futures import ProcessPoolExecutor
 from functools import partial
@@ -31,7 +30,7 @@ from AICode.MarcoAPI.Update.Constants import *
 from AICode.MarcoAPI.Update.StockCodes import *
 from AICode.MarcoAPI.Update.TradingDates import *
 from AICode.MarcoAPI.Update.Path import *
-from AICode.MarcoAPI.Update.SZ2001D import GET_SZ200_1D_PREVIOUS
+from AICode.MarcoAPI.Update.SZ2001D import GET_SZ200_1D_PREVIOUS, _rotate_dir
 
 
 def UPDATE_TARGET_TPO_3():
@@ -52,8 +51,7 @@ def UPDATE_TARGET_TPO_5():
 def _UPDATE_TARGET_CANDIDATE(strategy_name: str, market_index: int):
     """生成 T-2 日候选股票池到 TARGET/{strategy_name}/（多进程）"""
     target_dir = PATH_AIDATA_TARGET(strategy_name)
-    shutil.rmtree(target_dir, ignore_errors=True)
-    os.makedirs(target_dir, exist_ok=True)
+    _rotate_dir(target_dir)
     stock_codes = STOCK_CODES_ALL()
     trading_dates = TRADING_DATES()
     with ProcessPoolExecutor(max_workers=32) as pool:

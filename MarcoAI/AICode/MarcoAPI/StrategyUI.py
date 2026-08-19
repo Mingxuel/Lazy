@@ -228,7 +228,7 @@ def _render_html(data: dict[str, Any]) -> str:
 html, body {{ height: 100%; }}
 body {{ font-family: 'Microsoft YaHei', sans-serif; background: #0f1117; color: #e4e6eb; display: flex; overflow: hidden; }}
 /* ---- 左侧快捷命令侧边栏 ---- */
-.sidebar {{ width: 210px; min-width: 210px; background: #141821; border-right: 1px solid #262c38; display: flex; flex-direction: column; height: 100vh; }}
+.sidebar {{ width: 420px; min-width: 420px; background: #141821; border-right: 1px solid #262c38; display: flex; flex-direction: column; height: 100vh; }}
 .sidebar .brand {{ padding: 18px 16px; font-size: 15px; font-weight: 700; color: #e4e6eb; border-bottom: 1px solid #262c38; letter-spacing: .5px; }}
 .sidebar .brand small {{ display: block; font-size: 11px; color: #6b7280; font-weight: 400; margin-top: 3px; }}
 .sidebar .section {{ padding: 14px 16px 6px; font-size: 11px; color: #9aa0a6; text-transform: uppercase; letter-spacing: 1px; }}
@@ -1137,12 +1137,14 @@ function pollUpdateLog() {{
           pre.scrollTop = pre.scrollHeight;
         }}
       }}
-      if (!data.running && data.done) {{
+      // 更新完成条件：日志出现"全部数据更新完成"或"数据更新失败"
+      const doneMark = data.log.includes('全部数据更新完成') || data.log.includes('数据更新失败');
+      if (doneMark || (!data.running && data.done)) {{
         logCmd('数据更新完成，正在刷新页面...');
         setTimeout(() => location.reload(), 1000);
         return;
       }}
-      if (data.running) setTimeout(poll, 1500);
+      if (data.running) setTimeout(poll, 1000);
     }} catch (err) {{
       setTimeout(poll, 1500);
     }}
