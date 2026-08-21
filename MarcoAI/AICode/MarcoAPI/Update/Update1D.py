@@ -11,8 +11,8 @@
     4. UPDATE_1D               加工日线（1D_ORIGIN -> 1D，含 is_top/is_bottom/MA/连板等）
     5. UPDATE_TOP              生成每日涨停股列表（TOP_ORIGIN -> TOP）
     6. UPDATE_1D               加工日线（依赖涨停列表生成 is_top/lian_ban）
-    7. UPDATE_STRATEGY_TPO_3/TPO_TOP  策略选股（Strategy/ 回测数据）
-    8. UPDATE_TARGET_TPO_3/TPO_TOP  策略实盘候选池（TARGET/ 候选股）
+    7. UPDATE_STRATEGY_TPO_3  策略选股（Strategy/ 回测数据）
+    8. UPDATE_TARGET_TPO_3  策略实盘候选池（TARGET/ 候选股）
 """
 
 import os
@@ -27,14 +27,8 @@ from AICode.MarcoAPI.Update.StockCodes import UPDATE_STOCK_CODES
 from AICode.MarcoAPI.Update.SZ2001D import UPDATE_1D_ORIGIN, UPDATE_1D
 from AICode.MarcoAPI.Update.Path import PATH_AIDATA
 from AICode.MarcoAPI.Update.SZ200Top import UPDATE_TOP
-from AICode.MarcoAPI.Update.SZ200Strategy import (
-    UPDATE_STRATEGY_TPO_3,
-    UPDATE_STRATEGY_TPO_TOP,
-)
-from AICode.MarcoAPI.Update.SZ200Target import (
-    UPDATE_TARGET_TPO_3,
-    UPDATE_TARGET_TPO_TOP,
-)
+from AICode.MarcoAPI.Update.SZ200Strategy import UPDATE_STRATEGY_TPO_3
+from AICode.MarcoAPI.Update.SZ200Target import UPDATE_TARGET_TPO_3
 
 
 def _remove_dir_safe(path: str):
@@ -92,9 +86,7 @@ def UPDATE_ALL():
         ("UPDATE_TOP", UPDATE_TOP),
         ("UPDATE_1D", UPDATE_1D),
         ("UPDATE_STRATEGY_TPO_3", UPDATE_STRATEGY_TPO_3),
-        ("UPDATE_STRATEGY_TPO_TOP", UPDATE_STRATEGY_TPO_TOP),
         ("UPDATE_TARGET_TPO_3", UPDATE_TARGET_TPO_3),
-        ("UPDATE_TARGET_TPO_TOP", UPDATE_TARGET_TPO_TOP),
     ]
     for name, fn in steps:
         print(f"\n===== {name} =====")

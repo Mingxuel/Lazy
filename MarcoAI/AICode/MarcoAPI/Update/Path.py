@@ -105,9 +105,6 @@ def PATH_AIDATA_STRATEGY_RESULT() -> str:
 def PATH_AIDATA_STRATEGY_TPO_3() -> str:
     return GET_ROOT_PATH() + "/MarcoAI/AIData/Strategy/TPO_3"
 
-def PATH_AIDATA_STRATEGY_TPO_TOP() -> str:
-    return GET_ROOT_PATH() + "/MarcoAI/AIData/Strategy/TPO_TOP"
-
 def PATH_AIDATA_1D_MOTION_PRICE() -> str:
     return GET_ROOT_PATH() + "/MarcoAI/AIData/1D_MOTION_PRICE"
 

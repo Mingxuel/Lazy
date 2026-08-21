@@ -18,32 +18,27 @@ def UPDATE_STRATEGY_TPO_3():
     """策略 TPO_3：市值统一用 T-2 日收盘价计算（>= 200 亿），T-1 收盘涨跌幅 < 3%"""
     _UPDATE_STRATEGY_TPO("TPO_3", PATH_AIDATA_STRATEGY_TPO_3(), market_index=2, max_ratio=3.0)
 
-def UPDATE_STRATEGY_TPO_TOP():
-    """策略 TPO_TOP：条件同 TPO_3，但选股时按流通市值倒序排列，市值最大的排第一"""
-    _UPDATE_STRATEGY_TPO("TPO_TOP", PATH_AIDATA_STRATEGY_TPO_TOP(), market_index=2, max_ratio=3.0, sort_by_market=True)
 
-def _UPDATE_STRATEGY_TPO(strategy_name: str, strategy_dir: str, market_index: int, max_ratio: float = 3.0, sort_by_market: bool = False):
-    """TPO 系列通用选股：生成回测数据到 Strategy/{strategy_name}/。
+def _UPDATE_STRATEGY_TPO(strategy_name: str, strategy_dir: str, market_index: int, max_ratio: float = 3.0):
+    """TPO 策略通用选股：生成回测数据到 Strategy/{strategy_name}/。
 
     写入 T-0 日全部加工数据（28列），供回测使用。
-    实盘候选池由 SZ200Target.py 的 UPDATE_TARGET_TPO_3/TPO_TOP 生成（TARGET/ 目录）。
+    实盘候选池由 SZ200Target.py 的 UPDATE_TARGET_TPO_3 生成（TARGET/ 目录）。
     市值统一用 market_index（默认 2=T-2）日收盘价计算；
-    筛选条件由 max_ratio（T-1 收盘涨跌幅上限）与 TPO 形态共同决定；
-    sort_by_market=True 时（TPO_TOP）结果按流通市值倒序排列（市值最大的排第一），否则按股票代码顺序。
+    筛选条件由 max_ratio（T-1 收盘涨跌幅上限）与 TPO 形态共同决定。
     """
     _rotate_dir(strategy_dir)
     stock_codes = STOCK_CODES_ALL()
     trading_dates = TRADING_DATES()
     with ProcessPoolExecutor(max_workers=32) as pool:
-        list(pool.map(partial(GENERATE_STRATEGY_TPO, stock_codes, strategy_dir, market_index, max_ratio, sort_by_market), trading_dates))
+        list(pool.map(partial(GENERATE_STRATEGY_TPO, stock_codes, strategy_dir, market_index, max_ratio), trading_dates))
 
-def GENERATE_STRATEGY_TPO(stock_codes: list[str], strategy_dir: str, market_index: int, max_ratio: float, sort_by_market: bool, trading_date: str):
+def GENERATE_STRATEGY_TPO(stock_codes: list[str], strategy_dir: str, market_index: int, max_ratio: float, trading_date: str):
     """worker（回测数据）: 以 trading_date 为 T-0，逐股按加工字段判断是否满足完整 TPO 形态。
 
     写入 T-0 日全部加工数据（28列）到 Strategy/{strategy}/{T-0日期}，供回测使用。
     市值统一用 market_index（默认 2=T-2）日收盘价计算；
-    筛选条件由 max_ratio（T-1 收盘涨跌幅上限）与 TPO 形态共同决定；
-    sort_by_market=True 时（TPO_TOP）结果按流通市值倒序排列（市值最大的排第一）。
+    筛选条件由 max_ratio（T-1 收盘涨跌幅上限）与 TPO 形态共同决定。
     """
     print("UPDATE_TARGET_TPO: " + trading_date)
     sell_date = trading_date                    # T-0
@@ -89,10 +84,6 @@ def GENERATE_STRATEGY_TPO(stock_codes: list[str], strategy_dir: str, market_inde
             continue
         data.append((record_0, code, name, market_value))
 
-    # TPO_TOP：按流通市值倒序排列，市值最大的排第一（TPO_3 保持股票代码顺序）
-    if sort_by_market:
-        data.sort(key=lambda x: x[3], reverse=True)
-
     with open(f"{strategy_dir}/{sell_date}", "a") as file:
         if len(data) == 0:
             file.write("\n")
@@ -114,5 +105,4 @@ def _write_row(file: TextIO, date: str, code: str, name: str, market_value: floa
 if __name__ == "__main__":
     #SHOW_TARGET_1D()
     UPDATE_STRATEGY_TPO_3()
-    UPDATE_STRATEGY_TPO_TOP()
     #SHOW_TARGET_1D()

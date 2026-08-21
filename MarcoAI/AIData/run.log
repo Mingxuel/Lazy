@@ -877,3 +877,72 @@ git 同步完成
 同花顺板块已更新:
 策略 TPO_3: 20260821 共 0 只(TPO3), 20260820 共 0 只(TPO31)
 已覆盖: C:\同花顺远航版\bin\users\狗蛋儿家的金\blockstockV3.xml
+[GIT_SYNC] -: 命令: GIT_SYNC
+策略: -
+
+$ git add .
+$ git commit -m "Updated"
+[dev b3fbb6a61] Updated
+ 2359 files changed, 10771 insertions(+), 5626 deletions(-)
+ delete mode 100644 MarcoAI/AIData/1D/000403.SZ
+ create mode 100644 MarcoAI/AIData/1D/000410.SZ
+ create mode 100644 MarcoAI/AIData/1D/000510.SZ
+ create mode 100644 MarcoAI/AIData/1D/000555.SZ
+ create mode 100644 MarcoAI/AIData/1D/000700.SZ
+ create mode 100644 MarcoAI/AIData/1D/000727.SZ
+ create mode 100644 MarcoAI/AIData/1D/000767.SZ
+ create mode 100644 MarcoAI/AIData/1D/000917.SZ
+ delete mode 100644 MarcoAI/AIData/1D/002020.SZ
+ delete mode 100644 MarcoAI/AIData/1D/002204.SZ
+ create mode 100644 MarcoAI/AIData/1D/002297.SZ
+ create mode 100644 MarcoAI/AIData/1D/002413.SZ
+ delete mode 100644 MarcoAI/AIData/1D/002984.SZ
+ create mode 100644 MarcoAI/AIData/1D/600345.SH
+ delete mode 100644 MarcoAI/AIData/1D/600383.SH
+ create mode 100644 MarcoAI/AIData/1D/600391.SH
+ create mode 100644 MarcoAI/AIData/1D/600446.SH
+ create mode 100644 MarcoAI/AIData/1D/600509.SH
+ delete mode 100644 MarcoAI/AIData/1D/600649.SH
+ delete mode 100644 MarcoAI/AIData/1D/600993.SH
+ create mode 100644 MarcoAI/AIData/1D/603281.SH
+ delete mode 100644 MarcoAI/AIData/1D/603538.SH
+ create mode 100644 MarcoAI/AIData/1D/603580.SH
+ create mode 100644 MarcoAI/AIData/1D/603626.SH
+ delete mode 100644 MarcoAI/AIData/1D/603693.SH
+ delete mode 100644 MarcoAI/AIData/1D_ORIGIN/000403.SZ
+ create mode 100644 MarcoAI/AIData/1D_ORIGIN/000410.SZ
+ create mode 100644 MarcoAI/AIData/1D_ORIGIN/000510.SZ
+ create mode 100644 MarcoAI/AIData/1D_ORIGIN/000555.SZ
+ create mode 100644 MarcoAI/AIData/1D_ORIGIN/000700.SZ
+ create mode 100644 MarcoAI/AIData/1D_ORIGIN/000727.SZ
+ create mode 100644 MarcoAI/AIData/1D_ORIGIN/000767.SZ
+ create mode 100644 MarcoAI/AIData/1D_ORIGIN/000917.SZ
+ delete mode 100644 MarcoAI/AIData/1D_ORIGIN/002020.SZ
+ delete mode 100644 MarcoAI/AIData/1D_ORIGIN/002204.SZ
+ create mode 100644 MarcoAI/AIData/1D_ORIGIN/002297.SZ
+ create mode 100644 MarcoAI/AIData/1D_ORIGIN/002413.SZ
+ delete mode 100644 MarcoAI/AIData/1D_ORIGIN/002984.SZ
+ create mode 100644 MarcoAI/AIData/1D_ORIGIN/600345.SH
+ delete mode 100644 MarcoAI/AIData/1D_ORIGIN/600383.SH
+ create mode 100644 MarcoAI/AIData/1D_ORIGIN/600391.SH
+ create mode 100644 MarcoAI/AIData/1D_ORIGIN/600446.SH
+ create mode 100644 MarcoAI/AIData/1D_ORIGIN/600509.SH
+ delete mode 100644 MarcoAI/AIData/1D_ORIGIN/600649.SH
+ delete mode 100644 MarcoAI/AIData/1D_ORIGIN/600993.SH
+ create mode 100644 MarcoAI/AIData/1D_ORIGIN/603281.SH
+ delete mode 100644 MarcoAI/AIData/1D_ORIGIN/603538.SH
+ create mode 100644 MarcoAI/AIData/1D_ORIGIN/603580.SH
+ create mode 100644 MarcoAI/AIData/1D_ORIGIN/603626.SH
+ delete mode 100644 MarcoAI/AIData/1D_ORIGIN/603693.SH
+ create mode 100644 MarcoAI/AIData/STRATEGY/TPO_3/20260821
+ create mode 100644 MarcoAI/AIData/STRATEGY/TPO_TOP/20260821
+ create mode 100644 MarcoAI/AIData/TARGET/TPO_3/20260821
+ create mode 100644 MarcoAI/AIData/TARGET/TPO_TOP/20260821
+ create mode 100644 MarcoAI/AIData/TOP/20260821
+ create mode 100644 MarcoAI/AIData/TOP_ORIGIN/主板，2026年8月21日涨停所有股.xlsx
+$ git push
+remote: Powered by [01;33mGITEE.COM [0m[1.1.23]        
+remote: Set trace flag 0d4f7695        
+To https://gitee.com/mingxuel/lazy.git
+   7a2f156c1..b3fbb6a61  dev -> dev
+git 同步完成
