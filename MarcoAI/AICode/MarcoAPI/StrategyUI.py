@@ -32,9 +32,10 @@ from AICode.MarcoAPI.Backtest import (
     _load_strategy, INIT_CAPITAL, _stock_return, _limit_ratio, _limit_price, STOCK_SELL_STOP
 )
 from AICode.MarcoAPI.Update.Path import (
-    PATH_AIDATA_STRATEGY, PATH_AIDATA_TARGET, PATH_AIDATA_1D_ORIGIN, PATH_AIDATA
+    PATH_AIDATA_STRATEGY, PATH_AIDATA_TARGET, PATH_AIDATA_1D_ORIGIN, PATH_AIDATA, PATH_AIDATA_TOP
 )
 from AICode.MarcoAPI.Update.Update1D import UPDATE_ALL
+from AICode.MarcoAPI.Update.StockCodes import GET_STOCK_INFO
 
 KLINE_DAYS = 120  # 内嵌每只候选股最近 120 天 K 线数据
 
@@ -274,11 +275,66 @@ def _load_candidates(strategy_name: str) -> dict[str, list[list[str]]]:
     return dict(sorted(candidates.items(), key=lambda x: x[0], reverse=True))
 
 
-def _load_kline(codes: set[str], names: dict[str, str] | None = None) -> dict[str, dict[str, Any]]:
+def _stock_close_map(code: str) -> dict[str, float]:
+    """读取个股 1D_ORIGIN，构建 {YYYYMMDD: close} 映射"""
+    path = os.path.join(PATH_AIDATA_1D_ORIGIN(), code)
+    if not os.path.exists(path):
+        return {}
+    closes = {}
+    for line in _read_text(path).splitlines():
+        parts = line.split("|")
+        if len(parts) >= 5 and parts[0].isdigit():
+            try:
+                closes[parts[0]] = float(parts[4])  # r[4] 是 close
+            except ValueError:
+                continue
+    return closes
+
+
+def _load_top() -> dict[str, list[list[str]]]:
+    """读取涨停列表 {日期: [[code, name, market_value], ...]}。
+
+    按市值（流通股本×当日收盘价）倒序排列；日期倒序（默认最新）。
+    """
+    base = PATH_AIDATA_TOP()
+    if not os.path.isdir(base):
+        return {}
+    top = {}
+    close_cache: dict[str, dict[str, float]] = {}
+    for date in sorted(os.listdir(base)):
+        if not date.isdigit():
+            continue
+        path = os.path.join(base, date)
+        codes = [line.strip() for line in _read_text(path).splitlines() if line.strip()]
+        rows = []
+        for code in codes:
+            norm = code if "." in code else (f"{code}.SH" if code.startswith("6") else f"{code}.SZ")
+            info = GET_STOCK_INFO(norm)
+            if info is None or info[1] <= 0:
+                continue
+            closes = close_cache.get(norm)
+            if closes is None:
+                closes = _stock_close_map(norm)
+                close_cache[norm] = closes
+            close = closes.get(date)
+            if close is None or close <= 0:
+                continue
+            name = info[0]
+            market_value = float(info[1]) * close
+            rows.append([norm, name, f"{market_value:.2f}"])
+        # 按市值倒序
+        rows.sort(key=lambda r: float(r[2]), reverse=True)
+        top[date] = rows
+    # 日期倒序（默认最新）
+    return dict(sorted(top.items(), key=lambda x: x[0], reverse=True))
+
+
+def _load_kline(codes: set[str], names: dict[str, str] | None = None, max_days: int | None = None) -> dict[str, dict[str, Any]]:
     """读取候选股的【全部历史】原始日线（1D_ORIGIN）。
 
     仅传原始 OHLCV，所有指标（MA/MACD/KDJ/BOLL/VWAP）与月线聚合
     均由前端 JS 动态计算，便于配置切换。names 提供 code->股票名称。
+    max_days>0 时仅保留最近 N 条（用于涨停股等数据量大、且只需近期走势的场景，减小 payload）。
     """
     names = names or {}
     kline = {}
@@ -288,6 +344,8 @@ def _load_kline(codes: set[str], names: dict[str, str] | None = None) -> dict[st
             continue
         lines = _read_text(path).splitlines()
         rows = [l.split("|") for l in lines if l.strip() and len(l.split("|")) >= 6]
+        if max_days and max_days > 0 and len(rows) > max_days:
+            rows = rows[-max_days:]
         ohlcv = []
         prev_close = None
         for r in rows:
@@ -516,6 +574,7 @@ table.detail-table th:nth-child(13) {{ width: 82px; }}
   <div class="tab active" data-tab="backtest" onclick="switchTab('backtest')">策略回测</div>
   <div class="tab" data-tab="candidate" onclick="switchTab('candidate')">实盘候选池</div>
   <div class="tab" data-tab="detail" onclick="switchTab('detail')">策略选股</div>
+  <div class="tab" data-tab="top" onclick="switchTab('top')">涨停股</div>
 </div>
 
 <div id="panel-backtest" class="tab-panel active">
@@ -619,18 +678,62 @@ table.detail-table th:nth-child(13) {{ width: 82px; }}
   <div id="detail-groups" class="card"></div>
 </div>
 
+<div id="panel-top" class="tab-panel">
+  <div class="card">
+    <h2>涨停股列表（按流通市值倒序；日期倒序，默认最新）</h2>
+    <div class="cand-layout">
+      <div style="padding:10px">
+        <div style="font-size:13px;color:#9aa0a6;margin-bottom:8px">涨停日期</div>
+        <div class="date-list" id="top-date-list"></div>
+      </div>
+      <div style="padding:10px">
+        <div style="font-size:13px;color:#9aa0a6;margin-bottom:8px">涨停股票（市值倒序）</div>
+        <div class="stock-list" id="top-stock-list"></div>
+      </div>
+      <div style="padding:10px">
+        <div class="chart-title" id="top-kline-title"></div>
+        <div class="kline-info" id="top-kline-info"></div>
+        <div class="kline-toolbar">
+          <select id="top-kline-period" title="周期">
+            <option value="day">日线</option>
+            <option value="month">月线</option>
+          </select>
+          <button id="top-bar-btn" type="button">指标栏</button>
+          <label class="kline-chk"><input type="checkbox" id="top-boll"> BOLL</label>
+          <label class="kline-chk"><input type="checkbox" id="top-vwap"> VWAP</label>
+          <button id="top-ma-btn" type="button">MA 配置</button>
+          <button id="top-ma-add" type="button" style="display:none">+</button>
+          <button id="top-color-btn" type="button">涨跌颜色</button>
+        </div>
+        <div class="kline-bars" id="top-bars"></div>
+        <div class="kline-ma-config" id="top-ma-config"></div>
+        <div class="kline-color-config" id="top-color-config"></div>
+        <div id="top-kline">
+          <div id="top-kline-main"><div class="empty-hint">请选择涨停日期与个股</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script>
 const DATA = {payload};
-let current = {{ strategy: null, candStrategy: null, date: null, code: null }};
+let current = {{ strategy: null, candStrategy: null, date: null, code: null, topDate: null, topCode: null }};
 
 function switchTab(name) {{
   document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === name));
   document.getElementById('panel-backtest').classList.toggle('active', name === 'backtest');
   document.getElementById('panel-candidate').classList.toggle('active', name === 'candidate');
   document.getElementById('panel-detail').classList.toggle('active', name === 'detail');
-  // 候选池 TAB 激活时重绘 K 线（容器可见后再渲染）
-  if (name === 'candidate' && current.code) {{
-    requestAnimationFrame(() => selectStock(current.code));
+  document.getElementById('panel-top').classList.toggle('active', name === 'top');
+  // TAB 激活时重绘 K 线（容器可见后再渲染）
+  if (name === 'candidate') {{
+    klineTarget = 'candidate';
+    if (current.code) requestAnimationFrame(() => selectStock(current.code));
+  }}
+  if (name === 'top') {{
+    klineTarget = 'top';
+    if (current.topCode) requestAnimationFrame(() => selectTopStock(current.topCode));
   }}
 }}
 
@@ -1001,6 +1104,50 @@ function selectDate(date) {{
   selectStock(stocks[0][0]);
 }}
 
+/* ------- 涨停股 ------- */
+function loadTop() {{
+  const dates = Object.keys(DATA.top || {{}}).sort().reverse();
+  const list = document.getElementById('top-date-list');
+  list.innerHTML = '';
+  if (dates.length === 0) {{ list.innerHTML = '<div class="empty-hint">无涨停数据</div>'; return; }}
+  dates.forEach(d => {{
+    const n = (DATA.top[d] || []).length;
+    const el = document.createElement('div');
+    el.className = 'date-item';
+    el.innerHTML = d + '<span class="stock-count">' + n + '只</span>';
+    el.onclick = () => {{ selectTopDate(d); }};
+    list.appendChild(el);
+  }});
+  selectTopDate(dates[0]);  // 默认最新
+}}
+function selectTopDate(date) {{
+  current.topDate = date;
+  document.querySelectorAll('#top-date-list .date-item').forEach(el => {{
+    el.classList.toggle('active', el.textContent.startsWith(date));
+  }});
+  const stocks = DATA.top[date] || [];
+  const list = document.getElementById('top-stock-list');
+  list.innerHTML = '';
+  if (stocks.length === 0) {{ list.innerHTML = '<div class="empty-hint">该日无涨停股</div>'; return; }}
+  stocks.forEach(s => {{
+    const el = document.createElement('div');
+    el.className = 'stock-item';
+    el.innerHTML = s[0] + ' ' + s[1] + (s[2] ? '<span class="stock-market">' + fmtYi(s[2]) + '</span>' : '');
+    el.onclick = () => {{ selectTopStock(s[0]); }};
+    list.appendChild(el);
+  }});
+  selectTopStock(stocks[0][0]);
+}}
+function selectTopStock(code) {{
+  klineTarget = 'top';
+  current.topCode = code;
+  current.code = code;
+  document.querySelectorAll('#top-stock-list .stock-item').forEach(el => {{
+    el.classList.toggle('active', el.textContent.startsWith(code));
+  }});
+  selectStock(code);
+}}
+
 /* ==================== K 线增强（分栏指标/MA配置/BOLL/VWAP/月线） ==================== */
 /* klineState：周期(day/month)、副图指标(volume/macd/kdj)、MA列表、BOLL/VWAP开关 */
 const klineState = {{
@@ -1158,13 +1305,16 @@ function calcVolMA(data, period) {{
 
 /* ---- K 线渲染（LightweightCharts v5 原生分栏：主图 + 最多3个指标栏，自动对齐与十字线贯穿） ---- */
 let _chart = null;
+/* K 线渲染目标：'candidate'（实盘候选池）或 'top'（涨停股）。共用一套渲染函数，切换目标访问不同 DOM。 */
+let klineTarget = 'candidate';
+function klineEl(id) {{ return (klineTarget === 'top' && id.indexOf('top-') !== 0) ? 'top-' + id : id; }}
 function destroyKline() {{
   if (_chart) {{ try {{ _chart.remove(); }} catch(e) {{}} _chart = null; }}
 }}
 /* 主图悬浮时在标题栏下方显示当天数据 */
 function showDayInfo(chart, candleSeries, data) {{
   chart.subscribeCrosshairMove(param => {{
-    const info = document.getElementById('kline-info');
+    const info = document.getElementById(klineEl('kline-info'));
     if (!param.time) {{ if (info && info.dataset.base) info.textContent = info.dataset.base; return; }}
     // 始终从完整 data（内嵌含 pre_close）查找，避免 seriesData 不含 pre_close 导致涨跌幅用 open
     let d = null;
@@ -1213,11 +1363,11 @@ function renderIndicatorBar(pane, bar, data, limitMap) {{
 }}
 function renderKline(k) {{
   const data = getSeriesData(k);
-  const box = document.getElementById('kline');
-  box.innerHTML = '<div id="kline-main"></div>';
+  const box = document.getElementById(klineEl('kline'));
+  box.innerHTML = '<div id="' + klineEl('kline-main') + '"></div>';
   destroyKline();
 
-  const mainEl = document.getElementById('kline-main');
+  const mainEl = document.getElementById(klineEl('kline-main'));
   _chart = LightweightCharts.createChart(mainEl, {{
     layout: {{ background: {{ type: LightweightCharts.ColorType.Solid, color: '#171a21' }}, textColor: '#d1d4dc' }},
     grid: {{ vertLines: {{ color: '#2b2b43' }}, horzLines: {{ color: '#2b2b43' }} }},
@@ -1289,15 +1439,15 @@ function selectStock(code) {{
     el.classList.toggle('active', el.textContent.startsWith(code));
   }});
   const k = DATA.kline[code];
-  const title = document.getElementById('kline-title');
+  const title = document.getElementById(klineEl('kline-title'));
   title.innerHTML = klineTitleHtml(k, code);
-  const info = document.getElementById('kline-info');
+  const info = document.getElementById(klineEl('kline-info'));
   const base = (k && k.name ? k.name + '  ' : '') + code + '  ' + (klineState.period === 'month' ? '月线' : '日线');
   info.dataset.base = base;
   info.textContent = base;
   if (!k || k.ohlcv.length === 0) {{
     destroyKline();
-    document.getElementById('kline').innerHTML = '<div id="kline-main"><div class="empty-hint">暂无 K 线数据</div></div>';
+    document.getElementById(klineEl('kline')).innerHTML = '<div id="' + klineEl('kline-main') + '"><div class="empty-hint">暂无 K 线数据</div></div>';
     return;
   }}
   requestAnimationFrame(() => renderKline(k));
@@ -1305,7 +1455,7 @@ function selectStock(code) {{
 
 /* ---- MA 配置面板 ---- */
 function renderMaConfig() {{
-  const cfg = document.getElementById('kline-ma-config');
+  const cfg = document.getElementById(klineEl('kline-ma-config'));
   if (cfg.style.display === 'none') return;
   cfg.innerHTML = '';
   klineState.ma.forEach((ma, i) => {{
@@ -1327,7 +1477,7 @@ function rerenderKline() {{
 }}
 /* ---- 指标栏管理面板 ---- */
 function renderBarConfig() {{
-  const box = document.getElementById('kline-bars');
+  const box = document.getElementById(klineEl('kline-bars'));
   box.innerHTML = '';
   klineState.bars.forEach((bar, i) => {{
     const row = document.createElement('div');
@@ -1372,7 +1522,7 @@ function renderBarConfig() {{
 }}
 /* ---- 涨跌/涨停颜色配置面板 ---- */
 function renderColorConfig() {{
-  const box = document.getElementById('kline-color-config');
+  const box = document.getElementById(klineEl('kline-color-config'));
   box.innerHTML = '';
   const defs = [['up', '涨', klineState.colors.up], ['down', '跌', klineState.colors.down], ['limitUp', '涨停', klineState.colors.limitUp]];
   defs.forEach(([key, label, val]) => {{
@@ -1415,7 +1565,7 @@ function initKlineControls() {{
   addBtn.style.display = 'inline-block';
   // 涨跌颜色面板开关
   const colorBtn = document.getElementById('kline-color-btn');
-  const colorCfg = document.getElementById('kline-color-config');
+  const colorCfg = document.getElementById(klineEl('kline-color-config'));
   colorBtn.onclick = () => {{
     const show = (colorCfg.style.display === 'none' || colorCfg.style.display === '');
     colorCfg.style.display = show ? 'block' : 'none';
@@ -1454,10 +1604,47 @@ function initBtKlineControls() {{
   }};
   renderBtBarConfig();
 }}
+/* 涨停 TAB 的 K 线控制：复用共享 klineState，DOM 用 top- 前缀 */
+function initTopKlineControls() {{
+  document.getElementById('top-kline-period').onchange = e => {{
+    klineState.period = e.target.value;
+    if (current.topCode && DATA.kline[current.topCode]) {{
+      document.getElementById(klineEl('kline-title')).innerHTML = klineTitleHtml(DATA.kline[current.topCode], current.topCode);
+      rerenderKline();
+    }}
+  }};
+  document.getElementById('top-boll').onchange = e => {{ klineState.showBOLL = e.target.checked; rerenderKline(); }};
+  document.getElementById('top-vwap').onchange = e => {{ klineState.showVWAP = e.target.checked; rerenderKline(); }};
+  document.getElementById('top-ma-btn').onclick = () => {{
+    const cfg = document.getElementById('top-ma-config');
+    const show = (cfg.style.display === 'none' || cfg.style.display === '');
+    cfg.style.display = show ? 'block' : 'none';
+    if (show) renderMaConfig();
+  }};
+  document.getElementById('top-ma-add').onclick = () => {{
+    klineState.ma.push({{ p: 5, c: '#e91e63' }});
+    renderMaConfig(); rerenderKline();
+  }};
+  document.getElementById('top-ma-add').style.display = 'inline-block';
+  document.getElementById('top-bar-btn').onclick = () => {{
+    const barsPanel = document.getElementById('top-bars');
+    const show = (barsPanel.style.display === 'none' || barsPanel.style.display === '');
+    barsPanel.style.display = show ? 'block' : 'none';
+    if (show) renderBarConfig();
+  }};
+  document.getElementById('top-color-btn').onclick = () => {{
+    const cfg = document.getElementById('top-color-config');
+    const show = (cfg.style.display === 'none' || cfg.style.display === '');
+    cfg.style.display = show ? 'block' : 'none';
+    if (show) renderColorConfig();
+  }};
+}}
 initKlineControls();
 initBtKlineControls();
+initTopKlineControls();
 loadStrategy();    // klineState 就绪后再加载回测（避免 TDZ），渲染资金 K 线
 loadCandidates();  // 所有函数与 klineState 声明就绪后再加载候选池，避免 TDZ 报错
+loadTop();         // 加载涨停股列表
 
 /* ------- 策略选股详情 TAB ------- */
 function fmtNum(v) {{
@@ -1843,6 +2030,18 @@ def GENERATE_STRATEGY_UI(strategy_name: str | None = None, open_browser: bool = 
                     code_names[r[0]] = r[1]
     kline = _load_kline(all_codes, code_names)
 
+    # 涨停列表（按市值倒序）
+    top = _load_top()
+    top_codes = set()
+    top_names: dict[str, str] = {}
+    for rows in top.values():
+        for r in rows:
+            top_codes.add(r[0])
+            if r[0] not in top_names:
+                top_names[r[0]] = r[1]
+    top_kline = _load_kline(top_codes, top_names, max_days=120)
+    kline.update(top_kline)  # 涨停股 K 线并入（若已有则跳过/覆盖同名）
+
     # 策略选股详情（第三个 TAB）
     strategy_detail = _load_strategy_detail(strategies)
 
@@ -1850,6 +2049,7 @@ def GENERATE_STRATEGY_UI(strategy_name: str | None = None, open_browser: bool = 
         "strategies": strategies,
         "backtest": backtest,
         "candidates": candidates,
+        "top": top,
         "kline": kline,
         "strategy_detail": strategy_detail,
     }
