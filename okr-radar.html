@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="团队 OKR 雷达图 - 多维度目标达成分析">
+<title>团队 OKR 雷达图</title>
+<style>
+/* ============ RESET & BASE ============ */
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg-1:#0a0e1a;--bg-2:#0f1525;--bg-3:#131a2e;
+  --card-bg:rgba(255,255,255,.025);--card-border:rgba(255,255,255,.06);--card-hover:rgba(255,255,255,.045);
+  --text-1:#e8ecf4;--text-2:#9ca8b8;--text-3:#5a6578;
+  --team-color:#6366f1;--team-rgb:99,102,241;
+  --exceed:#10b981;--exceed-bg:rgba(16,185,129,.12);
+  --close:#f59e0b;--close-bg:rgba(245,158,11,.12);
+  --insufficient:#ef4444;--insufficient-bg:rgba(239,68,68,.12);
+  --grid:rgba(255,255,255,.05);--axis:rgba(255,255,255,.07);--grid-label:rgba(255,255,255,.2);
+  --radius:14px;--transition:.35s cubic-bezier(.4,0,.2,1);
+}
+html{font-size:15px}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Hiragino Sans GB','Microsoft YaHei',sans-serif;
+  background:
+    radial-gradient(ellipse at 15% 10%,rgba(var(--team-rgb),.07),transparent 55%),
+    radial-gradient(ellipse at 85% 90%,rgba(236,72,153,.04),transparent 55%),
+    linear-gradient(160deg,var(--bg-1),var(--bg-2));
+  color:var(--text-1);min-height:100vh;line-height:1.5;
+  transition:background .6s ease;
+}
+.num{font-family:'SF Mono','Monaco','Consolas',monospace;font-variant-numeric:tabular-nums}
+
+/* ============ LAYOUT ============ */
+.app{max-width:1200px;margin:0 auto;padding:24px 20px 40px}
+.header{display:flex;justify-content:space-between;align-items:center;gap:16px;margin-bottom:24px;flex-wrap:wrap}
+.title-group h1{font-size:1.5rem;font-weight:700;letter-spacing:-.02em;background:linear-gradient(135deg,var(--text-1),var(--text-2));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.title-group .subtitle{font-size:.8rem;color:var(--text-3);margin-top:2px;letter-spacing:.02em}
+.team-switcher{display:flex;gap:6px;background:var(--card-bg);border:1px solid var(--card-border);border-radius:10px;padding:4px}
+.team-btn{
+  padding:7px 18px;border:none;background:transparent;color:var(--text-2);
+  border-radius:7px;cursor:pointer;font-size:.85rem;font-weight:500;
+  transition:var(--transition);font-family:inherit;position:relative;
+}
+.team-btn:hover{color:var(--text-1);background:var(--card-hover)}
+.team-btn.active{background:rgba(var(--team-rgb),.15);color:var(--team-color);box-shadow:0 0 12px rgba(var(--team-rgb),.15)}
+
+.main{display:flex;gap:20px;align-items:flex-start}
+.chart-panel{flex:1;min-width:0;background:var(--card-bg);border:1px solid var(--card-border);border-radius:var(--radius);padding:20px 20px 12px;backdrop-filter:blur(10px)}
+.sidebar{width:340px;flex-shrink:0;display:flex;flex-direction:column;gap:16px}
+
+/* ============ CHART PANEL ============ */
+.panel-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.panel-header h2{font-size:.95rem;font-weight:600;color:var(--text-1)}
+.legend{display:flex;gap:14px}
+.legend-item{display:flex;align-items:center;gap:6px;font-size:.72rem;color:var(--text-2)}
+.legend-dash{width:22px;height:0;border-top:1.5px dashed rgba(255,255,255,.3)}
+.legend-fill{width:14px;height:10px;border-radius:2px;background:rgba(var(--team-rgb),.25);border:1.5px solid var(--team-color);transition:var(--transition)}
+.radar-container{width:100%;max-width:540px;margin:0 auto;position:relative}
+.radar-svg{width:100%;height:auto;display:block;overflow:visible}
+
+/* SVG element styles */
+.grid-line{fill:none;stroke:var(--grid);stroke-width:1}
+.grid-line:last-child{stroke:rgba(255,255,255,.09)}
+.axis-line{stroke:var(--axis);stroke-width:1}
+.grid-label{fill:var(--grid-label);font-size:9px;font-family:monospace}
+.target-poly{fill:none;stroke:rgba(255,255,255,.28);stroke-width:1.5;stroke-dasharray:6 4;transition:var(--transition)}
+.actual-poly{fill:rgba(var(--team-rgb),.12);stroke:var(--team-color);stroke-width:2;stroke-linejoin:round;transition:fill .4s,stroke .4s;filter:drop-shadow(0 0 6px rgba(var(--team-rgb),.3))}
+.vertex{cursor:pointer;transition:r .2s ease;filter:drop-shadow(0 0 4px currentColor)}
+.vertex:hover{r:7}
+.axis-label{fill:var(--text-1);font-size:12px;font-weight:600}
+.axis-value{font-size:10px;font-family:monospace;font-weight:500}
+
+/* ============ SIDEBAR CARDS ============ */
+.stat-card{
+  background:var(--card-bg);border:1px solid var(--card-border);border-radius:var(--radius);
+  padding:18px;backdrop-filter:blur(10px);
+  animation:fadeUp .5s ease both;
+}
+.stat-card:nth-child(2){animation-delay:.08s}
+.stat-card:nth-child(3){animation-delay:.16s}
+.stat-card h3{font-size:.78rem;font-weight:600;color:var(--text-2);margin-bottom:14px;letter-spacing:.04em;text-transform:uppercase}
+
+/* ============ OVERVIEW CARD ============ */
+.overview-card{display:flex;align-items:center;gap:18px}
+.progress-ring-wrap{position:relative;flex-shrink:0}
+.progress-ring{width:110px;height:110px}
+.ring-bg{fill:none;stroke:rgba(255,255,255,.06);stroke-width:7}
+.ring-fill{
+  fill:none;stroke:var(--team-color);stroke-width:7;stroke-linecap:round;
+  transform:rotate(-90deg);transform-origin:center;
+  transition:stroke-dashoffset .9s cubic-bezier(.4,0,.2,1),stroke .4s ease;
+  filter:drop-shadow(0 0 6px rgba(var(--team-rgb),.4));
+}
+.ring-num{fill:var(--text-1);font-size:1.3rem;font-weight:700;font-family:monospace;text-anchor:middle}
+.ring-sub{fill:var(--text-3);font-size:.6rem;text-anchor:middle;letter-spacing:.05em}
+.overview-info{flex:1;min-width:0}
+.overview-info .label{font-size:.72rem;color:var(--text-3);margin-bottom:4px}
+.trend-badge{display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:6px;font-size:.72rem;font-weight:600;font-family:monospace}
+.trend-badge.up{background:rgba(16,185,129,.12);color:var(--exceed)}
+.trend-badge.down{background:rgba(239,68,68,.12);color:var(--insufficient)}
+.trend-detail{font-size:.7rem;color:var(--text-3);margin-top:6px;font-family:monospace}
+
+/* ============ HIGHLIGHTS CARD ============ */
+.highlight-row{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.04)}
+.highlight-row:last-child{border-bottom:none;padding-bottom:0}
+.highlight-row:first-child{padding-top:0}
+.hl-icon{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:.8rem;flex-shrink:0}
+.hl-icon.strong{background:var(--exceed-bg);color:var(--exceed)}
+.hl-icon.weak{background:var(--insufficient-bg);color:var(--insufficient)}
+.hl-content{flex:1;min-width:0}
+.hl-label{font-size:.68rem;color:var(--text-3)}
+.hl-name{font-size:.88rem;font-weight:600;color:var(--text-1);margin-top:1px}
+.hl-right{text-align:right;flex-shrink:0}
+.hl-rate{font-size:.95rem;font-weight:700;font-family:monospace}
+.hl-badge{display:inline-block;padding:1px 7px;border-radius:4px;font-size:.62rem;font-weight:600;margin-top:3px}
+.hl-badge.exceed{background:var(--exceed-bg);color:var(--exceed)}
+.hl-badge.close{background:var(--close-bg);color:var(--close)}
+.hl-badge.insufficient{background:var(--insufficient-bg);color:var(--insufficient)}
+
+/* status pills */
+.status-pills{display:flex;gap:6px;margin-bottom:12px}
+.pill{flex:1;text-align:center;padding:6px 4px;border-radius:8px;font-size:.68rem}
+.pill .pill-num{font-size:1.05rem;font-weight:700;font-family:monospace;display:block}
+.pill .pill-label{color:var(--text-3);font-size:.62rem}
+.pill.exceed{background:var(--exceed-bg)}
+.pill.exceed .pill-num{color:var(--exceed)}
+.pill.close{background:var(--close-bg)}
+.pill.close .pill-num{color:var(--close)}
+.pill.insufficient{background:var(--insufficient-bg)}
+.pill.insufficient .pill-num{color:var(--insufficient)}
+
+/* ============ BREAKDOWN CARD ============ */
+.breakdown-list{display:flex;flex-direction:column;gap:10px}
+.bd-item{padding:10px 12px;border-radius:10px;background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.03);transition:var(--transition)}
+.bd-item:hover{background:rgba(255,255,255,.035);border-color:rgba(255,255,255,.06)}
+.bd-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.bd-name{font-size:.82rem;font-weight:600;color:var(--text-1)}
+.bd-badge{padding:1px 7px;border-radius:4px;font-size:.62rem;font-weight:600}
+.bd-badge.exceed{background:var(--exceed-bg);color:var(--exceed)}
+.bd-badge.close{background:var(--close-bg);color:var(--close)}
+.bd-badge.insufficient{background:var(--insufficient-bg);color:var(--insufficient)}
+.bd-stats{display:flex;gap:10px;font-size:.68rem;color:var(--text-3);margin-bottom:6px;font-family:monospace}
+.bd-stats .rate{color:var(--text-2);font-weight:600}
+.bd-bar{position:relative;height:5px;background:rgba(255,255,255,.05);border-radius:3px;overflow:visible;margin-bottom:4px}
+.bd-bar-fill{height:100%;border-radius:3px;transition:width .7s cubic-bezier(.4,0,.2,1);position:relative;z-index:1}
+.bd-bar-fill.exceed{background:linear-gradient(90deg,rgba(16,185,129,.5),var(--exceed))}
+.bd-bar-fill.close{background:linear-gradient(90deg,rgba(245,158,11,.5),var(--close))}
+.bd-bar-fill.insufficient{background:linear-gradient(90deg,rgba(239,68,68,.5),var(--insufficient))}
+.bd-bar-target{position:absolute;top:-2px;width:2px;height:9px;background:rgba(255,255,255,.35);border-radius:1px;z-index:2}
+.bd-trend{display:flex;justify-content:flex-end;align-items:center;gap:4px;font-size:.65rem;font-family:monospace}
+.bd-trend .delta.up{color:var(--exceed)}
+.bd-trend .delta.down{color:var(--insufficient)}
+.bd-trend .label{color:var(--text-3)}
+
+/* ============ TOOLTIP ============ */
+.tooltip{
+  position:fixed;background:rgba(10,14,26,.96);border:1px solid var(--card-border);
+  border-radius:10px;padding:12px 14px;font-size:.75rem;pointer-events:none;
+  opacity:0;transition:opacity .15s ease;z-index:1000;
+  backdrop-filter:blur(12px);box-shadow:0 8px 32px rgba(0,0,0,.5);min-width:150px;
+}
+.tooltip.show{opacity:1}
+.tt-name{font-weight:700;margin-bottom:8px;font-size:.85rem}
+.tt-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px 12px;margin-bottom:8px}
+.tt-cell{display:flex;flex-direction:column}
+.tt-label{font-size:.62rem;color:var(--text-3)}
+.tt-val{font-size:.82rem;font-weight:600;font-family:monospace}
+.tt-val.up{color:var(--exceed)}
+.tt-val.down{color:var(--insufficient)}
+.tt-badge{display:inline-block;padding:2px 8px;border-radius:4px;font-size:.65rem;font-weight:600;text-align:center}
+.tt-badge.exceed{background:var(--exceed-bg);color:var(--exceed)}
+.tt-badge.close{background:var(--close-bg);color:var(--close)}
+.tt-badge.insufficient{background:var(--insufficient-bg);color:var(--insufficient)}
+
+/* ============ FOOTER ============ */
+.footer{text-align:center;margin-top:24px;font-size:.7rem;color:var(--text-3);letter-spacing:.03em}
+
+/* ============ ANIMATIONS ============ */
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+@keyframes pulse{0%,100%{filter:drop-shadow(0 0 6px rgba(var(--team-rgb),.3))}50%{filter:drop-shadow(0 0 14px rgba(var(--team-rgb),.45))}}
+.actual-poly{animation:pulse 3.5s ease-in-out infinite}
+
+/* ============ RESPONSIVE ============ */
+@media(max-width:900px){
+  .main{flex-direction:column}
+  .sidebar{width:100%}
+  .chart-panel{width:100%}
+}
+@media(max-width:520px){
+  .app{padding:16px 12px 30px}
+  .header{flex-direction:column;align-items:flex-start;gap:10px}
+  .team-switcher{width:100%;justify-content:center}
+  .team-btn{flex:1;text-align:center}
+  .overview-card{flex-direction:column;text-align:center;gap:12px}
+  .overview-info{text-align:center}
+  .axis-label{font-size:10px}
+  .axis-value{font-size:9px}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <!-- HEADER -->
+  <header class="header">
+    <div class="title-group">
+      <h1>团队 OKR 雷达图</h1>
+      <p class="subtitle">2026 Q3 · 多维度目标达成分析</p>
+    </div>
+    <div class="team-switcher" id="teamSwitcher">
+      <button class="team-btn active" data-team="product">产品</button>
+      <button class="team-btn" data-team="tech">技术</button>
+      <button class="team-btn" data-team="design">设计</button>
+    </div>
+  </header>
+
+  <!-- MAIN -->
+  <main class="main">
+    <!-- CHART -->
+    <section class="chart-panel">
+      <div class="panel-header">
+        <h2>雷达图分析</h2>
+        <div class="legend">
+          <span class="legend-item"><span class="legend-dash"></span>目标值</span>
+          <span class="legend-item"><span class="legend-fill" id="legendFill"></span>实际值</span>
+        </div>
+      </div>
+      <div class="radar-container" id="radarContainer"></div>
+    </section>
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar" id="sidebar">
+      <!-- Overview, Highlights, Breakdown will be rendered here -->
+    </aside>
+  </main>
+
+  <div class="footer">数据周期: 2026 Q3 · 更新于 2026-08-20 · 六维度目标 vs 实际达成</div>
+</div>
+
+<div class="tooltip" id="tooltip"></div>
+
+<script>
+// ==================== CONFIG ====================
+const cfg = { cx: 260, cy: 260, R: 175, levels: [20, 40, 60, 80, 100], labelOffset: 30 };
+const dims = ['产品交付', '技术质量', '用户增长', '团队协作', '创新能力', '客户满意度'];
+const statusCfg = {
+  exceed:       { label: '超额', color: '#10b981' },
+  close:        { label: '接近', color: '#f59e0b' },
+  insufficient: { label: '不足', color: '#ef4444' }
+};
+
+const teams = {
+  product: {
+    name: '产品团队', color: '#6366f1', rgb: '99,102,241',
+    data: [
+      { target: 90, actual: 85, prev: 80 },
+      { target: 85, actual: 92, prev: 85 },
+      { target: 80, actual: 68, prev: 72 },
+      { target: 85, actual: 88, prev: 82 },
+      { target: 75, actual: 72, prev: 65 },
+      { target: 90, actual: 86, prev: 80 }
+    ]
+  },
+  tech: {
+    name: '技术团队', color: '#06b6d4', rgb: '6,182,212',
+    data: [
+      { target: 90, actual: 82, prev: 78 },
+      { target: 85, actual: 95, prev: 88 },
+      { target: 80, actual: 65, prev: 60 },
+      { target: 85, actual: 78, prev: 75 },
+      { target: 75, actual: 80, prev: 68 },
+      { target: 90, actual: 79, prev: 75 }
+    ]
+  },
+  design: {
+    name: '设计团队', color: '#ec4899', rgb: '236,72,153',
+    data: [
+      { target: 90, actual: 78, prev: 72 },
+      { target: 85, actual: 72, prev: 68 },
+      { target: 80, actual: 70, prev: 65 },
+      { target: 85, actual: 92, prev: 85 },
+      { target: 75, actual: 85, prev: 78 },
+      { target: 90, actual: 88, prev: 82 }
+    ]
+  }
+};
+
+// ==================== STATE ====================
+let currentTeam = 'product';
+let displayed = { actual: [0,0,0,0,0,0], target: [0,0,0,0,0,0] };
+let els = {};
+let animFrame = null;
+const RING_R = 52;
+const RING_C = 2 * Math.PI * RING_R;
+const tooltip = document.getElementById('tooltip');
+
+// ==================== HELPERS ====================
+function getPoint(value, i) {
+  const a = (-90 + 60 * i) * Math.PI / 180;
+  const r = cfg.R * (value / 100);
+  return { x: cfg.cx + r * Math.cos(a), y: cfg.cy + r * Math.sin(a) };
+}
+function getLabelPoint(i) {
+  const a = (-90 + 60 * i) * Math.PI / 180;
+  const r = cfg.R + cfg.labelOffset;
+  return { x: cfg.cx + r * Math.cos(a), y: cfg.cy + r * Math.sin(a) };
+}
+function getStatus(actual, target) {
+  if (actual >= target) return 'exceed';
+  if (actual >= target * 0.9) return 'close';
+  return 'insufficient';
+}
+function easeInOutCubic(t) {
+  return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+}
+function calcStats(key) {
+  const t = teams[key];
+  const rates = t.data.map(d => d.actual / d.target * 100);
+  const prevRates = t.data.map(d => d.prev / d.target * 100);
+  const overall = rates.reduce((a, b) => a + b, 0) / 6;
+  const prevOverall = prevRates.reduce((a, b) => a + b, 0) / 6;
+  let maxI = 0, minI = 0;
+  for (let i = 1; i < 6; i++) {
+    if (rates[i] > rates[maxI]) maxI = i;
+    if (rates[i] < rates[minI]) minI = i;
+  }
+  const counts = { exceed: 0, close: 0, insufficient: 0 };
+  t.data.forEach(d => counts[getStatus(d.actual, d.target)]++);
+  return {
+    overall, prevOverall, delta: overall - prevOverall,
+    rates, prevRates,
+    max: { name: dims[maxI], rate: rates[maxI], actual: t.data[maxI].actual, target: t.data[maxI].target, status: getStatus(t.data[maxI].actual, t.data[maxI].target) },
+    min: { name: dims[minI], rate: rates[minI], actual: t.data[minI].actual, target: t.data[minI].target, status: getStatus(t.data[minI].actual, t.data[minI].target) },
+    counts
+  };
+}
+
+// ==================== BUILD RADAR SVG ====================
+function buildRadar() {
+  let gridHex = '', axisLines = '', gridLabels = '';
+  for (const lv of cfg.levels) {
+    const pts = [];
+    for (let i = 0; i < 6; i++) {
+      const p = getPoint(lv, i);
+      pts.push(p.x.toFixed(1) + ',' + p.y.toFixed(1));
+    }
+    gridHex += '<polygon class="grid-line" points="' + pts.join(' ') + '"/>';
+  }
+  for (let i = 0; i < 6; i++) {
+    const p = getPoint(100, i);
+    axisLines += '<line class="axis-line" x1="' + cfg.cx + '" y1="' + cfg.cy + '" x2="' + p.x.toFixed(1) + '" y2="' + p.y.toFixed(1) + '"/>';
+  }
+  for (const lv of cfg.levels) {
+    const y = cfg.cy - cfg.R * (lv / 100);
+    gridLabels += '<text class="grid-label" x="' + (cfg.cx + 8) + '" y="' + (y + 3.5) + '">' + lv + '</text>';
+  }
+
+  let vertices = '';
+  for (let i = 0; i < 6; i++) {
+    vertices += '<circle class="vertex" id="vertex-' + i + '" r="5" stroke="#fff" stroke-width="2" data-dim="' + i + '"/>';
+  }
+
+  let labels = '';
+  for (let i = 0; i < 6; i++) {
+    const p = getLabelPoint(i);
+    let anchor = 'middle';
+    if (p.x > cfg.cx + 20) anchor = 'start';
+    else if (p.x < cfg.cx - 20) anchor = 'end';
+    labels += '<text class="axis-label" x="' + p.x.toFixed(1) + '" y="' + p.y.toFixed(1) + '" text-anchor="' + anchor + '" dominant-baseline="middle">' + dims[i] + '</text>';
+    labels += '<text class="axis-value" id="axisval-' + i + '" x="' + p.x.toFixed(1) + '" y="' + (p.y + 16).toFixed(1) + '" text-anchor="' + anchor + '" dominant-baseline="middle"></text>';
+  }
+
+  document.getElementById('radarContainer').innerHTML =
+    '<svg viewBox="0 0 520 520" class="radar-svg">' +
+    '<g class="grid-group">' + gridHex + '</g>' +
+    '<g class="axis-group">' + axisLines + '</g>' +
+    '<g class="grid-labels">' + gridLabels + '</g>' +
+    '<polygon class="target-poly" id="targetPoly" points=""/>' +
+    '<polygon class="actual-poly" id="actualPoly" points=""/>' +
+    '<g class="vertex-group">' + vertices + '</g>' +
+    '<g class="label-group">' + labels + '</g>' +
+    '</svg>';
+
+  els.targetPoly = document.getElementById('targetPoly');
+  els.actualPoly = document.getElementById('actualPoly');
+  els.vertices = [];
+  els.axisVals = [];
+  for (let i = 0; i < 6; i++) {
+    els.vertices.push(document.getElementById('vertex-' + i));
+    els.axisVals.push(document.getElementById('axisval-' + i));
+  }
+}
+
+// ==================== UPDATE RADAR ====================
+function updatePolygons() {
+  const ap = [], tp = [];
+  for (let i = 0; i < 6; i++) {
+    const pa = getPoint(displayed.actual[i], i);
+    const pt = getPoint(displayed.target[i], i);
+    ap.push(pa.x.toFixed(1) + ',' + pa.y.toFixed(1));
+    tp.push(pt.x.toFixed(1) + ',' + pt.y.toFixed(1));
+  }
+  els.actualPoly.setAttribute('points', ap.join(' '));
+  els.targetPoly.setAttribute('points', tp.join(' '));
+}
+
+function updateVertices() {
+  for (let i = 0; i < 6; i++) {
+    const p = getPoint(displayed.actual[i], i);
+    els.vertices[i].setAttribute('cx', p.x.toFixed(1));
+    els.vertices[i].setAttribute('cy', p.y.toFixed(1));
+  }
+}
+
+function updateRadarColors(key) {
+  const team = teams[key];
+  // actual polygon style
+  els.actualPoly.style.fill = 'rgba(' + team.rgb + ',0.12)';
+  els.actualPoly.style.stroke = team.color;
+  // vertices color + data
+  for (let i = 0; i < 6; i++) {
+    const d = team.data[i];
+    const st = getStatus(d.actual, d.target);
+    els.vertices[i].setAttribute('fill', statusCfg[st].color);
+    els.vertices[i].dataset.team = key;
+  }
+  // axis value text
+  for (let i = 0; i < 6; i++) {
+    const d = team.data[i];
+    const st = getStatus(d.actual, d.target);
+    const col = statusCfg[st].color;
+    els.axisVals[i].innerHTML =
+      '<tspan fill="' + col + '" font-weight="600">' + d.actual + '</tspan>' +
+      '<tspan fill="rgba(255,255,255,0.3)"> / ' + d.target + '</tspan>';
+  }
+}
+
+// ==================== ANIMATE ====================
+function animateTo(key) {
+  if (animFrame) cancelAnimationFrame(animFrame);
+  const team = teams[key];
+  const tgtA = team.data.map(d => d.actual);
+  const tgtT = team.data.map(d => d.target);
+  const fromA = displayed.actual.slice();
+  const fromT = displayed.target.slice();
+  const dur = 650;
+  const t0 = performance.now();
+
+  updateRadarColors(key);
+
+  function step(now) {
+    const t = Math.min(1, (now - t0) / dur);
+    const e = easeInOutCubic(t);
+    for (let i = 0; i < 6; i++) {
+      displayed.actual[i] = fromA[i] + (tgtA[i] - fromA[i]) * e;
+      displayed.target[i] = fromT[i] + (tgtT[i] - fromT[i]) * e;
+    }
+    updatePolygons();
+    updateVertices();
+    if (t < 1) {
+      animFrame = requestAnimationFrame(step);
+    } else {
+      displayed.actual = tgtA.slice();
+      displayed.target = tgtT.slice();
+      updatePolygons();
+      updateVertices();
+      animFrame = null;
+    }
+  }
+  animFrame = requestAnimationFrame(step);
+}
+
+function animateNumber(el, from, to, dur, suffix) {
+  const t0 = performance.now();
+  function step(now) {
+    const t = Math.min(1, (now - t0) / dur);
+    const e = 1 - Math.pow(1 - t, 3);
+    const v = from + (to - from) * e;
+    el.textContent = v.toFixed(1) + (suffix || '');
+    if (t < 1) requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
+}
+
+// ==================== SIDEBAR ====================
+function setTeamColor(key) {
+  const team = teams[key];
+  document.documentElement.style.setProperty('--team-color', team.color);
+  document.documentElement.style.setProperty('--team-rgb', team.rgb);
+}
+
+function renderSidebar(key) {
+  const s = calcStats(key);
+  const team = teams[key];
+  const trendClass = s.delta >= 0 ? 'up' : 'down';
+  const trendArrow = s.delta >= 0 ? '↑' : '↓';
+  const trendSign = s.delta >= 0 ? '+' : '';
+
+  // pills
+  const pills =
+    '<div class="pill exceed"><span class="pill-num">' + s.counts.exceed + '</span><span class="pill-label">超额</span></div>' +
+    '<div class="pill close"><span class="pill-num">' + s.counts.close + '</span><span class="pill-label">接近</span></div>' +
+    '<div class="pill insufficient"><span class="pill-num">' + s.counts.insufficient + '</span><span class="pill-label">不足</span></div>';
+
+  // highlights
+  const highlights =
+    '<div class="highlight-row">' +
+      '<div class="hl-icon strong">▲</div>' +
+      '<div class="hl-content"><div class="hl-label">最强维度</div><div class="hl-name">' + s.max.name + '</div></div>' +
+      '<div class="hl-right"><div class="hl-rate" style="color:' + statusCfg[s.max.status].color + '">' + s.max.rate.toFixed(1) + '%</div>' +
+      '<div class="hl-badge ' + s.max.status + '">' + statusCfg[s.max.status].label + '</div></div>' +
+    '</div>' +
+    '<div class="highlight-row">' +
+      '<div class="hl-icon weak">▼</div>' +
+      '<div class="hl-content"><div class="hl-label">最弱维度</div><div class="hl-name">' + s.min.name + '</div></div>' +
+      '<div class="hl-right"><div class="hl-rate" style="color:' + statusCfg[s.min.status].color + '">' + s.min.rate.toFixed(1) + '%</div>' +
+      '<div class="hl-badge ' + s.min.status + '">' + statusCfg[s.min.status].label + '</div></div>' +
+    '</div>';
+
+  // breakdown
+  let bd = '';
+  for (let i = 0; i < 6; i++) {
+    const d = team.data[i];
+    const st = getStatus(d.actual, d.target);
+    const rate = (d.actual / d.target * 100);
+    const delta = d.actual - d.prev;
+    const dClass = delta >= 0 ? 'up' : 'down';
+    const dSign = delta >= 0 ? '+' : '';
+    const targetPct = (d.target / 100 * 100);
+    bd +=
+      '<div class="bd-item">' +
+        '<div class="bd-header">' +
+          '<span class="bd-name">' + dims[i] + '</span>' +
+          '<span class="bd-badge ' + st + '">' + statusCfg[st].label + '</span>' +
+        '</div>' +
+        '<div class="bd-stats">' +
+          '<span>目标 ' + d.target + '</span>' +
+          '<span>实际 ' + d.actual + '</span>' +
+          '<span class="rate">达成 ' + rate.toFixed(1) + '%</span>' +
+        '</div>' +
+        '<div class="bd-bar">' +
+          '<div class="bd-bar-fill ' + st + '" style="width:' + Math.min(d.actual, 100) + '%"></div>' +
+          '<div class="bd-bar-target" style="left:' + targetPct + '%"></div>' +
+        '</div>' +
+        '<div class="bd-trend">' +
+          '<span class="label">环比</span>' +
+          '<span class="delta ' + dClass + '">' + dSign + delta + '</span>' +
+        '</div>' +
+      '</div>';
+  }
+
+  document.getElementById('sidebar').innerHTML =
+    // Card 1: Overview
+    '<div class="stat-card overview-card">' +
+      '<div class="progress-ring-wrap">' +
+        '<svg viewBox="0 0 120 120" class="progress-ring">' +
+          '<circle class="ring-bg" cx="60" cy="60" r="' + RING_R + '"/>' +
+          '<circle class="ring-fill" cx="60" cy="60" r="' + RING_R + '" id="ringFill" stroke-dasharray="' + RING_C.toFixed(2) + '" stroke-dashoffset="' + RING_C.toFixed(2) + '"/>' +
+          '<text class="ring-num" x="60" y="58" id="ringNum">0.0%</text>' +
+          '<text class="ring-sub" x="60" y="74">完成率</text>' +
+        '</svg>' +
+      '</div>' +
+      '<div class="overview-info">' +
+        '<div class="label">环比趋势</div>' +
+        '<div class="trend-badge ' + trendClass + '">' + trendArrow + ' ' + trendSign + s.delta.toFixed(1) + '%</div>' +
+        '<div class="trend-detail">上期 ' + s.prevOverall.toFixed(1) + '% → 本期 ' + s.overall.toFixed(1) + '%</div>' +
+      '</div>' +
+    '</div>' +
+    // Card 2: Highlights
+    '<div class="stat-card">' +
+      '<h3>维度概览</h3>' +
+      '<div class="status-pills">' + pills + '</div>' +
+      highlights +
+    '</div>' +
+    // Card 3: Breakdown
+    '<div class="stat-card">' +
+      '<h3>维度明细</h3>' +
+      '<div class="breakdown-list">' + bd + '</div>' +
+    '</div>';
+
+  // Animate progress ring
+  const ringFill = document.getElementById('ringFill');
+  ringFill.style.stroke = team.color;
+  requestAnimationFrame(function() {
+    ringFill.style.strokeDashoffset = (RING_C * (1 - s.overall / 100)).toFixed(2);
+  });
+  // Animate number
+  animateNumber(document.getElementById('ringNum'), 0, s.overall, 800, '%');
+}
+
+// ==================== TEAM SWITCH ====================
+function switchTeam(key) {
+  if (key === currentTeam) return;
+  currentTeam = key;
+  setTeamColor(key);
+  // Update active button
+  document.querySelectorAll('.team-btn').forEach(function(b) {
+    b.classList.toggle('active', b.dataset.team === key);
+  });
+  // Animate radar
+  animateTo(key);
+  // Update sidebar
+  renderSidebar(key);
+  // Update legend fill color
+  document.getElementById('legendFill').style.background = 'rgba(' + teams[key].rgb + ',0.25)';
+  document.getElementById('legendFill').style.borderColor = teams[key].color;
+}
+
+// ==================== TOOLTIP ====================
+function showTooltip(e) {
+  const v = e.target;
+  const dim = parseInt(v.dataset.dim);
+  const teamKey = v.dataset.team || currentTeam;
+  const team = teams[teamKey];
+  const d = team.data[dim];
+  const st = getStatus(d.actual, d.target);
+  const rate = (d.actual / d.target * 100).toFixed(1);
+  const delta = d.actual - d.prev;
+  const dClass = delta >= 0 ? 'up' : 'down';
+  const dSign = delta >= 0 ? '+' : '';
+
+  tooltip.innerHTML =
+    '<div class="tt-name">' + dims[dim] + '</div>' +
+    '<div class="tt-grid">' +
+      '<div class="tt-cell"><span class="tt-label">目标</span><span class="tt-val">' + d.target + '</span></div>' +
+      '<div class="tt-cell"><span class="tt-label">实际</span><span class="tt-val" style="color:' + statusCfg[st].color + '">' + d.actual + '</span></div>' +
+      '<div class="tt-cell"><span class="tt-label">达成率</span><span class="tt-val">' + rate + '%</span></div>' +
+      '<div class="tt-cell"><span class="tt-label">环比</span><span class="tt-val ' + dClass + '">' + dSign + delta + '</span></div>' +
+    '</div>' +
+    '<div class="tt-badge ' + st + '">' + statusCfg[st].label + '</div>';
+  tooltip.classList.add('show');
+  positionTooltip(e);
+}
+
+function positionTooltip(e) {
+  const x = e.clientX, y = e.clientY;
+  const tw = tooltip.offsetWidth, th = tooltip.offsetHeight;
+  let left = x + 14, top = y - th - 10;
+  if (left + tw > window.innerWidth - 8) left = x - tw - 14;
+  if (top < 8) top = y + 18;
+  tooltip.style.left = left + 'px';
+  tooltip.style.top = top + 'px';
+}
+
+function hideTooltip() {
+  tooltip.classList.remove('show');
+}
+
+// ==================== EVENTS ====================
+function setupEvents() {
+  // Team switcher
+  document.getElementById('teamSwitcher').addEventListener('click', function(e) {
+    if (e.target.classList.contains('team-btn')) {
+      switchTeam(e.target.dataset.team);
+    }
+  });
+  // Vertex hover (event delegation)
+  const rc = document.getElementById('radarContainer');
+  rc.addEventListener('mouseover', function(e) {
+    if (e.target.classList && e.target.classList.contains('vertex')) showTooltip(e);
+  });
+  rc.addEventListener('mousemove', function(e) {
+    if (e.target.classList && e.target.classList.contains('vertex')) positionTooltip(e);
+  });
+  rc.addEventListener('mouseout', function(e) {
+    if (e.target.classList && e.target.classList.contains('vertex')) hideTooltip();
+  });
+}
+
+// ==================== INIT ====================
+function init() {
+  setTeamColor('product');
+  buildRadar();
+  renderSidebar('product');
+  setupEvents();
+  // Entrance animation: from center to product values
+  setTimeout(function() { animateTo('product'); }, 100);
+}
+init();
+</script>
+</body>
+</html>
