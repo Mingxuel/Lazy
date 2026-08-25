@@ -24,44 +24,51 @@ def UPDATE_STRATEGY_TPO_TOP():
     _UPDATE_STRATEGY_TPO("TPO_TOP", PATH_AIDATA_STRATEGY_TPO_TOP(), market_index=2, max_ratio=3.0, sort_by_market=True)
 
 
-def UPDATE_STRATEGY_TPO_NB():
-    """策略 TPO_NB：条件同 TPO_3，但 T-3 日只需涨停（不限首板）"""
-    _UPDATE_STRATEGY_TPO("TPO_NB", PATH_AIDATA_STRATEGY_TPO_NB(), market_index=2, max_ratio=3.0, require_first_plate=False)
+def UPDATE_STRATEGY_TPO_M5():
+    """策略 TPO_M5：基于 TPO_TOP，市值区间 200 亿~1300 亿，止损 -5%，按市值倒序首选第一只；
+    额外条件：T-1 收盘价需 >= 预测 T-0 的 MA5 = (T-1*2 + T-2 + T-3 + T-4)/5，
+    否则顺延至下一只，直到条件满足（都不满足则取市值最大的一只）。"""
+    _UPDATE_STRATEGY_TPO(
+        "TPO_M5", PATH_AIDATA_STRATEGY_TPO_M5(),
+        market_index=2, max_ratio=3.0, sort_by_market=True,
+        market_min=2e10, market_max=1.3e11, ma5_predict=True, stop_loss=-0.05,
+    )
 
 
-def UPDATE_STRATEGY_TPO_VR():
-    """策略 TPO_VR：条件同 TPO_3，但按 T-2 成交量 / T-3 成交量（量比）倒序排列，量比最大的排第一"""
-    _UPDATE_STRATEGY_TPO("TPO_VR", PATH_AIDATA_STRATEGY_TPO_VR(), market_index=2, max_ratio=3.0, sort_by_vol_ratio=True)
-
-
-def _UPDATE_STRATEGY_TPO(strategy_name: str, strategy_dir: str, market_index: int, max_ratio: float = 3.0, sort_by_market: bool = False, sort_by_vol_ratio: bool = False, sort_by_vol_ratio_asc: bool = False, require_first_plate: bool = True):
+def _UPDATE_STRATEGY_TPO(strategy_name: str, strategy_dir: str, market_index: int, max_ratio: float = 3.0, sort_by_market: bool = False, sort_by_vol_ratio: bool = False, sort_by_vol_ratio_asc: bool = False, require_first_plate: bool = True, market_min: float = 2e10, market_max: float = float("inf"), ma5_predict: bool = False, stop_loss: float = -0.06):
     """TPO 策略通用选股：生成回测数据到 Strategy/{strategy_name}/。
 
-    写入 T-0 日全部加工数据（28列），供回测使用。
+    写入 T-0 日全部加工数据（29列，末列为本策略止损线），供回测使用。
     实盘候选池由 SZ200Target.py 的 UPDATE_TARGET_TPO_3/TPO_TOP/TPO_NB 生成（TARGET/ 目录）。
     市值统一用 market_index（默认 2=T-2）日收盘价计算；
     筛选条件由 max_ratio（T-1 收盘涨跌幅上限）与 TPO 形态共同决定；
     sort_by_market=True 时（TPO_TOP）结果按流通市值倒序排列（市值最大的排第一）；
     sort_by_vol_ratio=True 时（TPO_VR）结果按 T-2/T-3 量比倒序排列（量比最大的排第一）；
     sort_by_vol_ratio_asc=True 时（TPO_VR2）结果按量比升序排列（量比最小的排第一）；
-    require_first_plate=False 时（TPO_NB）T-3 日只需涨停、不限首板。
+    require_first_plate=False 时（TPO_NB）T-3 日只需涨停、不限首板；
+    market_min/market_max 为流通市值区间（默认 200 亿~不限）；
+    ma5_predict=True 时（TPO_M5）按市值倒序后，取第一只满足
+      “T-1 收盘价 >= 预测 T-0 的 MA5 = (T-1*2 + T-2 + T-3 + T-4)/5” 的，否则取第一只；
+    stop_loss 为本策略次日卖出止损线（默认 -6%，TPO_M5 用 -5%）。
     """
     _rotate_dir(strategy_dir)
     stock_codes = STOCK_CODES_ALL()
     trading_dates = TRADING_DATES()
     with ProcessPoolExecutor(max_workers=32) as pool:
-        list(pool.map(partial(GENERATE_STRATEGY_TPO, stock_codes, strategy_dir, market_index, max_ratio, sort_by_market, sort_by_vol_ratio, sort_by_vol_ratio_asc, require_first_plate), trading_dates))
+        list(pool.map(partial(GENERATE_STRATEGY_TPO, stock_codes, strategy_dir, market_index, max_ratio, sort_by_market, sort_by_vol_ratio, sort_by_vol_ratio_asc, require_first_plate, market_min, market_max, ma5_predict, stop_loss), trading_dates))
 
-def GENERATE_STRATEGY_TPO(stock_codes: list[str], strategy_dir: str, market_index: int, max_ratio: float, sort_by_market: bool, sort_by_vol_ratio: bool, sort_by_vol_ratio_asc: bool, require_first_plate: bool, trading_date: str):
+def GENERATE_STRATEGY_TPO(stock_codes: list[str], strategy_dir: str, market_index: int, max_ratio: float, sort_by_market: bool, sort_by_vol_ratio: bool, sort_by_vol_ratio_asc: bool, require_first_plate: bool, market_min: float, market_max: float, ma5_predict: bool, stop_loss: float, trading_date: str):
     """worker（回测数据）: 以 trading_date 为 T-0，逐股按加工字段判断是否满足完整 TPO 形态。
 
-    写入 T-0 日全部加工数据（28列）到 Strategy/{strategy}/{T-0日期}，供回测使用。
+    写入 T-0 日全部加工数据（29列，末列为止损线）到 Strategy/{strategy}/{T-0日期}，供回测使用。
     市值统一用 market_index（默认 2=T-2）日收盘价计算；
     筛选条件由 max_ratio（T-1 收盘涨跌幅上限）与 TPO 形态共同决定；
     sort_by_market=True 时（TPO_TOP）结果按流通市值倒序排列（市值最大的排第一）；
     sort_by_vol_ratio=True 时（TPO_VR）结果按 T-2/T-3 量比倒序排列（量比最大的排第一）；
     sort_by_vol_ratio_asc=True 时（TPO_VR2）结果按量比升序排列（量比最小的排第一）；
-    require_first_plate=False 时（TPO_NB）T-3 日只需涨停、不限首板。
+    require_first_plate=False 时（TPO_NB）T-3 日只需涨停、不限首板；
+    market_min/market_max 为流通市值区间；
+    ma5_predict=True 时按市值倒序后只选第一只满足 MA5 预测条件的（否则第一只）。
     """
     print("UPDATE_TARGET_TPO: " + trading_date)
     sell_date = trading_date                    # T-0
@@ -97,13 +104,13 @@ def GENERATE_STRATEGY_TPO(stock_codes: list[str], strategy_dir: str, market_inde
             continue
         if record_1.close <= record_1.ma5:
             continue
-        # 市值 ≥ 200 亿
+        # 市值区间 [market_min, market_max]
         info = GET_STOCK_INFO(code)
         if info is None or info[1] <= 0:
             continue
         market_record = {3: record_3, 2: record_2, 1: record_1}[market_index]
         market_value = float(info[1]) * market_record.close
-        if market_value < 2e10:
+        if market_value < market_min or market_value > market_max:
             continue
         # T-2 / T-3 量比
         vol_ratio = (record_2.volume / record_3.volume) if (record_3.volume and record_3.volume > 0) else 0.0
@@ -117,31 +124,43 @@ def GENERATE_STRATEGY_TPO(stock_codes: list[str], strategy_dir: str, market_inde
     elif sort_by_vol_ratio_asc:
         data.sort(key=lambda x: x[4], reverse=False)
 
+    # MA5 预测筛选：按市值倒序后，取第一只满足 “T-1 收盘 >= 预测 T-0 MA5” 的
+    if ma5_predict:
+        chosen: tuple[DATA_1D, str, str, float, float] | None = None
+        for d, code, name, market_value, _v in data:
+            rec1 = GET_SZ200_1D_PREVIOUS(code, trading_date, 1)
+            rec2 = GET_SZ200_1D_PREVIOUS(code, trading_date, 2)
+            rec3 = GET_SZ200_1D_PREVIOUS(code, trading_date, 3)
+            rec4 = GET_SZ200_1D_PREVIOUS(code, trading_date, 4)
+            if rec1 is None or rec2 is None or rec3 is None or rec4 is None:
+                continue
+            pred_ma5 = (rec1.close * 2 + rec2.close + rec3.close + rec4.close) / 5.0
+            if rec1.close >= pred_ma5:
+                chosen = (d, code, name, market_value, 0.0)
+                break
+        if chosen is not None:
+            data = [chosen]  # 只保留选中的一只
+        elif len(data) > 0:
+            data = [data[0]]  # 都不满足，兜底取市值最大的一只
+
     with open(f"{strategy_dir}/{sell_date}", "a") as file:
         if len(data) == 0:
             file.write("\n")
         for d, code, name, market_value, _vol_ratio in data:
-            _write_row(file, sell_date, code, name, market_value, d)
+            _write_row(file, sell_date, code, name, market_value, d, stop_loss)
 
 
-def _write_row(file: TextIO, date: str, code: str, name: str, market_value: float, d: DATA_1D):
-    """股票代码|股票名称|市值 放最前面，日期用 T-0 卖出日，后接该日 25 列加工数据（共28列）"""
+def _write_row(file: TextIO, date: str, code: str, name: str, market_value: float, d: DATA_1D, stop_loss: float = -0.06):
+    """股票代码|股票名称|市值 放最前面，日期用 T-0 卖出日，后接该日 25 列加工数据 + 本策略止损线（共29列）"""
     file.write(
         f"{code}|{name}|{market_value:.2f}"
         + f"|{date}|{d.open}|{d.high}|{d.low}|{d.close}|{d.volume}|{d.amount}"
         + f"|{d.pre_close}|{d.is_top}|{d.is_toped}|{d.ratio}"
         + f"|{d.is_up}|{d.is_down}|{d.is_red}|{d.is_green}"
         + f"|{d.is_volume_up}|{d.is_volume_down}"
-        + f"|{d.ma5}|{d.ma10}|{d.ma20}|{d.ma30}|{d.ma60}|{d.ma120}|{d.lian_ban}|{d.is_bottom}\n"
+        + f"|{d.ma5}|{d.ma10}|{d.ma20}|{d.ma30}|{d.ma60}|{d.ma120}|{d.lian_ban}|{d.is_bottom}"
+        + f"|{stop_loss:.2f}\n"
     )
-
-def UPDATE_STRATEGY_TPO_MA():
-    """策略 TPO_MA：基于 TPO_3 候选池，按候选池顺序选第一只 T-1 均线多头排列
-    （MA20 > MA10 > MA5）的；若全部不满足则默认选第一只。"""
-    def cond(r3: DATA_1D, r2: DATA_1D, r1: DATA_1D) -> bool:
-        return bool(r1.ma20 and r1.ma10 and r1.ma5 and r1.ma20 > r1.ma10 > r1.ma5)
-    _update_condition_strategy(PATH_AIDATA_STRATEGY_TPO_MA(), cond)
-
 
 def _update_condition_strategy(strategy_dir: str, condition: Callable[[DATA_1D, DATA_1D, DATA_1D], bool]) -> None:
     """通用：遍历 TPO_3 候选池，每只按 condition(rec3, rec2, rec1) 判断，选第一只满足的，兜底第一只。"""
@@ -202,7 +221,5 @@ if __name__ == "__main__":
     #SHOW_TARGET_1D()
     UPDATE_STRATEGY_TPO_3()
     UPDATE_STRATEGY_TPO_TOP()
-    UPDATE_STRATEGY_TPO_NB()
-    UPDATE_STRATEGY_TPO_MA()
-    UPDATE_STRATEGY_TPO_VR()
+    UPDATE_STRATEGY_TPO_M5()
     #SHOW_TARGET_1D()

@@ -2226,3 +2226,88 @@ git 同步完成
 同花顺板块已更新:
 策略 TPO_3: 20260824 共 1 只(TPO3), 20260821 共 0 只(TPO31)
 已覆盖: C:\同花顺远航版\bin\users\狗蛋儿家的金\blockstockV3.xml
+[GIT_SYNC] -: 命令: GIT_SYNC
+策略: -
+
+$ git add .
+$ git commit -m "Updated"
+[dev 567ebd2df] Updated
+ 3077 files changed, 7381 insertions(+), 9108 deletions(-)
+ create mode 100644 MarcoAI/AIData/1D/000065.SZ
+ delete mode 100644 MarcoAI/AIData/1D/000410.SZ
+ delete mode 100644 MarcoAI/AIData/1D/000555.SZ
+ delete mode 100644 MarcoAI/AIData/1D/000700.SZ
+ delete mode 100644 MarcoAI/AIData/1D/000727.SZ
+ delete mode 100644 MarcoAI/AIData/1D/000767.SZ
+ create mode 100644 MarcoAI/AIData/1D/000828.SZ
+ delete mode 100644 MarcoAI/AIData/1D/000837.SZ
+ delete mode 100644 MarcoAI/AIData/1D/000917.SZ
+ delete mode 100644 MarcoAI/AIData/1D/002182.SZ
+ delete mode 100644 MarcoAI/AIData/1D/002346.SZ
+ delete mode 100644 MarcoAI/AIData/1D/002348.SZ
+ delete mode 100644 MarcoAI/AIData/1D/002413.SZ
+ delete mode 100644 MarcoAI/AIData/1D/002541.SZ
+ delete mode 100644 MarcoAI/AIData/1D/002626.SZ
+ create mode 100644 MarcoAI/AIData/1D/002906.SZ
+ create mode 100644 MarcoAI/AIData/1D/002984.SZ
+ create mode 100644 MarcoAI/AIData/1D/600198.SH
+ delete mode 100644 MarcoAI/AIData/1D/600446.SH
+ delete mode 100644 MarcoAI/AIData/1D/600480.SH
+ delete mode 100644 MarcoAI/AIData/1D/603124.SH
+ delete mode 100644 MarcoAI/AIData/1D/603281.SH
+ create mode 100644 MarcoAI/AIData/1D/603327.SH
+ delete mode 100644 MarcoAI/AIData/1D/603580.SH
+ delete mode 100644 MarcoAI/AIData/1D/603601.SH
+ delete mode 100644 MarcoAI/AIData/1D/603883.SH
+ create mode 100644 MarcoAI/AIData/1D/605168.SH
+ create mode 100644 MarcoAI/AIData/1D_ORIGIN/000065.SZ
+ delete mode 100644 MarcoAI/AIData/1D_ORIGIN/000410.SZ
+ delete mode 100644 MarcoAI/AIData/1D_ORIGIN/000555.SZ
+ delete mode 100644 MarcoAI/AIData/1D_ORIGIN/000700.SZ
+ delete mode 100644 MarcoAI/AIData/1D_ORIGIN/000727.SZ
+ delete mode 100644 MarcoAI/AIData/1D_ORIGIN/000767.SZ
+ create mode 100644 MarcoAI/AIData/1D_ORIGIN/000828.SZ
+ delete mode 100644 MarcoAI/AIData/1D_ORIGIN/000837.SZ
+ delete mode 100644 MarcoAI/AIData/1D_ORIGIN/000917.SZ
+ delete mode 100644 MarcoAI/AIData/1D_ORIGIN/002182.SZ
+ delete mode 100644 MarcoAI/AIData/1D_ORIGIN/002346.SZ
+ delete mode 100644 MarcoAI/AIData/1D_ORIGIN/002348.SZ
+ delete mode 100644 MarcoAI/AIData/1D_ORIGIN/002413.SZ
+ delete mode 100644 MarcoAI/AIData/1D_ORIGIN/002541.SZ
+ delete mode 100644 MarcoAI/AIData/1D_ORIGIN/002626.SZ
+ create mode 100644 MarcoAI/AIData/1D_ORIGIN/002906.SZ
+ create mode 100644 MarcoAI/AIData/1D_ORIGIN/002984.SZ
+ create mode 100644 MarcoAI/AIData/1D_ORIGIN/600198.SH
+ delete mode 100644 MarcoAI/AIData/1D_ORIGIN/600446.SH
+ delete mode 100644 MarcoAI/AIData/1D_ORIGIN/600480.SH
+ delete mode 100644 MarcoAI/AIData/1D_ORIGIN/603124.SH
+ delete mode 100644 MarcoAI/AIData/1D_ORIGIN/603281.SH
+ create mode 100644 MarcoAI/AIData/1D_ORIGIN/603327.SH
+ delete mode 100644 MarcoAI/AIData/1D_ORIGIN/603580.SH
+ delete mode 100644 MarcoAI/AIData/1D_ORIGIN/603601.SH
+ delete mode 100644 MarcoAI/AIData/1D_ORIGIN/603883.SH
+ create mode 100644 MarcoAI/AIData/1D_ORIGIN/605168.SH
+ rename MarcoAI/AIData/STRATEGY/{TPO_MA/20260107 => TPO_3/20260824} (100%)
+ create mode 100644 MarcoAI/AIData/STRATEGY/TPO_MA/20260824
+ create mode 100644 MarcoAI/AIData/STRATEGY/TPO_NB/20260824
+ create mode 100644 MarcoAI/AIData/STRATEGY/TPO_TOP/20260824
+ create mode 100644 MarcoAI/AIData/STRATEGY/TPO_VR/20260824
+ create mode 100644 MarcoAI/AIData/TARGET/TPO_3/20260824
+ create mode 100644 MarcoAI/AIData/TARGET/TPO_NB/20260824
+ create mode 100644 MarcoAI/AIData/TARGET/TPO_TOP/20260824
+ create mode 100644 MarcoAI/AIData/TOP/20260824
+ create mode 100644 MarcoAI/AIData/TOP_ORIGIN/主板，2026年8月24日涨停所有股.xlsx
+Auto packing the repository for optimum performance.
+See "git help gc" for manual housekeeping.
+$ git push
+remote: Powered by [01;33mGITEE.COM [0m[1.1.23]        
+remote: Set trace flag 8e46eb84        
+To https://gitee.com/mingxuel/lazy.git
+   950578fc6..567ebd2df  dev -> dev
+git 同步完成
+[UPDATE_THS] TPO_3: 命令: UPDATE_THS
+策略: TPO_3
+
+同花顺板块已更新:
+策略 TPO_3: 20260825 共 1 只(TPO3), 20260824 共 0 只(TPO31)
+已覆盖: C:\同花顺远航版\bin\users\狗蛋儿家的金\blockstockV3.xml

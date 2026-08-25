@@ -15,7 +15,6 @@
 API 说明:
     UPDATE_TARGET_TPO_3()    市值统一用 T-2 日收盘价计算（>= 200 亿）
     UPDATE_TARGET_TPO_TOP()  条件同 TPO_3，按流通市值倒序排列（市值最大的排第一）
-    UPDATE_TARGET_TPO_NB()   条件同 TPO_3，但 T-3 日只需涨停（不限首板）
 """
 
 import os
@@ -41,11 +40,6 @@ def UPDATE_TARGET_TPO_3():
 def UPDATE_TARGET_TPO_TOP():
     """实盘候选池 TPO_TOP：条件同 TPO_3，按流通市值倒序排列（市值最大的排第一）"""
     _UPDATE_TARGET_CANDIDATE("TPO_TOP", market_index=2, sort_by_market=True)
-
-
-def UPDATE_TARGET_TPO_NB():
-    """实盘候选池 TPO_NB：条件同 TPO_3，但 T-3 日只需涨停（不限首板）"""
-    _UPDATE_TARGET_CANDIDATE("TPO_NB", market_index=2, require_first_plate=False)
 
 
 def _UPDATE_TARGET_CANDIDATE(strategy_name: str, market_index: int, sort_by_market: bool = False, require_first_plate: bool = True):
@@ -119,4 +113,3 @@ def GENERATE_TARGET_CANDIDATE(stock_codes: list[str], target_dir: str, market_in
 if __name__ == "__main__":
     UPDATE_TARGET_TPO_3()
     UPDATE_TARGET_TPO_TOP()
-    UPDATE_TARGET_TPO_NB()

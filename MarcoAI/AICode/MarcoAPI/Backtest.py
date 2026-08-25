@@ -101,10 +101,13 @@ def _stock_return(cols: list[str]) -> float | None:
     """按次日卖出规则计算单只股票收益率；数据无效返回 None。
 
     卖出规则（按优先级）：
-      1. 开盘涨跌幅 < -6%        -> 按开盘价卖出
-      2. 最低价涨跌幅 < -6%      -> 按 -6% 止损卖出
-      3. 最高价触及涨停价        -> 按涨停价卖出
-      4. 以上都不满足            -> 按收盘价卖出
+      1. 开盘涨跌幅 < 止损线      -> 按开盘价卖出
+      2. 最低价涨跌幅 < 止损线    -> 按止损线卖出
+      3. 最高价触及涨停价          -> 按涨停价卖出
+      4. 以上都不满足             -> 按收盘价卖出
+
+    止损线优先取数据第 29 列（索引 28，由策略写入，如 TPO_M5 为 -5%），
+    缺失时回退全局 STOCK_SELL_STOP（-6%）。
     """
     try:
         code = cols[0]
@@ -118,15 +121,25 @@ def _stock_return(cols: list[str]) -> float | None:
     if pre_close <= 0:
         return None
 
-    # 规则1：开盘涨跌幅 < -6% -> 按开盘价卖出
+    # 本策略止损线（数据第 29 列，缺失则用全局默认）
+    stop = STOCK_SELL_STOP
+    if len(cols) > 28:
+        try:
+            v = float(cols[28])
+            if v < 0:
+                stop = v
+        except ValueError:
+            pass
+
+    # 规则1：开盘涨跌幅 < 止损线 -> 按开盘价卖出
     open_ratio = (open_p - pre_close) / pre_close
-    if open_ratio < STOCK_SELL_STOP:
+    if open_ratio < stop:
         return open_ratio
 
-    # 规则2：最低价 < -6% -> 按 -6% 止损卖出
+    # 规则2：最低价 < 止损线 -> 按止损线卖出
     low_ratio = (low - pre_close) / pre_close
-    if low_ratio < STOCK_SELL_STOP:
-        return STOCK_SELL_STOP
+    if low_ratio < stop:
+        return stop
 
     # 规则3：最高价触及涨停 -> 按涨停价卖出
     limit_p = _limit_price(pre_close, _limit_ratio(code))
