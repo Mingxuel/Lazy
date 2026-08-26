@@ -247,7 +247,11 @@ def _list_strategies() -> list[str]:
     base = PATH_AIDATA_STRATEGY()
     if not os.path.isdir(base):
         return []
-    return sorted(d for d in os.listdir(base) if os.path.isdir(os.path.join(base, d)) and d != "RESULT")
+    names = [d for d in os.listdir(base) if os.path.isdir(os.path.join(base, d)) and d != "RESULT"]
+    # TPO_M5 优先排首位，其余按字母序
+    ordered = [n for n in names if n == "TPO_M5"]
+    rest = sorted(n for n in names if n != "TPO_M5")
+    return ordered + rest
 
 
 def _load_candidates(strategy_name: str) -> dict[str, list[list[str]]]:
@@ -479,10 +483,15 @@ th {{ color: #9aa0a6; font-weight: 500; }}
 #panel-detail table {{ font-size: 12px; }}
 #panel-detail td {{ white-space: nowrap; }}
 #panel-detail tbody tr:hover {{ background: #1c2029; }}
+table.detail-table tbody tr.row-selected {{ background: #3a3220; border-left: 3px solid #ffca28; }}
+table.detail-table tbody tr.row-selected:hover {{ background: #4a4022; }}
+table.detail-table tbody tr.row-selected td {{ color: #ffca28; font-weight: 600; }}
+table.detail-table tbody tr.row-selected td.pos {{ color: #9be7a0; }}
+table.detail-table tbody tr.row-selected td.neg {{ color: #ff9b8a; }}
 #detail-groups {{ flex: 1 1 0; min-height: 0; }}
 .detail-date-head {{ background: #1c2029; color: #ffca28; font-size: 12px; font-weight: 600; padding: 6px 10px; margin: 8px 0 4px; border-radius: 5px; border-left: 3px solid #ffca28; }}
 .detail-date-head:first-child {{ margin-top: 0; }}
-table.detail-table {{ width: 100%; border-collapse: collapse; margin-bottom: 4px; table-layout: fixed; }}
+table.detail-table {{ width: auto; max-width: 100%; border-collapse: collapse; margin-bottom: 4px; table-layout: fixed; }}
 table.detail-table th, table.detail-table td {{ padding: 5px 6px; text-align: right; border-bottom: 1px solid #232a36; overflow: hidden; text-overflow: ellipsis; }}
 table.detail-table th:first-child, table.detail-table td:first-child {{ text-align: center; }}
 table.detail-table thead th {{ position: sticky; top: 0; background: #141821; color: #9aa0a6; font-weight: 600; z-index: 1; }}
@@ -497,7 +506,7 @@ table.detail-table th:nth-child(6) {{ width: 76px; }}
 table.detail-table th:nth-child(n+7):nth-child(-n+11) {{ width: 56px; }}
 table.detail-table th:nth-child(12) {{ width: 78px; }}
 table.detail-table th:nth-child(13) {{ width: 82px; }}
-#panel-detail .card {{ padding: 12px 16px 8px; }}
+#panel-detail .card {{ padding: 12px 16px 8px; max-width: 1120px; }}
 .mode-badge {{ display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 12px; margin-right: 6px; }}
 .b-first {{ background: #42a5f5; color: #0b1a2a; }}
 .b-last {{ background: #ef5350; color: #2a0b0b; }}
@@ -1679,6 +1688,7 @@ function loadDetail() {{
       const cls = row.chg >= 0 ? 'neg' : 'pos';  // 涨红跌绿
       const scls = (row.sell_chg || 0) >= 0 ? 'neg' : 'pos';  // 实际卖出涨跌颜色
       const tr = document.createElement('tr');
+      if (i === 0) tr.className = 'row-selected';  // 选中股（当日第一只）高亮
       tr.innerHTML = '<td>' + (i + 1) + '</td>' +
         '<td>' + row.code + '</td><td>' + row.name + '</td>' +
         '<td class="' + cls + '">' + row.chg.toFixed(2) + '</td>' +

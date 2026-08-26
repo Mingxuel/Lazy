@@ -15,7 +15,7 @@ from AICode.MarcoAPI.Update.Data import DATA_1D
 from AICode.MarcoAPI.Update.SZ2001D import GET_SZ200_1D_PREVIOUS, _rotate_dir
 
 def UPDATE_STRATEGY_TPO_3():
-    """策略 TPO_3：市值统一用 T-2 日收盘价计算（>= 200 亿），T-1 收盘涨跌幅 < 3%"""
+    """策略 TPO_3：市值统一用 T-2 日收盘价计算（>= 200 亿），T-1 收盘涨跌幅 <= 3%（含边界）"""
     _UPDATE_STRATEGY_TPO("TPO_3", PATH_AIDATA_STRATEGY_TPO_3(), market_index=2, max_ratio=3.0)
 
 
@@ -25,9 +25,9 @@ def UPDATE_STRATEGY_TPO_TOP():
 
 
 def UPDATE_STRATEGY_TPO_M5():
-    """策略 TPO_M5：基于 TPO_TOP，市值区间 200 亿~1300 亿，止损 -5%，按市值倒序首选第一只；
-    额外条件：T-1 收盘价需 >= 预测 T-0 的 MA5 = (T-1*2 + T-2 + T-3 + T-4)/5，
-    否则顺延至下一只，直到条件满足（都不满足则取市值最大的一只）。"""
+    """策略 TPO_M5：基于 TPO_TOP，市值区间 200 亿~1300 亿，止损固定 -5%，按市值倒序首选第一只；
+    额外条件（必须，不作兜底）：T-1 收盘价需 >= 预测 T-0 的 MA5 = (T-1*2 + T-2 + T-3 + T-4)/5，
+    否则顺延至下一只，直到条件满足；若当日无满足的票，则不选股（空行）。"""
     _UPDATE_STRATEGY_TPO(
         "TPO_M5", PATH_AIDATA_STRATEGY_TPO_M5(),
         market_index=2, max_ratio=3.0, sort_by_market=True,
@@ -39,9 +39,9 @@ def _UPDATE_STRATEGY_TPO(strategy_name: str, strategy_dir: str, market_index: in
     """TPO 策略通用选股：生成回测数据到 Strategy/{strategy_name}/。
 
     写入 T-0 日全部加工数据（29列，末列为本策略止损线），供回测使用。
-    实盘候选池由 SZ200Target.py 的 UPDATE_TARGET_TPO_3/TPO_TOP/TPO_NB 生成（TARGET/ 目录）。
+    实盘候选池由 SZ200Target.py 的 UPDATE_TARGET_TPO_3/TPO_TOP/TPO_M5 生成（TARGET/ 目录）。
     市值统一用 market_index（默认 2=T-2）日收盘价计算；
-    筛选条件由 max_ratio（T-1 收盘涨跌幅上限）与 TPO 形态共同决定；
+    筛选条件由 max_ratio（T-1 收盘涨跌幅上限，含边界，默认 3%）与 TPO 形态共同决定；
     sort_by_market=True 时（TPO_TOP）结果按流通市值倒序排列（市值最大的排第一）；
     sort_by_vol_ratio=True 时（TPO_VR）结果按 T-2/T-3 量比倒序排列（量比最大的排第一）；
     sort_by_vol_ratio_asc=True 时（TPO_VR2）结果按量比升序排列（量比最小的排第一）；
@@ -62,7 +62,7 @@ def GENERATE_STRATEGY_TPO(stock_codes: list[str], strategy_dir: str, market_inde
 
     写入 T-0 日全部加工数据（29列，末列为止损线）到 Strategy/{strategy}/{T-0日期}，供回测使用。
     市值统一用 market_index（默认 2=T-2）日收盘价计算；
-    筛选条件由 max_ratio（T-1 收盘涨跌幅上限）与 TPO 形态共同决定；
+    筛选条件由 max_ratio（T-1 收盘涨跌幅上限，含边界，默认 3%）与 TPO 形态共同决定；
     sort_by_market=True 时（TPO_TOP）结果按流通市值倒序排列（市值最大的排第一）；
     sort_by_vol_ratio=True 时（TPO_VR）结果按 T-2/T-3 量比倒序排列（量比最大的排第一）；
     sort_by_vol_ratio_asc=True 时（TPO_VR2）结果按量比升序排列（量比最小的排第一）；
@@ -97,8 +97,8 @@ def GENERATE_STRATEGY_TPO(stock_codes: list[str], strategy_dir: str, market_inde
             continue
         if record_2.is_top != 0:
             continue
-        # T-1 收盘涨跌幅 < max_ratio（按策略 3%/4%/5%）、缩量、收盘价>MA5
-        if record_1.ratio >= max_ratio:
+        # T-1 收盘涨跌幅 <= max_ratio（含边界，如 3%）、缩量、收盘价>MA5
+        if record_1.ratio > max_ratio:
             continue
         if record_1.is_volume_down != 1:
             continue
@@ -124,9 +124,11 @@ def GENERATE_STRATEGY_TPO(stock_codes: list[str], strategy_dir: str, market_inde
     elif sort_by_vol_ratio_asc:
         data.sort(key=lambda x: x[4], reverse=False)
 
-    # MA5 预测筛选：按市值倒序后，取第一只满足 “T-1 收盘 >= 预测 T-0 MA5” 的
+    # MA5 预测筛选（必须条件，不作兜底）：按市值倒序后，取第一只满足 “T-1 收盘 >= 预测 T-0 MA5” 的；
+    # 若没有满足的，则当日不选股（data 置空，写入空行，回测跳过该日）。
     if ma5_predict:
         chosen: tuple[DATA_1D, str, str, float, float] | None = None
+        chosen_code: str | None = None
         for d, code, name, market_value, _v in data:
             rec1 = GET_SZ200_1D_PREVIOUS(code, trading_date, 1)
             rec2 = GET_SZ200_1D_PREVIOUS(code, trading_date, 2)
@@ -137,11 +139,14 @@ def GENERATE_STRATEGY_TPO(stock_codes: list[str], strategy_dir: str, market_inde
             pred_ma5 = (rec1.close * 2 + rec2.close + rec3.close + rec4.close) / 5.0
             if rec1.close >= pred_ma5:
                 chosen = (d, code, name, market_value, 0.0)
+                chosen_code = code
                 break
         if chosen is not None:
-            data = [chosen]  # 只保留选中的一只
-        elif len(data) > 0:
-            data = [data[0]]  # 都不满足，兜底取市值最大的一只
+            # 选中股置顶（写在每日第一只，回测仍取 rows[0]），其余候选按原序跟随
+            rest = [x for x in data if x[1] != chosen_code]
+            data = [chosen] + rest
+        else:
+            data = []  # 无满足 MA5 预测者：当日空操作（回测跳过，不写候选）
 
     with open(f"{strategy_dir}/{sell_date}", "a") as file:
         if len(data) == 0:
@@ -219,7 +224,7 @@ def _write_condition_day(strategy_dir: str, target_dir: str, t2_date: str, condi
 
 if __name__ == "__main__":
     #SHOW_TARGET_1D()
+    UPDATE_STRATEGY_TPO_M5()
     UPDATE_STRATEGY_TPO_3()
     UPDATE_STRATEGY_TPO_TOP()
-    UPDATE_STRATEGY_TPO_M5()
     #SHOW_TARGET_1D()

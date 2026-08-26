@@ -42,17 +42,22 @@ def UPDATE_TARGET_TPO_TOP():
     _UPDATE_TARGET_CANDIDATE("TPO_TOP", market_index=2, sort_by_market=True)
 
 
-def _UPDATE_TARGET_CANDIDATE(strategy_name: str, market_index: int, sort_by_market: bool = False, require_first_plate: bool = True):
+def UPDATE_TARGET_TPO_M5():
+    """实盘候选池 TPO_M5：条件同 TPO_TOP（市值倒序），但市值区间收紧为 200 亿~1300 亿"""
+    _UPDATE_TARGET_CANDIDATE("TPO_M5", market_index=2, sort_by_market=True, market_max=1.3e11)
+
+
+def _UPDATE_TARGET_CANDIDATE(strategy_name: str, market_index: int, sort_by_market: bool = False, require_first_plate: bool = True, market_max: float = float("inf")):
     """生成 T-2 日候选股票池到 TARGET/{strategy_name}/（多进程）"""
     target_dir = PATH_AIDATA_TARGET(strategy_name)
     _rotate_dir(target_dir)
     stock_codes = STOCK_CODES_ALL()
     trading_dates = TRADING_DATES()
     with ProcessPoolExecutor(max_workers=32) as pool:
-        list(pool.map(partial(GENERATE_TARGET_CANDIDATE, stock_codes, target_dir, market_index, sort_by_market, require_first_plate), trading_dates))
+        list(pool.map(partial(GENERATE_TARGET_CANDIDATE, stock_codes, target_dir, market_index, sort_by_market, require_first_plate, market_max), trading_dates))
 
 
-def GENERATE_TARGET_CANDIDATE(stock_codes: list[str], target_dir: str, market_index: int, sort_by_market: bool, require_first_plate: bool, trading_date: str):
+def GENERATE_TARGET_CANDIDATE(stock_codes: list[str], target_dir: str, market_index: int, sort_by_market: bool, require_first_plate: bool, market_max: float, trading_date: str):
     """worker: 以 trading_date 为 T-2（选股池产生日），生成 T-2 候选股票池。
 
     候选池条件:
@@ -89,13 +94,15 @@ def GENERATE_TARGET_CANDIDATE(stock_codes: list[str], target_dir: str, market_in
             continue
         if record_0.is_top != 0:
             continue
-        # 市值：统一用 T-2 日（record_0）收盘价计算，>= 200 亿才保留
+        # 市值：统一用 T-2 日（record_0）收盘价计算，>= 200 亿且 <= market_max 才保留
         market_value = 0.0
         info = GET_STOCK_INFO(code)
         if info is None or info[1] <= 0:
             continue
         market_value = float(info[1]) * record_0.close
         if market_value < 2e10:              # 市值 >= 200 亿才保留
+            continue
+        if market_value > market_max:        # TPO_M5：市值上限 1300 亿
             continue
         rows.append((f"{code}|{name}|{market_value:.2f}", market_value))
 
@@ -111,5 +118,6 @@ def GENERATE_TARGET_CANDIDATE(stock_codes: list[str], target_dir: str, market_in
 
 
 if __name__ == "__main__":
+    UPDATE_TARGET_TPO_M5()
     UPDATE_TARGET_TPO_3()
     UPDATE_TARGET_TPO_TOP()
