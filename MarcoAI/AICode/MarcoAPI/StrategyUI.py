@@ -1041,7 +1041,9 @@ function buildDist(distArr) {{
   const allMap = new Map(), lastMap = new Map();
   vals.forEach(v => {{ const k = Math.round(v * 100); allMap.set(k, (allMap.get(k) || 0) + 1); }});
   last.forEach(v => {{ const k = Math.round(v * 100); lastMap.set(k, (lastMap.get(k) || 0) + 1); }});
-  const keys = [...new Set([...allMap.keys(), ...lastMap.keys()])].sort((a, b) => a - b);
+  // 固定横坐标范围 -10% ~ 10%（共 21 个整数百分比桶），超出范围的数据不显示
+  const keys = [];
+  for (let k = -10; k <= 10; k++) keys.push(k);
   return {{
     labels: keys.map(k => k + '%'),
     all: keys.map(k => allMap.get(k) || 0),
@@ -1062,7 +1064,7 @@ function renderDistChart(id, distArr) {{
     ] }},
     options: {{ responsive: true, maintainAspectRatio: false, resizeDelay: 100, interaction: {{ mode: 'index', intersect: false }},
       plugins: {{ legend: {{ display: false }} }},
-      scales: {{ x: {{ ticks: {{ color: '#9aa0a6', maxRotation: 0 }}, grid: {{ color: '#232a36' }} }},
+      scales: {{ x: {{ ticks: {{ color: '#9aa0a6', maxRotation: 0, autoSkip: true, maxTicksLimit: 11 }}, grid: {{ color: '#232a36' }} }},
                 y: {{ ticks: {{ color: '#9aa0a6', precision: 0 }}, beginAtZero: true }} }} }}
   }});
 }}

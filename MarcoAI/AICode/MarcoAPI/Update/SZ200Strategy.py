@@ -70,7 +70,7 @@ def GENERATE_STRATEGY_TPO(stock_codes: list[str], strategy_dir: str, market_inde
     market_min/market_max 为流通市值区间；
     ma5_predict=True 时按市值倒序后只选第一只满足 MA5 预测条件的（否则第一只）。
     """
-    print("UPDATE_TARGET_TPO: " + trading_date)
+    print("UPDATE_STRATEGY_TPO: " + trading_date)
     sell_date = trading_date                    # T-0
     data: list[tuple[DATA_1D, str, str, float, float]] = []  # (record_0, code, name, market_value, vol_ratio)
     for stock_code in stock_codes:

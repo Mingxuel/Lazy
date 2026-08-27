@@ -32,7 +32,7 @@ from AICode.MarcoAPI.Update.SZ200Strategy import (
     UPDATE_STRATEGY_TPO_TOP,
     UPDATE_STRATEGY_TPO_M5,
 )
-from AICode.MarcoAPI.Update.SZ200Target import UPDATE_TARGET_TPO_3, UPDATE_TARGET_TPO_TOP
+from AICode.MarcoAPI.Update.SZ200Target import UPDATE_TARGET_TPO_3, UPDATE_TARGET_TPO_TOP, UPDATE_TARGET_TPO_M5
 
 
 def _remove_dir_safe(path: str):
@@ -94,6 +94,7 @@ def UPDATE_ALL():
         ("UPDATE_STRATEGY_TPO_M5", UPDATE_STRATEGY_TPO_M5),
         ("UPDATE_TARGET_TPO_3", UPDATE_TARGET_TPO_3),
         ("UPDATE_TARGET_TPO_TOP", UPDATE_TARGET_TPO_TOP),
+        ("UPDATE_TARGET_TPO_M5", UPDATE_TARGET_TPO_M5),
     ]
     for name, fn in steps:
         print(f"\n===== {name} =====")
