@@ -35,6 +35,7 @@ from AICode.MarcoAPI.Update.Path import (
     PATH_AIDATA_STRATEGY, PATH_AIDATA_TARGET, PATH_AIDATA_1D_ORIGIN, PATH_AIDATA, PATH_AIDATA_TOP
 )
 from AICode.MarcoAPI.Update.Update1D import UPDATE_ALL
+from AICode.MarcoAPI.Update.SZ200Strategy import BUILD_SENTIMENT_KLINE
 from AICode.MarcoAPI.Update.StockCodes import GET_STOCK_INFO
 
 KLINE_DAYS = 120  # 内嵌每只候选股最近 120 天 K 线数据
@@ -202,6 +203,7 @@ def _build_strategy_payload(strategy_name: str) -> dict[str, object]:
         "year": year,
         "kline": kline,
         "dist": dist,
+        "sentiment_kline": BUILD_SENTIMENT_KLINE(),
     }
 
 
@@ -507,6 +509,8 @@ table.detail-table th:nth-child(n+7):nth-child(-n+11) {{ width: 56px; }}
 table.detail-table th:nth-child(12) {{ width: 78px; }}
 table.detail-table th:nth-child(13) {{ width: 82px; }}
 #panel-detail .card {{ padding: 12px 16px 8px; max-width: 1120px; }}
+#panel-backtest.active {{ display: flex; flex-direction: column; }}
+#panel-backtest .capital-card {{ order: 99; }}
 .mode-badge {{ display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 12px; margin-right: 6px; }}
 .b-first {{ background: #42a5f5; color: #0b1a2a; }}
 .b-last {{ background: #ef5350; color: #2a0b0b; }}
@@ -593,7 +597,7 @@ table.detail-table th:nth-child(13) {{ width: 82px; }}
     </div>
     <div class="legend" id="legend" style="margin-bottom:0"></div>
   </div>
-  <div class="card">
+  <div class="card capital-card">
     <h2>资金 K 线（每日资金 OHLC：起始 10 万复利，由每日买入股票的 O/C/H/L 涨跌幅计算）</h2>
     <div class="kline-toolbar">
       <button id="bt-bar-btn" type="button">指标栏</button>
@@ -607,6 +611,28 @@ table.detail-table th:nth-child(13) {{ width: 82px; }}
     <div class="kline-ma-config" id="bt-ma-config"></div>
     <div class="kline-color-config" id="bt-color-config"></div>
     <div id="bt-kline"><div id="bt-kline-main"><div class="empty-hint">暂无资金 K 线数据</div></div></div>
+  </div>
+  <div class="card capital-card">
+    <h2>情绪 K 线（T-3 日首板涨停股在 T-0 日的 O/H/L/C 涨跌幅均值，起始 10 万复利）</h2>
+    <div class="toolbar">
+      <div><label>均线：</label>
+        <select id="sent-ma-select">
+          <option value="">无</option>
+          <option value="5">MA5</option>
+          <option value="10">MA10</option>
+          <option value="20">MA20</option>
+          <option value="30">MA30</option>
+          <option value="60">MA60</option>
+        </select>
+      </div>
+      <button id="sent-ma-btn" type="button">均线</button>
+      <button id="sent-ma-add" type="button" style="display:none">+</button>
+      <button id="sent-color-btn" type="button">涨跌颜色</button>
+    </div>
+    <div class="kline-bars" id="sent-bars"></div>
+    <div class="kline-ma-config" id="sent-ma-config"></div>
+    <div class="kline-color-config" id="sent-color-config"></div>
+    <div id="sent-kline"><div id="sent-kline-main"><div class="empty-hint">暂无情绪 K 线数据</div></div></div>
   </div>
   <div class="card">
     <div class="toolbar">
@@ -779,6 +805,7 @@ function updateCharts() {{
     ` 最终资金: ${{st.final.toFixed(2)}}` +
     ` 交易天数: ${{st.dates.length}}`;
   renderBacktestKline(st);
+  renderSentimentKline(st);
   renderPeriodTables(st);
   renderBtStats(st);
   renderDistCharts(st);
@@ -907,6 +934,84 @@ function renderBtColorConfig() {{
 function rerenderBtKline() {{
   const st = DATA.backtest[current.strategy];
   if (st) requestAnimationFrame(() => renderBacktestKline(st));
+}}
+
+/* 情绪 K 线：T-3 首板涨停股在 T-0 的 O/H/L/C 涨跌幅均值，复用 klineState 渲染逻辑 */
+function renderSentimentKline(st) {{
+  const box = document.getElementById('sent-kline');
+  box.innerHTML = '<div id="sent-kline-main"></div>';
+  if (window.sentKlineChart) {{ try {{ window.sentKlineChart.remove(); }} catch(e) {{}} window.sentKlineChart = null; }}
+  const data = (st.sentiment_kline || []).filter(Boolean);
+  if (!data.length) {{
+    box.innerHTML = '<div id="sent-kline-main"><div class="empty-hint">无情绪 K 线数据</div></div>';
+    return;
+  }}
+  const mainEl = document.getElementById('sent-kline-main');
+  const chart = LightweightCharts.createChart(mainEl, {{
+    layout: {{ background: {{ type: LightweightCharts.ColorType.Solid, color: '#171a21' }}, textColor: '#d1d4dc' }},
+    grid: {{ vertLines: {{ color: '#2b2b43' }}, horzLines: {{ color: '#2b2b43' }} }},
+    rightPriceScale: {{ borderColor: '#2b2b43' }},
+    timeScale: {{ borderColor: '#2b2b43' }},
+    crosshair: {{ mode: LightweightCharts.CrosshairMode.Normal }},
+    height: mainEl.offsetHeight || 600,
+  }});
+  const c = sentKlineState.colors;
+  const candle = chart.addSeries(LightweightCharts.CandlestickSeries, {{
+    upColor: c.up, downColor: c.down, borderUpColor: c.up, borderDownColor: c.down,
+    wickUpColor: c.up, wickDownColor: c.down,
+  }});
+  candle.setData(data.map(d => ({{ time: d.time, open: d.open, high: d.high, low: d.low, close: d.close }})));
+  sentKlineState.ma.forEach(ma => {{
+    if (ma.p <= 0) return;
+    chart.addSeries(LightweightCharts.LineSeries, {{ color: ma.c, lineWidth: 1, priceLineVisible: false, lastValueVisible: false }}).setData(calcMA(data, ma.p));
+  }});
+  if (sentKlineState.showBOLL) {{
+    const boll = calcBOLL(data);
+    chart.addSeries(LightweightCharts.LineSeries, {{ color: '#90caf9', lineWidth: 1, priceLineVisible: false, lastValueVisible: false }}).setData(boll.up);
+    chart.addSeries(LightweightCharts.LineSeries, {{ color: '#90caf9', lineWidth: 1, lineStyle: LightweightCharts.LineStyle.Dotted, priceLineVisible: false, lastValueVisible: false }}).setData(boll.mid);
+    chart.addSeries(LightweightCharts.LineSeries, {{ color: '#90caf9', lineWidth: 1, priceLineVisible: false, lastValueVisible: false }}).setData(boll.low);
+  }}
+  if (sentKlineState.showVWAP) {{
+    chart.addSeries(LightweightCharts.LineSeries, {{ color: '#ff7043', lineWidth: 2, priceLineVisible: true, lastValueVisible: true }}).setData(calcVWAP(data));
+  }}
+  sentKlineState.bars.forEach(bar => {{
+    const pane = chart.addPane();
+    renderIndicatorBar(pane, bar, data, new Map());
+  }});
+  chart.timeScale().fitContent();
+  window.sentKlineChart = chart;
+}}
+function renderSentMaConfig() {{
+  const cfg = document.getElementById('sent-ma-config');
+  if (cfg.style.display === 'none') return;
+  cfg.innerHTML = '';
+  sentKlineState.ma.forEach((ma, i) => {{
+    const row = document.createElement('div');
+    row.className = 'ma-row';
+    row.innerHTML = '<span>MA</span><input type="number" class="ma-p" value="' + ma.p + '" min="1" max="250" title="周期">' +
+      '<input type="color" class="ma-c" value="' + ma.c + '" title="颜色">' +
+      '<button type="button" class="ma-del">×</button>';
+    row.querySelector('.ma-p').onchange = e => {{ ma.p = +e.target.value || 5; rerenderSentKline(); }};
+    row.querySelector('.ma-c').oninput = e => {{ ma.c = e.target.value; rerenderSentKline(); }};
+    row.querySelector('.ma-del').onclick = () => {{ sentKlineState.ma.splice(i, 1); renderSentMaConfig(); rerenderSentKline(); }};
+    cfg.appendChild(row);
+  }});
+}}
+function renderSentColorConfig() {{
+  const box = document.getElementById('sent-color-config');
+  box.innerHTML = '';
+  const defs = [['up', '涨', klineState.colors.up], ['down', '跌', klineState.colors.down], ['limitUp', '涨停', klineState.colors.limitUp]];
+  defs.forEach(([key, label, val]) => {{
+    const row = document.createElement('div');
+    row.className = 'ma-row';
+    row.innerHTML = '<span>' + label + '</span><input type="color" value="' + val + '" title="' + label + '">';
+    row.querySelector('input').oninput = e => {{ klineState.colors[key] = e.target.value; renderSentColorConfig(); rerenderSentKline(); }};
+    box.appendChild(row);
+  }});
+}}
+function rerenderSentKline() {{
+  const st = DATA.backtest[current.strategy];
+  if (st) requestAnimationFrame(() => renderSentimentKline(st));
 }}
 
 /* 综合收益：每日(柱状图) + 每月(表) + 每年(标题)，按年份切换 */
@@ -1174,6 +1279,14 @@ const MAX_BARS = 3;
 /* 资金 K 线独立状态：默认不显示成交量指标栏；颜色与候选池共享 */
 const btKlineState = {{
   bars: [],                                   // 资金曲线默认无成交量/指标栏
+  ma: klineState.ma.slice(),
+  showBOLL: false,
+  showVWAP: false,
+  colors: klineState.colors,                  // 共享涨跌颜色
+}};
+
+const sentKlineState = {{
+  bars: [],
   ma: klineState.ma.slice(),
   showBOLL: false,
   showVWAP: false,
@@ -1614,6 +1727,24 @@ function initBtKlineControls() {{
     if (show) renderBtColorConfig();
   }};
   renderBtBarConfig();
+  // 情绪 K 线工具栏
+  const sentMaCfg = document.getElementById('sent-ma-config');
+  document.getElementById('sent-ma-btn').onclick = () => {{
+    const show = (sentMaCfg.style.display === 'none' || sentMaCfg.style.display === '');
+    sentMaCfg.style.display = show ? 'block' : 'none';
+    if (show) renderSentMaConfig();
+  }};
+  document.getElementById('sent-ma-add').onclick = () => {{
+    sentKlineState.ma.push({{ p: 5, c: '#e91e63' }});
+    renderSentMaConfig(); rerenderSentKline();
+  }};
+  document.getElementById('sent-ma-add').style.display = 'inline-block';
+  const sentColorCfg = document.getElementById('sent-color-config');
+  document.getElementById('sent-color-btn').onclick = () => {{
+    const show = (sentColorCfg.style.display === 'none' || sentColorCfg.style.display === '');
+    sentColorCfg.style.display = show ? 'block' : 'none';
+    if (show) renderSentColorConfig();
+  }};
 }}
 /* 涨停 TAB 的 K 线控制：复用共享 klineState，DOM 用 top- 前缀 */
 function initTopKlineControls() {{

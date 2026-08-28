@@ -2323,3 +2323,68 @@ git 同步完成
 同花顺板块已更新:
 策略 TPO_M5: 20260827 共 2 只(TPO3), 20260826 共 1 只(TPO31)
 已覆盖: C:\同花顺远航版\bin\users\狗蛋儿家的金\blockstockV3.xml
+[GIT_SYNC] -: 命令: GIT_SYNC
+策略: -
+
+$ git add .
+$ git commit -m "Updated"
+[dev 9dca6ac2c] Updated
+ 2402 files changed, 8793 insertions(+), 2938 deletions(-)
+ create mode 100644 MarcoAI/AIData/1D/000510.SZ
+ create mode 100644 MarcoAI/AIData/1D/001399.SZ
+ create mode 100644 MarcoAI/AIData/1D/002155.SZ
+ create mode 100644 MarcoAI/AIData/1D/002297.SZ
+ delete mode 100644 MarcoAI/AIData/1D/002703.SZ
+ create mode 100644 MarcoAI/AIData/1D/002842.SZ
+ create mode 100644 MarcoAI/AIData/1D/002937.SZ
+ create mode 100644 MarcoAI/AIData/1D/002980.SZ
+ create mode 100644 MarcoAI/AIData/1D/600360.SH
+ delete mode 100644 MarcoAI/AIData/1D/600507.SH
+ create mode 100644 MarcoAI/AIData/1D/600728.SH
+ create mode 100644 MarcoAI/AIData/1D/600993.SH
+ delete mode 100644 MarcoAI/AIData/1D/601163.SH
+ delete mode 100644 MarcoAI/AIData/1D/601801.SH
+ create mode 100644 MarcoAI/AIData/1D/603124.SH
+ create mode 100644 MarcoAI/AIData/1D/603220.SH
+ create mode 100644 MarcoAI/AIData/1D/603281.SH
+ create mode 100644 MarcoAI/AIData/1D/603341.SH
+ create mode 100644 MarcoAI/AIData/1D/603580.SH
+ create mode 100644 MarcoAI/AIData/1D_ORIGIN/000510.SZ
+ create mode 100644 MarcoAI/AIData/1D_ORIGIN/001399.SZ
+ create mode 100644 MarcoAI/AIData/1D_ORIGIN/002155.SZ
+ create mode 100644 MarcoAI/AIData/1D_ORIGIN/002297.SZ
+ delete mode 100644 MarcoAI/AIData/1D_ORIGIN/002703.SZ
+ create mode 100644 MarcoAI/AIData/1D_ORIGIN/002842.SZ
+ create mode 100644 MarcoAI/AIData/1D_ORIGIN/002937.SZ
+ create mode 100644 MarcoAI/AIData/1D_ORIGIN/002980.SZ
+ create mode 100644 MarcoAI/AIData/1D_ORIGIN/600360.SH
+ delete mode 100644 MarcoAI/AIData/1D_ORIGIN/600507.SH
+ create mode 100644 MarcoAI/AIData/1D_ORIGIN/600728.SH
+ create mode 100644 MarcoAI/AIData/1D_ORIGIN/600993.SH
+ delete mode 100644 MarcoAI/AIData/1D_ORIGIN/601163.SH
+ delete mode 100644 MarcoAI/AIData/1D_ORIGIN/601801.SH
+ create mode 100644 MarcoAI/AIData/1D_ORIGIN/603124.SH
+ create mode 100644 MarcoAI/AIData/1D_ORIGIN/603220.SH
+ create mode 100644 MarcoAI/AIData/1D_ORIGIN/603281.SH
+ create mode 100644 MarcoAI/AIData/1D_ORIGIN/603341.SH
+ create mode 100644 MarcoAI/AIData/1D_ORIGIN/603580.SH
+ create mode 100644 MarcoAI/AIData/STRATEGY/TPO_3/20260827
+ create mode 100644 MarcoAI/AIData/STRATEGY/TPO_M5/20260827
+ create mode 100644 MarcoAI/AIData/STRATEGY/TPO_TOP/20260827
+ create mode 100644 MarcoAI/AIData/TARGET/TPO_3/20260827
+ create mode 100644 MarcoAI/AIData/TARGET/TPO_M5/20260827
+ create mode 100644 MarcoAI/AIData/TARGET/TPO_TOP/20260827
+ create mode 100644 MarcoAI/AIData/TOP/20260827
+ create mode 100644 MarcoAI/AIData/TOP_ORIGIN/主板，2026年8月27日涨停所有股.xlsx
+$ git push
+remote: Powered by [01;33mGITEE.COM [0m[1.1.23]        
+remote: Set trace flag fc4dfe8b        
+To https://gitee.com/mingxuel/lazy.git
+   4dd9edc75..9dca6ac2c  dev -> dev
+git 同步完成
+[UPDATE_THS] TPO_M5: 命令: UPDATE_THS
+策略: TPO_M5
+
+同花顺板块已更新:
+策略 TPO_M5: 20260828 共 6 只(TPO3), 20260827 共 2 只(TPO31)
+已覆盖: C:\同花顺远航版\bin\users\狗蛋儿家的金\blockstockV3.xml

@@ -228,3 +228,47 @@ if __name__ == "__main__":
     UPDATE_STRATEGY_TPO_3()
     UPDATE_STRATEGY_TPO_TOP()
     #SHOW_TARGET_1D()
+
+
+def BUILD_SENTIMENT_KLINE() -> list[dict]:
+    """情绪 K 线：对每个交易日 T-0，取 T-3 日首板涨停股（is_top==1 且 lian_ban==1）集合，
+    计算这些股在 T-0 日的 O/H/L/C 涨跌幅（相对各自前收）均值，作为当日资金涨跌幅，
+    起始资金 10W 复利累积成资金 K 线。返回 [{time,open,high,low,close,volume,pre_close}]。
+    无首板股的交易日不计入（资金不动）。"""
+    from AICode.MarcoAPI.Update.SZ2001D import GET_SZ200_1D_ALL
+    GET_SZ200_1D_ALL()  # 预热全量缓存，避免逐次读文件（命中后仅 dict 查找）
+    codes = STOCK_CODES()
+    dates = TRADING_DATES()
+    kline: list[dict] = []
+    prev = 100000.0
+    for t0 in dates:
+        plate = []
+        for code in codes:
+            rec3 = GET_SZ200_1D_PREVIOUS(code, t0, 3)
+            if rec3 is None or rec3.is_top != 1 or rec3.lian_ban != 1:
+                continue
+            rec0 = GET_SZ200_1D_PREVIOUS(code, t0, 0)
+            if rec0 is None or rec0.pre_close <= 0:
+                continue
+            pc = rec0.pre_close
+            plate.append(((rec0.open - pc) / pc, (rec0.high - pc) / pc,
+                          (rec0.low - pc) / pc, (rec0.close - pc) / pc))
+        if not plate:
+            continue
+        n = len(plate)
+        co = sum(x[0] for x in plate) / n
+        ch = sum(x[1] for x in plate) / n
+        cl = sum(x[2] for x in plate) / n
+        cc = sum(x[3] for x in plate) / n
+        t = t0[:4] + '-' + t0[4:6] + '-' + t0[6:8]
+        ko = prev * (1 + co)
+        kh = prev * (1 + ch)
+        kl = prev * (1 + cl)
+        kc = prev * (1 + cc)
+        kline.append({
+            "time": t, "open": round(ko, 2), "high": round(kh, 2),
+            "low": round(kl, 2), "close": round(kc, 2),
+            "volume": n, "pre_close": round(prev, 2),
+        })
+        prev = kc
+    return kline
