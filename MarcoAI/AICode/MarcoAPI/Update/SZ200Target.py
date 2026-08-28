@@ -19,8 +19,9 @@ API 说明:
 
 import os
 import sys
-from concurrent.futures import ProcessPoolExecutor
+from concurrent.futures import ProcessPoolExecutor, as_completed
 from functools import partial
+from tqdm import tqdm
 
 _root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 if _root not in sys.path:
@@ -54,7 +55,14 @@ def _UPDATE_TARGET_CANDIDATE(strategy_name: str, market_index: int, sort_by_mark
     stock_codes = STOCK_CODES_ALL()
     trading_dates = TRADING_DATES()
     with ProcessPoolExecutor(max_workers=32) as pool:
-        list(pool.map(partial(GENERATE_TARGET_CANDIDATE, stock_codes, target_dir, market_index, sort_by_market, require_first_plate, market_max), trading_dates))
+        fn = partial(GENERATE_TARGET_CANDIDATE, stock_codes, target_dir, market_index, sort_by_market, require_first_plate, market_max)
+        future_to_date = {pool.submit(fn, d): d for d in trading_dates}
+        with tqdm(total=len(future_to_date), desc=f"TARGET {strategy_name}", ncols=90) as bar:
+            for fut in as_completed(future_to_date):
+                fut.result()
+                bar.set_postfix(date=future_to_date[fut], refresh=False)
+                bar.update(1)
+    return f"TARGET {strategy_name}: 完成 {len(trading_dates)} 个交易日"
 
 
 def GENERATE_TARGET_CANDIDATE(stock_codes: list[str], target_dir: str, market_index: int, sort_by_market: bool, require_first_plate: bool, market_max: float, trading_date: str):
@@ -69,7 +77,6 @@ def GENERATE_TARGET_CANDIDATE(stock_codes: list[str], target_dir: str, market_in
     每行只存 股票代码|股票名称|市值。
     sort_by_market=True 时（TPO_TOP）按流通市值倒序排列（市值最大的排第一），否则按股票代码顺序。
     """
-    print("UPDATE_TARGET_CANDIDATE: " + trading_date)
     t2_date = trading_date                      # T-2 选股池产生日
     rows: list[tuple[str, float]] = []
     for stock_code in stock_codes:

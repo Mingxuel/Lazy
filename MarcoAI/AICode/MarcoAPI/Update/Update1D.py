@@ -83,9 +83,17 @@ def UPDATE_ALL():
         UPDATE_1D 加工日线的 is_top/lian_ban 依赖 UPDATE_TOP 生成的涨停列表，
         故 UPDATE_TOP 须在 UPDATE_1D 之前执行。
     """
+    def _step_trading_dates():
+        dates = UPDATE_TRADING_DATES()
+        return f"交易日历: 共 {len(dates)} 个交易日 ({dates[0]} ~ {dates[-1]})"
+
+    def _step_stock_codes():
+        rows = UPDATE_STOCK_CODES()
+        return f"股票列表: 共 {len(rows)} 只"
+
     steps = [
-        ("UPDATE_TRADING_DATES", UPDATE_TRADING_DATES),
-        ("UPDATE_STOCK_CODES", UPDATE_STOCK_CODES),
+        ("UPDATE_TRADING_DATES", _step_trading_dates),
+        ("UPDATE_STOCK_CODES", _step_stock_codes),
         ("UPDATE_1D_ORIGIN", UPDATE_1D_ORIGIN),
         ("UPDATE_TOP", UPDATE_TOP),
         ("UPDATE_1D", UPDATE_1D),
@@ -97,20 +105,19 @@ def UPDATE_ALL():
         ("UPDATE_TARGET_TPO_M5", UPDATE_TARGET_TPO_M5),
     ]
     for name, fn in steps:
-        print(f"\n===== {name} =====")
         try:
-            # 抑制内部步骤的详细输出，只保留步骤名
+            # 抑制内部步骤的详细输出（噪声），但步骤自身的摘要字符串在外部打印
             import io, contextlib
-            with contextlib.redirect_stdout(io.StringIO()):
-                fn()
-            print(f"===== {name} DONE =====")
+            buf = io.StringIO()
+            with contextlib.redirect_stdout(buf):
+                summary = fn()
+            if summary:
+                print(f"  {summary}")
         except BaseException as exc:  # 捕获所有异常，避免静默中断后续步骤
             print(f"!!!!! {name} FAILED: {type(exc).__name__}: {exc}")
     # 更新完成后清理 _rotate_dir 留下的 .old_* 残留目录
-    print("\n===== CLEANUP RESIDUAL DIRS =====")
     try:
         _cleanup_old_dirs()
-        print("===== CLEANUP RESIDUAL DIRS DONE =====")
     except BaseException as exc:
         print(f"!!!!! CLEANUP RESIDUAL DIRS FAILED: {type(exc).__name__}: {exc}")
     print("ALL DATA UPDATE COMPLETED")

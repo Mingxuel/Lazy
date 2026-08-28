@@ -10,7 +10,7 @@ echo ============================================
 echo.
 
 rem 启动服务（后台静默运行）
-start /b python -X utf8 AICode/MarcoAPI/StrategyService.py --port 8765
+start /b python -X utf8 ../StrategyService.py --port 8765
 
 rem 等待服务就绪
 timeout /t 3 /nobreak >nul

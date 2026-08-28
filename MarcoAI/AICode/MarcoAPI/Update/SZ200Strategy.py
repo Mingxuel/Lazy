@@ -1,8 +1,9 @@
-﻿from concurrent.futures import ProcessPoolExecutor
+﻿from concurrent.futures import ProcessPoolExecutor, as_completed
 from functools import partial
 import os
 import sys
 from typing import Callable, TextIO
+from tqdm import tqdm
 
 _root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 if _root not in sys.path:
@@ -55,7 +56,14 @@ def _UPDATE_STRATEGY_TPO(strategy_name: str, strategy_dir: str, market_index: in
     stock_codes = STOCK_CODES_ALL()
     trading_dates = TRADING_DATES()
     with ProcessPoolExecutor(max_workers=32) as pool:
-        list(pool.map(partial(GENERATE_STRATEGY_TPO, stock_codes, strategy_dir, market_index, max_ratio, sort_by_market, sort_by_vol_ratio, sort_by_vol_ratio_asc, require_first_plate, market_min, market_max, ma5_predict, stop_loss), trading_dates))
+        fn = partial(GENERATE_STRATEGY_TPO, stock_codes, strategy_dir, market_index, max_ratio, sort_by_market, sort_by_vol_ratio, sort_by_vol_ratio_asc, require_first_plate, market_min, market_max, ma5_predict, stop_loss)
+        future_to_date = {pool.submit(fn, d): d for d in trading_dates}
+        with tqdm(total=len(future_to_date), desc=f"STRATEGY {strategy_name}", ncols=90) as bar:
+            for fut in as_completed(future_to_date):
+                fut.result()
+                bar.set_postfix(date=future_to_date[fut], refresh=False)
+                bar.update(1)
+    return f"STRATEGY {strategy_name}: 完成 {len(trading_dates)} 个交易日"
 
 def GENERATE_STRATEGY_TPO(stock_codes: list[str], strategy_dir: str, market_index: int, max_ratio: float, sort_by_market: bool, sort_by_vol_ratio: bool, sort_by_vol_ratio_asc: bool, require_first_plate: bool, market_min: float, market_max: float, ma5_predict: bool, stop_loss: float, trading_date: str):
     """worker（回测数据）: 以 trading_date 为 T-0，逐股按加工字段判断是否满足完整 TPO 形态。
@@ -70,7 +78,6 @@ def GENERATE_STRATEGY_TPO(stock_codes: list[str], strategy_dir: str, market_inde
     market_min/market_max 为流通市值区间；
     ma5_predict=True 时按市值倒序后只选第一只满足 MA5 预测条件的（否则第一只）。
     """
-    print("UPDATE_STRATEGY_TPO: " + trading_date)
     sell_date = trading_date                    # T-0
     data: list[tuple[DATA_1D, str, str, float, float]] = []  # (record_0, code, name, market_value, vol_ratio)
     for stock_code in stock_codes:

@@ -61,12 +61,13 @@
       加载全部股票日线到缓存 {股票代码: {日期: DATA_1D}}
 """
 
-from concurrent.futures import ProcessPoolExecutor
+from concurrent.futures import ProcessPoolExecutor, as_completed
 import os
 import shutil
 import sys
 import pandas as pd
 from functools import partial
+from tqdm import tqdm
 
 _root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 if _root not in sys.path:
@@ -214,9 +215,18 @@ def UPDATE_1D_ORIGIN():
     tq.initialize(__file__)
     df = tq.get_market_data( field_list=["Open","High", "Low", "Close", "Volume", "Amount"], stock_list=stock_codes, start_time=START_DATE, end_time='', count=-1, dividend_type='front', period='1d', fill_data=True )
     _SZ200_1D_ALL_CACHE.clear()
+    fn_origin = partial(GENERATE_1D_ORIGIN, dataframe=df)
     with ProcessPoolExecutor(max_workers=MAX_WORKERS) as pool:
-        for stock_code, stock_cache in zip(stock_codes, pool.map(partial(GENERATE_1D_ORIGIN, dataframe=df), stock_codes)):  # pyright: ignore[reportArgumentType]
-            _SZ200_1D_ALL_CACHE[stock_code] = stock_cache
+        future_to_code = {pool.submit(fn_origin, c): c for c in stock_codes}
+        results: dict[str, object] = {}
+        with tqdm(total=len(future_to_code), desc="1D_ORIGIN", ncols=90) as bar:
+            for fut in as_completed(future_to_code):
+                results[future_to_code[fut]] = fut.result()
+                bar.set_postfix(code=future_to_code[fut], refresh=False)
+                bar.update(1)
+    for stock_code in stock_codes:
+        _SZ200_1D_ALL_CACHE[stock_code] = results[stock_code]  # pyright: ignore[reportArgumentType]
+    return f"1D_ORIGIN: 完成 {len(stock_codes)} 只股票"
 
 def GENERATE_1D_ORIGIN(stock_code:str, dataframe:pd.DataFrame) -> dict[str, DATA_1D]:
     """worker: 将通达信 DataFrame 中单只股票的原始日线写入 1D_ORIGIN 文件。
@@ -291,7 +301,13 @@ def UPDATE_1D():
     _rotate_dir(PATH_AIDATA_1D())
     _SZ200_1D_ALL_CACHE.clear()
     with ProcessPoolExecutor(max_workers=MAX_WORKERS) as pool:
-        list(pool.map(GENERATE_1D, stock_codes))
+        future_to_code = {pool.submit(GENERATE_1D, c): c for c in stock_codes}
+        with tqdm(total=len(future_to_code), desc="1D", ncols=90) as bar:
+            for fut in as_completed(future_to_code):
+                fut.result()
+                bar.set_postfix(code=future_to_code[fut], refresh=False)
+                bar.update(1)
+    return f"1D: 完成 {len(stock_codes)} 只股票"
 
 def _IS_TOP_FILE(stock_code: str, trading_date: str) -> bool:
     """从 TOP 列表文件判断某股票在指定交易日是否涨停。

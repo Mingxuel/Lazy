@@ -25,9 +25,11 @@ API 说明:
 import os
 import re
 import sys
-from concurrent.futures import ProcessPoolExecutor
+import warnings
+from concurrent.futures import ProcessPoolExecutor, as_completed
 from multiprocessing import Manager
 from typing import Optional
+from tqdm import tqdm
 
 from openpyxl import load_workbook
 
@@ -70,10 +72,15 @@ def UPDATE_TOP():
         if file_name.endswith(".xlsx") and re.search(r"(\d{4})年(\d{1,2})月(\d{1,2})日", file_name) is not None
     ]
     with ProcessPoolExecutor(max_workers=32) as pool:
-        list(pool.map(GENERATE_TOP, xlsx_files))
+        future_to_file = {pool.submit(GENERATE_TOP, f): f for f in xlsx_files}
+        with tqdm(total=len(future_to_file), desc="TOP", ncols=90) as bar:
+            for fut in as_completed(future_to_file):
+                fut.result()
+                bar.set_postfix(file=os.path.basename(future_to_file[fut]), refresh=False)
+                bar.update(1)
+    return f"TOP: 完成 {len(xlsx_files)} 个涨停文件"
 
 def GENERATE_TOP(xlsx_file: str):
-    print("UPDATE_TOP: " + os.path.basename(xlsx_file))
     match = re.search(r"(\d{4})年(\d{1,2})月(\d{1,2})日", os.path.basename(xlsx_file))
     if match is None:
         return
@@ -83,13 +90,16 @@ def GENERATE_TOP(xlsx_file: str):
     with open(top_file, "w") as file:
         for stock_code in stock_codes:
             file.write(f"{stock_code}\n")
-    print(f"UPDATE_TOP: {trading_date} -> {len(stock_codes)} 只涨停股")
 
 def _READ_TOP_ORIGIN(xlsx_file: str) -> list[str]:
     """读取涨停 xlsx，返回带后缀的股票代码列表（去重、保持顺序）"""
     stock_codes: list[str] = []
     seen: set[str] = set()
-    workbook = load_workbook(xlsx_file)
+    with warnings.catch_warnings():
+        # 抑制 openpyxl 读取部分 xlsx 时的无害警告：
+        # "Workbook contains no default style, apply openpyxl's default"
+        warnings.simplefilter("ignore", UserWarning)
+        workbook = load_workbook(xlsx_file)
     try:
         sheet = workbook.active
         if sheet is None:
