@@ -39,6 +39,22 @@ def connect():
     return t, sess
 
 
+def is_trading_day(date_str):
+    """判断指定日期（YYYYMMDD）是否为交易日，仅依赖 miniQMT 实时接口（xtdata.get_trading_dates）。
+
+    取「该日期当天」的交易日区间，返回列表中含该日期即为交易日。完全实时，不依赖
+    任何离线 AIData/TRADING_DATES 文件（盘中/盘前用昨日离线日历可能不准确）。
+
+    miniQMT 不可用（未配置/未登录）时直接抛异常，由上层决定不运行，不做离线兜底。
+    """
+    from xtquant import xtdata
+    xtdata.connect(config_path=C.QMT_USERDATA_PATH)
+    dates = xtdata.get_trading_dates(market="SH", start_time=date_str, end_time=date_str)
+    if dates:
+        return date_str in dates
+    return False
+
+
 def get_account_cash(xt_trader):
     """返回可用资金（元）。无连接时返回 INIT_CAPITAL。"""
     if xt_trader is None:
@@ -64,14 +80,21 @@ def get_positions(xt_trader):
 
 
 def get_full_tick(code):
-    """返回 {open, high, low, lastPrice} 或 None。"""
+    """返回 {open, high, low, lastPrice, ask1, bid1} 或 None。
+
+    ask1/bid1 为买卖一档价（收盘强平阶梯报价要用）；取不到时为 None。
+    """
     try:
         from xtquant import xtdata
         tick = xtdata.get_full_tick([code])
         if tick and code in tick:
             t = tick[code]
+            ask = t.get("askPrice") or []
+            bid = t.get("bidPrice") or []
             return {"open": t.get("open"), "high": t.get("high"),
-                    "low": t.get("low"), "lastPrice": t.get("lastPrice")}
+                    "low": t.get("low"), "lastPrice": t.get("lastPrice"),
+                    "ask1": float(ask[0]) if len(ask) else None,
+                    "bid1": float(bid[0]) if len(bid) else None}
     except Exception:
         pass
     return None
@@ -137,3 +160,43 @@ def submit_sell(xt_trader, code, vol, price):
         account_id=C.ACCOUNT_ID, order_type=xtconstant.FIX_PRICE,
         strategy_name=C.STRATEGY_NAME,
     )
+
+
+def query_orders(xt_trader, code=None, cancelable_only=True):
+    """查询当日委托，返回 [{'code','order_id','volume','traded','status'}]；失败返回 []。
+
+    cancelable_only=True 时只返回「未成交可撤」的委托（撤单场景用，语义最明确，
+    无需依赖具体状态码）。code 指定时只返回该股票的委托。
+    """
+    if xt_trader is None:
+        return []
+    try:
+        orders = xt_trader.query_stock_orders(C.ACCOUNT_ID, cancelable_only=cancelable_only)
+    except Exception as e:
+        C.log("qmt", f"查询委托失败：{e}")
+        return []
+    out = []
+    for o in orders or []:
+        ocode = getattr(o, "stock_code", None)
+        if code and ocode != code:
+            continue
+        out.append({
+            "code": ocode,
+            "order_id": getattr(o, "order_id", None),
+            "volume": int(getattr(o, "order_volume", 0) or 0),
+            "traded": int(getattr(o, "traded_volume", 0) or 0),
+            "status": int(getattr(o, "order_status", -1)),
+        })
+    return out
+
+
+def cancel_order(xt_trader, order_id):
+    """撤销指定委托，返回是否成功。未连接/无订单号/异常时返回 False。"""
+    if xt_trader is None or order_id is None:
+        return False
+    try:
+        xt_trader.cancel_order_stock(C.ACCOUNT_ID, order_id)
+        return True
+    except Exception as e:
+        C.log("qmt", f"撤单失败 order_id={order_id}：{e}")
+        return False

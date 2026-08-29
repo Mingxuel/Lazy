@@ -13,6 +13,7 @@
 """
 
 import datetime
+import time
 
 from AITrading import config as C
 from AITrading import commands as CMD
@@ -80,19 +81,20 @@ def is_close_approach():
 def hit_stop_loss(code, tick):
     """触发条件：该持仓是否已触发止损。
 
-    逻辑：当天最低价相对前收价的跌幅超过 config.STOP_LOSS（默认 -5%）即止损。
-    用「最低价」而非「最新价」判断，确保盘中下探即触发，不等到收盘。
-    取不到前收或最低价时返回 False（保守，不误杀）。
+    逻辑：当前最新价相对持仓成本价的跌幅达到 config.STOP_LOSS（默认 -5%）即止损。
+    用「最新价」判断——最新价跌破止损线就立刻卖掉，不等最低价反弹。
+    成本价来自 commands 的持仓状态机（sync_positions 同步的真实持仓成本）。
+    取不到成本价或最新价时返回 False（保守，不误杀）。
     """
-    pre_close = Q.get_pre_close(code)
-    low = tick.get("low")
-    if pre_close is None or low is None:
+    st = CMD._positions_state.get(code)
+    last = tick.get("lastPrice")
+    if not st or st["cost"] <= 0 or last is None:
         return False
-    return (low - pre_close) / pre_close < C.STOP_LOSS
+    return (last - st["cost"]) / st["cost"] < C.STOP_LOSS
 
 
 def is_limit_up(code, tick):
-    """触发条件：该持仓是否涨停（止盈的极端情形）。
+    """触发条件：该持仓是否涨停（止盈即涨停，不再设独立止盈线）。
 
     逻辑：当天最高价 >= 涨停价即视为涨停。涨停价由前收 × 涨跌幅限制算出
     （_limit_price(pre_close, _limit_ratio(code))，主板 10% / 创业板 20%）。
@@ -106,17 +108,55 @@ def is_limit_up(code, tick):
     return high >= limit_px
 
 
-def hit_take_profit(code, tick):
-    """触发条件：该持仓是否达到普通止盈线。
+# ----------------------------------------------------------------------
+# 收盘强平：阶段判断（当前处于三阶段中的第几阶段）与执行时机判断（节流/次数）
+# ----------------------------------------------------------------------
+def _secs_since(t):
+    """当前时刻相对 t（datetime.time）已过去的秒数，当天内计算。"""
+    today = datetime.date.today()
+    return (datetime.datetime.combine(today, _now())
+            - datetime.datetime.combine(today, t)).total_seconds()
 
-    逻辑：当前最新价相对持仓成本价盈利 >= config.TAKE_PROFIT 即止盈。
-    config.TAKE_PROFIT 为 None 时本函数恒返回 False（关闭普通止盈，仅靠涨停卖）。
-    成本价来自 commands 的持仓状态机（sync_positions 同步的真实持仓成本）。
+
+def force_close_phase():
+    """判断当前处于收盘强平第几阶段（1/2/3）；未到强平时间或已进集合竞价返回 None。
+
+    强平窗口 = [SELL_CLOSE_TIME, BUY_TIME) = [14:55, 14:57)：
+      阶段一 前 P1_SEC 秒         → 卖一价，每 RETRY_SEC 撤挂
+      阶段二 接着 P2_SEC 秒       → 卖一价-P2_TICK，最多 P2_MAX 次
+      阶段三 直到 BUY_TIME        → 买一价，每 tick 撤挂
+    14:57 进入集合竞价后交易所不接受撤单，故返回 None 停止撤挂操作。
     """
-    if not C.TAKE_PROFIT:
+    start = _parse_time(C.SELL_CLOSE_TIME)
+    end = _parse_time(C.BUY_TIME)
+    now = _now()
+    if now < start or now >= end:
+        return None
+    secs = _secs_since(start)
+    if secs < C.FORCE_CLOSE_P1_SEC:
+        return 1
+    if secs < C.FORCE_CLOSE_P1_SEC + C.FORCE_CLOSE_P2_SEC:
+        return 2
+    return 3
+
+
+def force_close_due(code, phase):
+    """判断该股本 tick 是否该执行强平撤挂。
+
+    · 阶段一/二：距上次挂单 >= FORCE_CLOSE_RETRY_SEC 秒才重挂（阶段二另有次数上限）
+    · 阶段三    ：每 tick 都撤挂买一价，直到集合竞价
+    · 已清仓 / 已过集合竞价（phase 为 None）→ 不再操作
+    """
+    if phase is None:
         return False
     st = CMD._positions_state.get(code)
-    last = tick.get("lastPrice")
-    if not st or st["cost"] <= 0 or last is None:
-        return False
-    return (last - st["cost"]) / st["cost"] >= C.TAKE_PROFIT
+    if not st or st["target_vol"] <= 0:
+        return False                        # 已清仓，无需再操作
+    if phase == 3:
+        return True                         # 每 tick 撤挂
+    fs = CMD._force_close_state.get(code)
+    if phase == 2 and fs and fs["p2_count"] >= C.FORCE_CLOSE_P2_MAX:
+        return False                        # 阶段二次数用尽，等进入阶段三
+    if fs and fs["last_ts"]:
+        return (time.time() - fs["last_ts"]) >= C.FORCE_CLOSE_RETRY_SEC
+    return True                             # 从未挂过 → 立即挂首单

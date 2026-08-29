@@ -78,9 +78,6 @@ from AICode.MarcoAPI.Update.TradingDates import *
 from AICode.MarcoAPI.Update.Path import *
 from AICode.MarcoAPI.Update.Data import DATA_1D
 
-sys.path.append(PATH_TDX())
-from tqcenter import tq
-
 _SZ200_1D_ALL_CACHE: dict[str, dict[str, DATA_1D]] = {}
 
 # MA 周期列表
@@ -212,6 +209,7 @@ def UPDATE_1D_ORIGIN():
 
     stock_codes = STOCK_CODES()
 
+    from tqcenter import tq  # 仅在离线更新时惰性导入，避免实盘加载本模块时触碰通达信
     tq.initialize(__file__)
     df = tq.get_market_data( field_list=["Open","High", "Low", "Close", "Volume", "Amount"], stock_list=stock_codes, start_time=START_DATE, end_time='', count=-1, dividend_type='front', period='1d', fill_data=True )
     _SZ200_1D_ALL_CACHE.clear()

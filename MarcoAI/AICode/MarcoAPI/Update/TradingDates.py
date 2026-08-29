@@ -34,9 +34,6 @@ if _root not in sys.path:
 from AICode.MarcoAPI.Update.Constants import *
 from AICode.MarcoAPI.Update.Path import *
 
-sys.path.append(PATH_TDX())
-from tqcenter import tq
-
 _TRADING_DATES_CACHE: dict[str, list[str]] = {}
 
 def TRADING_DATES():
@@ -46,6 +43,8 @@ def TRADING_DATES():
     return _TRADING_DATES_CACHE["data"]
 
 def UPDATE_TRADING_DATES():
+    # 通达信(tq)仅在离线更新时才需要，惰性导入避免实盘加载本模块时触碰通达信
+    from tqcenter import tq
     tq.initialize(__file__)
     trading_dates = tq.get_trading_dates(market = 'SH', start_time = START_DATE, end_time = '', count = -1)
     with open(PATH_AIDATA_TRADING_DATES(), "w") as file:

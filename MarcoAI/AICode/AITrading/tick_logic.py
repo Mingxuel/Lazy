@@ -32,7 +32,8 @@ def handle_tick(xt_trader, tick):
 
     # —— 阶段一·开盘后：先同步真实持仓（处理部分成交），再监控止损 ——
     # 前提：处于盘中交易区间 [09:30,14:55)
-    # 判断：哪些持仓的最低价已跌破止损线；有触发 → 逐只止损；无 → 跳过
+    # 判断：哪些持仓的最新价已跌破止损线（成本 ×(1+STOP_LOSS)）；有触发 → 逐只止损；无 → 跳过
+    # 执行：每 tick 先撤未成交止损单，再按「卖一价 - 0.01」重挂，直到成交（卖不出去就持续撤挂）
     if CON.in_trading_session():
         CMD.sync_positions(xt_trader)                       # 同步真实持仓（处理部分成交）
         hits = [c for c in list(CMD._positions_state.keys())
@@ -41,34 +42,41 @@ def handle_tick(xt_trader, tick):
             pass                                            # 无持仓触发止损 → 跳过
         else:
             for code in hits:
-                CMD.stop_loss_order(xt_trader, code)        # 有 → 逐只止损
+                CMD.stop_loss_order(xt_trader, code)        # 有 → 逐只止损（撤单重挂）
 
-    # —— 阶段二·盘中：监控涨停 / 止盈 ——
+    # —— 阶段二·盘中：监控涨停（止盈即涨停，不再设独立止盈线）——
     # 前提：处于盘中交易区间
-    # 判断：哪些持仓涨停（最高价触涨停价）或盈利达止盈线；有 → 逐只卖出；无 → 跳过
+    # 判断：哪些持仓涨停（最高价触涨停价）；有 → 逐只卖出；无 → 跳过
     if CON.in_trading_session():
-        hits = []                                           # [(code, 卖出原因)]
-        for code in list(CMD._positions_state.keys()):
-            if CON.is_limit_up(code, tick):
-                hits.append((code, "涨停"))
-            elif CON.hit_take_profit(code, tick):
-                hits.append((code, "止盈"))
+        hits = [c for c in list(CMD._positions_state.keys())
+                if CON.is_limit_up(c, tick)]
         if not hits:
-            pass                                            # 无持仓涨停/止盈 → 跳过
+            pass                                            # 无持仓涨停 → 跳过
         else:
-            for code, reason in hits:
-                CMD.take_profit_order(xt_trader, code, reason)  # 有 → 逐只卖出
+            for code in hits:
+                CMD.take_profit_order(xt_trader, code, "涨停")  # 有 → 逐只卖出
 
-    # —— 阶段三·临近收盘：仍未触板则强平 ——
+    # —— 阶段三·临近收盘：三阶段阶梯强平（14:55-14:57 可撤重挂，14:57 后不可撤）——
     # 前提：已到达收盘强平时间点（>=14:55）
-    # 判断：还有哪些持仓未卖出；有 → 逐只强平；无（已空仓）→ 跳过
+    # 撤单：先撤掉止损/止盈遗留挂单（每日一次），释放被冻结的持仓
+    # 判断：处于强平第几小阶段 → 还有哪些持仓未卖出 → 该股本 tick 是否该撤挂
+    #   3.1  卖一价        ，每 15 秒撤单重挂
+    #   3.2  卖一价 - 0.01 ，最多 2 次
+    #   3.3  买一价        ，每 tick 撤挂，直到 14:57 集合竞价
     if CON.is_close_approach():
+        if not CMD.cancel_done_today():                     # 每日仅第一次
+            CMD.cancel_pending_orders(xt_trader)            # 撤掉止损/止盈遗留的未成交挂单
+            CMD.reset_force_close()                         # 清空昨日强平计数/节流计时
+        CMD.sync_positions(xt_trader)                       # 撤单后重新同步真实持仓
         left = list(CMD._positions_state.keys())
         if not left:
             pass                                            # 已空仓 → 跳过
         else:
+            phase = CON.force_close_phase()                 # 判断：当前强平小阶段（3.1/3.2/3.3，None=已进集合竞价）
             for code in left:
-                CMD.close_liq_order(xt_trader, code)        # 有持仓 → 逐只强平
+                if not CON.force_close_due(code, phase):    # 判断：节流未到 / 次数用尽 / 已成交
+                    continue                                # → 本 tick 不动
+                CMD.force_close_step(xt_trader, code, phase)  # 有 → 撤单并按该小阶段报价重挂剩余量
 
     # —— 阶段四·尾盘：集合竞价买入 ——
     # 前提：处于尾盘集合竞价区间 [14:57,15:00)，且今日尚未买过
@@ -77,6 +85,7 @@ def handle_tick(xt_trader, tick):
         if CMD.buy_done_today():
             pass                                            # 今日已买过 → 跳过（避免重复下单）
         else:
+            CMD.cancel_pending_orders(xt_trader)            # 撤单：释放冻结资金，保证买入能正常报价
             decision = CMD.decide_buy()                     # 判断：选出策略最优先股
             if decision is None:
                 pass                                        # 无可选股 → 跳过（今日空仓）

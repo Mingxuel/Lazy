@@ -91,10 +91,18 @@ def _limit_ratio(code: str) -> float:
 
 
 def _limit_price(pre_close: float, ratio: float) -> float:
-    """涨停价 = 前收×(1+涨幅)，四舍五入到分"""
+    """涨停价 = 前收×(1+涨幅)，按交易所规则两步四舍五入：
+
+    1) 先四舍五入到 0.001（厘位）得中间价，例如 5.5445
+    2) 再把中间价四舍五入到 0.01（分位），例如 5.5445 → 5.545 → 5.55
+
+    不能一步四舍五入到 0.01：5.5445 一步到分是 5.54（第3位4舍去），
+    但交易所先到厘成 5.545、再到分成 5.55，结果不同。
+    """
     from decimal import Decimal, ROUND_HALF_UP
-    return float((Decimal(str(pre_close)) * Decimal(str(1 + ratio)))
-                 .quantize(Decimal("0.01"), rounding=ROUND_HALF_UP))
+    mid = (Decimal(str(pre_close)) * Decimal(str(1 + ratio))) \
+        .quantize(Decimal("0.001"), rounding=ROUND_HALF_UP)
+    return float(mid.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP))
 
 
 def _stock_return(cols: list[str]) -> float | None:

@@ -52,6 +52,13 @@ SELL_STOP_TIME = "09:30:00"
 SELL_LIMIT_MONITOR_TIME = "09:30:00"
 SELL_CLOSE_TIME = "14:55:00"
 
+# 收盘强平三阶段（自 SELL_CLOSE_TIME 起算；14:57 进入集合竞价后不可撤单）
+FORCE_CLOSE_P1_SEC = 60      # 阶段一：卖一价挂单，每 FORCE_CLOSE_RETRY_SEC 撤单重挂
+FORCE_CLOSE_P2_SEC = 30      # 阶段二：卖一价 - P2_TICK，最多 P2_MAX 次
+FORCE_CLOSE_P2_MAX = 2       # 阶段二最多挂单次数
+FORCE_CLOSE_P2_TICK = 0.01   # 阶段二让价幅度（元）
+FORCE_CLOSE_RETRY_SEC = 15   # 阶段一/二撤单重挂间隔（秒）；阶段三为每 tick 撤挂
+
 # ======================================================================
 # 四、TPO_M5 策略参数（与回测 UPDATE_STRATEGY_TPO_M5 保持一致）
 # ======================================================================
@@ -60,7 +67,6 @@ MAX_RATIO = 0.03
 MARKET_MIN = 2e10
 MARKET_MAX = 1.3e11
 STOP_LOSS = -0.05
-TAKE_PROFIT = None  # 止盈比例（None 关闭；如 0.09 表示相对成本价盈利 9% 即卖出）
 
 # ======================================================================
 # 五、路径（基于项目根目录，自动加入 sys.path）
@@ -86,7 +92,9 @@ _OVERRIDABLE = [
     "QMT_USERDATA_PATH", "ACCOUNT_ID", "ACCOUNT_TYPE",
     "INIT_CAPITAL", "POSITION_RATIO", "MIN_BUY_AMOUNT",
     "BUY_TIME", "SELL_STOP_TIME", "SELL_LIMIT_MONITOR_TIME", "SELL_CLOSE_TIME",
-    "STRATEGY_NAME", "MAX_RATIO", "MARKET_MIN", "MARKET_MAX", "STOP_LOSS", "TAKE_PROFIT",
+    "FORCE_CLOSE_P1_SEC", "FORCE_CLOSE_P2_SEC", "FORCE_CLOSE_P2_MAX",
+    "FORCE_CLOSE_P2_TICK", "FORCE_CLOSE_RETRY_SEC",
+    "STRATEGY_NAME", "MAX_RATIO", "MARKET_MIN", "MARKET_MAX", "STOP_LOSS",
 ]
 
 

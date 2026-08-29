@@ -40,6 +40,7 @@ except Exception:
 from AICode.MarcoAPI.Update.Update1D import UPDATE_ALL
 from AICode.MarcoAPI.StrategyUI import GENERATE_STRATEGY_UI
 from AICode.AITrading.Structure.callbacks import watch as qmt_watch
+from AICode.AITrading import commands as CMD
 
 
 # 终端颜色（非 TTY 环境自动降级为空，避免乱码）
@@ -62,6 +63,12 @@ def _do_ui():
 def _do_qmt():
     """启动 QMT 自动交易（常驻 watch：按时间窗自动触发买卖）。Ctrl+C 退出。"""
     print(f"  {Y}即将启动 QMT 自动交易（常驻），按 Ctrl+C 退出。{R}")
+    # 脚本启动时（无论盘前还是盘中）预筛当日买入候选：全市场日线预热、买入池读取、
+    # T-4/T-3/T-2 预筛等重型 I/O 在此一次性完成，尾盘 decide_buy 只做 T-1 实时快判。
+    try:
+        CMD.prepare_buy_candidates()
+    except Exception as e:
+        print(f"  {Y}[警告] 买入候选预筛失败，尾盘将降级为全量判定：{e}{R}")
     qmt_watch()
 
 
@@ -199,6 +206,11 @@ def main():
     # 命令行参数直接启动 QMT 自动化（常驻 watch）：python Run.py qmt
     args = sys.argv[1:]
     if args and args[0] == "qmt":
+        # 脚本启动时预筛当日买入候选（同上，覆盖命令行直接启动场景）
+        try:
+            CMD.prepare_buy_candidates()
+        except Exception as e:
+            print(f"{Y}[警告] 买入候选预筛失败，尾盘将降级为全量判定：{e}{R}")
         qmt_watch()
         return
     _menu_loop()
