@@ -44,6 +44,7 @@ def TRADING_DATES():
 
 def UPDATE_TRADING_DATES():
     # 通达信(tq)仅在离线更新时才需要，惰性导入避免实盘加载本模块时触碰通达信
+    sys.path.append(PATH_TDX())  # 确保 tqcenter 模块所在目录在 sys.path 中
     from tqcenter import tq
     tq.initialize(__file__)
     trading_dates = tq.get_trading_dates(market = 'SH', start_time = START_DATE, end_time = '', count = -1)

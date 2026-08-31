@@ -209,6 +209,7 @@ def UPDATE_1D_ORIGIN():
 
     stock_codes = STOCK_CODES()
 
+    sys.path.append(PATH_TDX())  # 确保 tqcenter 模块所在目录在 sys.path 中
     from tqcenter import tq  # 仅在离线更新时惰性导入，避免实盘加载本模块时触碰通达信
     tq.initialize(__file__)
     df = tq.get_market_data( field_list=["Open","High", "Low", "Close", "Volume", "Amount"], stock_list=stock_codes, start_time=START_DATE, end_time='', count=-1, dividend_type='front', period='1d', fill_data=True )
